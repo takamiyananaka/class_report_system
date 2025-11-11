@@ -1,4 +1,4 @@
-package com.nanaka.maven.class_report_system;
+package com.xuegongbu;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
