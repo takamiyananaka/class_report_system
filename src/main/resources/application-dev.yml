@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    druid:
+      url: jdbc:mysql://localhost:3306/class_report?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      username: root
+      password: root
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+
+logging:
+  level:
+    com.xuegongbu: debug
