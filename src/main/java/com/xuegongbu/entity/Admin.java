@@ -12,6 +12,10 @@ public class Admin {
     private String phone;
     private String email;
     private Integer status;
+    private LocalDateTime lastLoginTime;
+    private String lastLoginIp;
+    private String remark;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Integer isDelete;
 }

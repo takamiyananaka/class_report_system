@@ -3,6 +3,7 @@ package com.xuegongbu.entity;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+
 @Data
 public class Teacher {
     private Long id;
@@ -14,6 +15,10 @@ public class Teacher {
     private String email;
     private String department;
     private Integer status;
+    private LocalDateTime lastLoginTime;
+    private String lastLoginIp;
+    private String remark;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Integer isDelete;
 }
