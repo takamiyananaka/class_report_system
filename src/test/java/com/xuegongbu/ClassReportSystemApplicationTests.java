@@ -1,6 +1,7 @@
 package com.xuegongbu;
 
 import com.xuegongbu.mapper.AdminMapper;
+import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.utils.RedisUtils;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,9 @@ class ClassReportSystemApplicationTests {
 
     @MockBean
     private TeacherMapper teacherMapper;
+
+    @MockBean
+    private CourseScheduleMapper courseScheduleMapper;
 
     @MockBean
     private RedisUtils redisUtils;
