@@ -11,6 +11,7 @@
         <result column="phone" property="phone"/>
         <result column="email" property="email"/>
         <result column="department" property="department"/>
+        <result column="identity" property="identity"/>
         <result column="status" property="status"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -25,8 +26,8 @@
     </select>
 
     <insert id="insert" parameterType="com.xuegongbu.entity.Teacher" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO tb_teacher (username, password, real_name, teacher_no, phone, email, department, status)
-        VALUES (#{username}, #{password}, #{realName}, #{teacherNo}, #{phone}, #{email}, #{department}, #{status})
+        INSERT INTO tb_teacher (username, password, real_name, teacher_no, phone, email, department, identity, status)
+        VALUES (#{username}, #{password}, #{realName}, #{teacherNo}, #{phone}, #{email}, #{department}, #{identity}, #{status})
     </insert>
 
     <update id="update" parameterType="com.xuegongbu.entity.Teacher">
@@ -38,6 +39,7 @@
             <if test="phone != null">phone = #{phone},</if>
             <if test="email != null">email = #{email},</if>
             <if test="department != null">department = #{department},</if>
+            <if test="identity != null">identity = #{identity},</if>
             <if test="status != null">status = #{status},</if>
         </set>
         WHERE id = #{id}
