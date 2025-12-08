@@ -2,15 +2,14 @@ package com.xuegongbu.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
 import java.time.LocalDateTime;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 教师表
@@ -33,7 +32,7 @@ public class Teacher implements Serializable {
     @NotBlank(message="[用户名]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("用户名")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String username;
     /**
     * 密码（BCrypt加密）
@@ -41,7 +40,7 @@ public class Teacher implements Serializable {
     @NotBlank(message="[密码（BCrypt加密）]不能为空")
     @Size(max= 255,message="编码长度不能超过255")
     @ApiModelProperty("密码（BCrypt加密）")
-    @Length(max= 255,message="编码长度不能超过255")
+    @Size(max= 255,message="编码长度不能超过255")
     private String password;
     /**
     * 真实姓名
@@ -49,7 +48,7 @@ public class Teacher implements Serializable {
     @NotBlank(message="[真实姓名]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("真实姓名")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String realName;
     /**
     * 教师工号
@@ -57,28 +56,28 @@ public class Teacher implements Serializable {
     @NotBlank(message="[教师工号]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("教师工号")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String teacherNo;
     /**
     * 手机号
     */
     @Size(max= 20,message="编码长度不能超过20")
     @ApiModelProperty("手机号")
-    @Length(max= 20,message="编码长度不能超过20")
+    @Size(max= 20,message="编码长度不能超过20")
     private String phone;
     /**
     * 邮箱
     */
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("邮箱")
-    @Length(max= 100,message="编码长度不能超过100")
+    @Size(max= 100,message="编码长度不能超过100")
     private String email;
     /**
     * 所属部门/学院
     */
     @Size(max= 255,message="编码长度不能超过255")
     @ApiModelProperty("所属部门/学院")
-    @Length(max= 255,message="编码长度不能超过255")
+    @Size(max= 255,message="编码长度不能超过255")
     private String department;
     /**
     * 身份：1-只是教师，2-教师且是辅导员
@@ -100,14 +99,14 @@ public class Teacher implements Serializable {
     */
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("最后登录IP")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String lastLoginIp;
     /**
     * 备注
     */
     @Size(max= 500,message="编码长度不能超过500")
     @ApiModelProperty("备注")
-    @Length(max= 500,message="编码长度不能超过500")
+    @Size(max= 500,message="编码长度不能超过500")
     private String remark;
     /**
     * 创建时间

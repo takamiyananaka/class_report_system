@@ -1,8 +1,8 @@
 package com.xuegongbu.domain;
 
 import jakarta.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 预警记录表
@@ -64,7 +63,7 @@ public class Alert implements Serializable {
     */
     @Size(max= 500,message="编码长度不能超过500")
     @ApiModelProperty("预警信息")
-    @Length(max= 500,message="编码长度不能超过500")
+    @Size(max= 500,message="编码长度不能超过500")
     private String alertMessage;
     /**
     * 通知状态：0-未发送，1-已发送，2-发送失败
