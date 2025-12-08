@@ -1,6 +1,6 @@
 package com.xuegongbu.domain;
 
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import javax.validation.constraints.NotNull;
@@ -25,6 +25,7 @@ public class Teacher implements Serializable {
     */
     @NotNull(message="[主键ID]不能为空")
     @ApiModelProperty("主键ID")
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
     * 用户名
@@ -112,16 +113,19 @@ public class Teacher implements Serializable {
     * 创建时间
     */
     @ApiModelProperty("创建时间")
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     /**
     * 更新时间
     */
     @ApiModelProperty("更新时间")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
     /**
     * 是否删除：0-否，1-是
     */
     @ApiModelProperty("是否删除：0-否，1-是")
+    @TableLogic
     private Integer isDeleted;
 
 }

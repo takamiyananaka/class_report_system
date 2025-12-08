@@ -18,17 +18,4 @@ public class TeacherController {
     @Autowired
     private TeacherService teacherService;
 
-    /**
-     * 根据教师ID查询教师信息
-     */
-    @GetMapping("/{id}")
-    @ApiOperation("根据教师ID查询教师信息")
-    public Result<Teacher> getById(@PathVariable Long id) {
-        log.info("查询教师请求，ID：{}", id);
-        Teacher teacher = teacherService.findById(id);
-        if (teacher == null) {
-            return Result.error("教师不存在");
-        }
-        return Result.success(teacher);
-    }
 }

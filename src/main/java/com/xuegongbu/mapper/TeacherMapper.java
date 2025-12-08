@@ -7,5 +7,5 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface TeacherMapper extends BaseMapper<Teacher> {
-    Teacher findByUsername(@Param("username") String username);
+
 }

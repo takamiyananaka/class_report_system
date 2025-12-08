@@ -30,8 +30,8 @@ mybatis-plus:
 jwt:
   secret: class-report-system-jwt-secret-key-for-token-generation-2025
   expiration: 86400000
-  header: Authorization
-  prefix: "Bearer "
+
+
 
 logging:
   level:
