@@ -16,9 +16,9 @@ import org.hibernate.validator.constraints.Length;
 
 /**
 * 管理员表
-* @TableName admin
+* @TableName tb_admin
 */
-@TableName(value = "admin")
+@TableName(value = "tb_admin")
 @Data
 public class Admin implements Serializable {
 

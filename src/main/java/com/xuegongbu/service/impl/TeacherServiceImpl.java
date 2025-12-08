@@ -1,5 +1,6 @@
 package com.xuegongbu.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.TeacherService;
@@ -8,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TeacherServiceImpl implements TeacherService {
+public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService {
 
     @Autowired
     private TeacherMapper teacherMapper;
@@ -20,20 +21,20 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public Teacher findById(Long id) {
-        return teacherMapper.findById(id);
+        return teacherMapper.selectById(id);
     }
 
     @Override
     public Teacher create(Teacher teacher) {
         teacherMapper.insert(teacher);
-        return teacherMapper.findById(teacher.getId());
+        return teacherMapper.selectById(teacher.getId());
     }
 
     @Override
     public Teacher update(Long id, Teacher teacher) {
         teacher.setId(id);
-        teacherMapper.update(teacher);
-        return teacherMapper.findById(id);
+        teacherMapper.updateById(teacher);
+        return teacherMapper.selectById(id);
     }
 
     @Override

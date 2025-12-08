@@ -16,9 +16,9 @@ import org.hibernate.validator.constraints.Length;
 
 /**
 * 课程表
-* @TableName course
+* @TableName tb_course
 */
-@TableName(value = "course")
+@TableName(value = "tb_course")
 @Data
 public class Course implements Serializable {
 

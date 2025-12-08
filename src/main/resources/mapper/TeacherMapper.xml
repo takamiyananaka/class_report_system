@@ -18,31 +18,7 @@
     </resultMap>
 
     <select id="findByUsername" resultMap="BaseResultMap">
-        SELECT * FROM teacher WHERE username = #{username}
+        SELECT * FROM tb_teacher WHERE username = #{username}
     </select>
-
-    <select id="findById" resultMap="BaseResultMap">
-        SELECT * FROM teacher WHERE id = #{id}
-    </select>
-
-    <insert id="insert" parameterType="com.xuegongbu.domain.Teacher" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO teacher (username, password, real_name, teacher_no, phone, email, department, identity, status)
-        VALUES (#{username}, #{password}, #{realName}, #{teacherNo}, #{phone}, #{email}, #{department}, #{identity}, #{status})
-    </insert>
-
-    <update id="update" parameterType="com.xuegongbu.domain.Teacher">
-        UPDATE teacher
-        <set>
-            <if test="password != null">password = #{password},</if>
-            <if test="realName != null">real_name = #{realName},</if>
-            <if test="teacherNo != null">teacher_no = #{teacherNo},</if>
-            <if test="phone != null">phone = #{phone},</if>
-            <if test="email != null">email = #{email},</if>
-            <if test="department != null">department = #{department},</if>
-            <if test="identity != null">identity = #{identity},</if>
-            <if test="status != null">status = #{status},</if>
-        </set>
-        WHERE id = #{id}
-    </update>
 
 </mapper>
