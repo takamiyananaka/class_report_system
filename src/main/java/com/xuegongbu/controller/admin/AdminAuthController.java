@@ -17,10 +17,10 @@ public class AdminAuthController {
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/login")
-    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        log.info("管理员登录请求：{}", request.getUsername());
-        LoginResponse response = authService.adminLogin(request);
-        return Result.success(response);
-    }
+//    @PostMapping("/login")
+//    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+//        log.info("管理员登录请求：{}", request.getUsername());
+//        LoginResponse response = authService.adminLogin(request);
+//        return Result.success(response);
+//    }
 }

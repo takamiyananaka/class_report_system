@@ -41,33 +41,33 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private RedisUtils redisUtils;
 
-    @Override
-    public LoginResponse adminLogin(LoginRequest request) {
-        Admin admin = adminService.findByUsername(request.getUsername());
-        if (admin == null) {
-            throw new BusinessException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
-        }
+//    @Override
+//    public LoginResponse adminLogin(LoginRequest request) {
+//        Admin admin = adminService.findByUsername(request.getUsername());
+//        if (admin == null) {
+//            throw new BusinessException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
+//        }
+//
+//        if (!passwordEncoder.matches(request.getPassword(), admin.getPassword())) {
+//            throw new BusinessException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
+//        }
+//
+//        if (Constants.STATUS_DISABLED.equals(admin.getStatus())) {
+//            throw new BusinessException(ResultCode.USER_DISABLED);
+//        }
+//
+//        String token = jwtTokenProvider.generateToken(admin.getId(), admin.getUsername(), Constants.ROLE_ADMIN);
+//
+//        // 缓存用户信息到Redis
+//        String redisKey = Constants.REDIS_USER_KEY_PREFIX + admin.getId();
+//        redisUtils.set(redisKey, admin, Constants.REDIS_TOKEN_EXPIRATION, TimeUnit.SECONDS);
+//
+//        AdminVO adminVO = BeanUtil.copyProperties(admin, AdminVO.class);
+//
+//        return new LoginResponse(token, adminVO);
+//    }
 
-        if (!passwordEncoder.matches(request.getPassword(), admin.getPassword())) {
-            throw new BusinessException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
-        }
 
-        if (Constants.STATUS_DISABLED.equals(admin.getStatus())) {
-            throw new BusinessException(ResultCode.USER_DISABLED);
-        }
-
-        String token = jwtTokenProvider.generateToken(admin.getId(), admin.getUsername(), Constants.ROLE_ADMIN);
-        
-        // 缓存用户信息到Redis
-        String redisKey = Constants.REDIS_USER_KEY_PREFIX + admin.getId();
-        redisUtils.set(redisKey, admin, Constants.REDIS_TOKEN_EXPIRATION, TimeUnit.SECONDS);
-
-        AdminVO adminVO = BeanUtil.copyProperties(admin, AdminVO.class);
-        
-        return new LoginResponse(token, adminVO);
-    }
-
-    @Override
     public LoginResponse teacherLogin(LoginRequest request) {
         Teacher teacher = teacherService.findByUsername(request.getUsername());
         if (teacher == null) {

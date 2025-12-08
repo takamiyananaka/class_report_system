@@ -16,11 +16,11 @@ public class TeacherAuthController {
 
     @Autowired
     private AuthService authService;
-
-    @PostMapping("/login")
-    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        log.info("教师登录请求：{}", request.getUsername());
-        LoginResponse response = authService.teacherLogin(request);
-        return Result.success(response);
-    }
+//
+//    @PostMapping("/login")
+//    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+//        log.info("教师登录请求：{}", request.getUsername());
+//        LoginResponse response = authService.teacherLogin(request);
+//        return Result.success(response);
+//    }
 }

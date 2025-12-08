@@ -30,6 +30,7 @@
         <java.version>17</java.version>
     </properties>
     <dependencies>
+
         <!-- Spring Web - REST API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -37,10 +38,16 @@
         </dependency>
         
         <!-- MyBatis-Plus (includes MyBatis) -->
+<!--        <dependency>-->
+<!--            <groupId>com.baomidou</groupId>-->
+<!--            <artifactId>mybatis-plus</artifactId>-->
+<!--            <version>3.5.12</version>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.5.3.1</version>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <version>3.5.5</version>
         </dependency>
 
         <dependency>
@@ -124,13 +131,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
-        <!-- Druid - 数据库连接池 -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
-            <version>1.2.23</version>
         </dependency>
 
         <!-- swagger -->

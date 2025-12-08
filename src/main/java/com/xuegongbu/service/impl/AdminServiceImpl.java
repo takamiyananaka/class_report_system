@@ -13,10 +13,7 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
     @Autowired
     private AdminMapper adminMapper;
 
-    @Override
-    public Admin findByUsername(String username) {
-        return adminMapper.findByUsername(username);
-    }
+
 
     @Override
     public Admin findById(Long id) {

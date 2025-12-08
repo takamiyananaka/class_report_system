@@ -22,29 +22,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 尝试从管理员表查找
-        Admin admin = adminMapper.findByUsername(username);
-        if (admin != null) {
-            return new SecurityUser(
-                    admin.getId(),
-                    admin.getUsername(),
-                    admin.getPassword(),
-                    Constants.ROLE_ADMIN,
-                    admin.getStatus()
-            );
-        }
 
-        // 尝试从教师表查找
-        Teacher teacher = teacherMapper.findByUsername(username);
-        if (teacher != null) {
-            return new SecurityUser(
-                    teacher.getId(),
-                    teacher.getUsername(),
-                    teacher.getPassword(),
-                    Constants.ROLE_TEACHER,
-                    teacher.getStatus()
-            );
-        }
 
         throw new UsernameNotFoundException("用户不存在：" + username);
     }

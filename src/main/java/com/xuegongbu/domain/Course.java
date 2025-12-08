@@ -125,6 +125,11 @@ public class Course implements Serializable {
     */
     @ApiModelProperty("是否删除：0-否，1-是")
     private Integer isDeleted;
+    /**
+     * 上课的班级名字
+     */
+    @ApiModelProperty("上课的班级名字")
+    private String className;
 
 
 }
