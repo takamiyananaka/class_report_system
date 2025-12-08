@@ -2,7 +2,7 @@ package com.xuegongbu.controller;
 
 import com.xuegongbu.common.Result;
 import com.xuegongbu.dto.CourseScheduleRequest;
-import com.xuegongbu.entity.CourseSchedule;
+import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.service.CourseScheduleService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

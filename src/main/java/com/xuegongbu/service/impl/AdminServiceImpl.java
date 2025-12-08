@@ -1,6 +1,6 @@
 package com.xuegongbu.service.impl;
 
-import com.xuegongbu.entity.Admin;
+import com.xuegongbu.domain.Admin;
 import com.xuegongbu.mapper.AdminMapper;
 import com.xuegongbu.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;

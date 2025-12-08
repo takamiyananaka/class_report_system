@@ -1,6 +1,6 @@
 package com.xuegongbu.service;
 
-import com.xuegongbu.entity.Teacher;
+import com.xuegongbu.domain.Teacher;
 
 public interface TeacherService {
     Teacher findByUsername(String username);

@@ -1,8 +1,8 @@
 package com.xuegongbu.security;
 
 import com.xuegongbu.common.Constants;
-import com.xuegongbu.entity.Admin;
-import com.xuegongbu.entity.Teacher;
+import com.xuegongbu.domain.Admin;
+import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.AdminMapper;
 import com.xuegongbu.mapper.TeacherMapper;
 import org.springframework.beans.factory.annotation.Autowired;

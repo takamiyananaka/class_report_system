@@ -1,6 +1,6 @@
 package com.xuegongbu.service.impl;
 
-import com.xuegongbu.entity.Teacher;
+import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.TeacherService;
 import com.xuegongbu.utils.TeacherValidationUtils;

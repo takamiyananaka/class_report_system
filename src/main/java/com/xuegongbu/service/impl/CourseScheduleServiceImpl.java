@@ -1,6 +1,6 @@
 package com.xuegongbu.service.impl;
 
-import com.xuegongbu.entity.CourseSchedule;
+import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.CourseScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;

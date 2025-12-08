@@ -1,6 +1,6 @@
 package com.xuegongbu.mapper;
 
-import com.xuegongbu.entity.Admin;
+import com.xuegongbu.domain.Admin;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

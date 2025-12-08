@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.xuegongbu.mapper.CourseScheduleMapper">
     
-    <resultMap id="BaseResultMap" type="com.xuegongbu.entity.CourseSchedule">
+    <resultMap id="BaseResultMap" type="com.xuegongbu.domain.CourseSchedule">
         <id column="id" property="id"/>
         <result column="course_name" property="courseName"/>
         <result column="teacher_id" property="teacherId"/>
@@ -96,12 +96,12 @@
         ORDER BY weekday, start_time
     </select>
 
-    <insert id="insert" parameterType="com.xuegongbu.entity.CourseSchedule" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.xuegongbu.domain.CourseSchedule" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO tb_course_schedule (course_name, teacher_id, class_name, weekday, start_time, end_time, classroom, semester, school_year)
         VALUES (#{courseName}, #{teacherId}, #{className}, #{weekday}, #{startTime}, #{endTime}, #{classroom}, #{semester}, #{schoolYear})
     </insert>
 
-    <update id="update" parameterType="com.xuegongbu.entity.CourseSchedule">
+    <update id="update" parameterType="com.xuegongbu.domain.CourseSchedule">
         UPDATE tb_course_schedule
         <set>
             <if test="courseName != null">course_name = #{courseName},</if>

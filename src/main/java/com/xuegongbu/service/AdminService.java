@@ -1,6 +1,6 @@
 package com.xuegongbu.service;
 
-import com.xuegongbu.entity.Admin;
+import com.xuegongbu.domain.Admin;
 
 public interface AdminService {
     Admin findByUsername(String username);

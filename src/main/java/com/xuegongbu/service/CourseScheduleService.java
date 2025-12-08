@@ -1,6 +1,6 @@
 package com.xuegongbu.service;
 
-import com.xuegongbu.entity.CourseSchedule;
+import com.xuegongbu.domain.CourseSchedule;
 
 import java.util.List;
 import java.util.Map;
