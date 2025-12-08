@@ -10,7 +10,6 @@ import java.time.LocalTime;
 import java.time.LocalDateTime;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 课表表
@@ -32,7 +31,6 @@ public class CourseSchedule implements Serializable {
     @NotBlank(message="[课程名称]不能为空")
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("课程名称")
-    @Size(max= 100,message="编码长度不能超过100")
     private String courseName;
     
     /**
@@ -48,7 +46,6 @@ public class CourseSchedule implements Serializable {
     @NotBlank(message="[班级名称]不能为空")
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("班级名称")
-    @Size(max= 100,message="编码长度不能超过100")
     private String className;
     
     /**
@@ -78,7 +75,6 @@ public class CourseSchedule implements Serializable {
     @NotBlank(message="[教室]不能为空")
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("教室")
-    @Size(max= 100,message="编码长度不能超过100")
     private String classroom;
     
     /**
@@ -87,7 +83,6 @@ public class CourseSchedule implements Serializable {
     @NotBlank(message="[学期]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("学期")
-    @Size(max= 50,message="编码长度不能超过50")
     private String semester;
     
     /**
@@ -96,7 +91,6 @@ public class CourseSchedule implements Serializable {
     @NotBlank(message="[学年]不能为空")
     @Size(max= 20,message="编码长度不能超过20")
     @ApiModelProperty("学年")
-    @Size(max= 20,message="编码长度不能超过20")
     private String schoolYear;
     
     /**
