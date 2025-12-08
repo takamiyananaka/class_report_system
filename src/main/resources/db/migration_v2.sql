@@ -3,9 +3,9 @@
 
 USE class_report;
 
--- 为教师表添加identity字段
+-- 为教师表添加identity字段（先检查是否存在）
 ALTER TABLE tb_teacher
-ADD COLUMN IF NOT EXISTS identity TINYINT DEFAULT 1 COMMENT '身份：1-只是教师，2-教师且是辅导员' AFTER department;
+ADD COLUMN identity TINYINT DEFAULT 1 COMMENT '身份：1-只是教师，2-教师且是辅导员' AFTER department;
 
 -- 修改department字段长度以支持多个专业
 ALTER TABLE tb_teacher
@@ -28,5 +28,5 @@ CREATE TABLE IF NOT EXISTS tb_course_schedule (
     INDEX idx_teacher_id (teacher_id),
     INDEX idx_class_name (class_name),
     INDEX idx_weekday (weekday),
-    FOREIGN KEY (teacher_id) REFERENCES tb_teacher(id)
+    FOREIGN KEY (teacher_id) REFERENCES tb_teacher(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';

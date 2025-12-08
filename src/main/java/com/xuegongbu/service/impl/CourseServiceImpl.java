@@ -77,7 +77,12 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                         log.warn("第{}行：教师ID为空，跳过", i + 1);
                         continue;
                     }
-                    course.setTeacherId(Long.valueOf(getCellValueAsString(cell2)));
+                    try {
+                        course.setTeacherId(Long.valueOf(getCellValueAsString(cell2)));
+                    } catch (NumberFormatException e) {
+                        log.warn("第{}行：教师ID格式错误，跳过", i + 1);
+                        continue;
+                    }
                     
                     // 教室号 (必填)
                     Cell cell3 = row.getCell(3);
@@ -125,13 +130,21 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                     // 星期几
                     Cell cell8 = row.getCell(8);
                     if (cell8 != null && cell8.getCellType() != CellType.BLANK) {
-                        course.setWeekDay(Integer.valueOf(getCellValueAsString(cell8)));
+                        try {
+                            course.setWeekDay(Integer.valueOf(getCellValueAsString(cell8)));
+                        } catch (NumberFormatException e) {
+                            log.warn("第{}行：星期几格式错误", i + 1);
+                        }
                     }
                     
                     // 预到人数
                     Cell cell9 = row.getCell(9);
                     if (cell9 != null && cell9.getCellType() != CellType.BLANK) {
-                        course.setExpectedCount(Integer.valueOf(getCellValueAsString(cell9)));
+                        try {
+                            course.setExpectedCount(Integer.valueOf(getCellValueAsString(cell9)));
+                        } catch (NumberFormatException e) {
+                            log.warn("第{}行：预到人数格式错误", i + 1);
+                        }
                     }
                     
                     // 学期
@@ -143,7 +156,12 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                     // 状态
                     Cell cell11 = row.getCell(11);
                     if (cell11 != null && cell11.getCellType() != CellType.BLANK) {
-                        course.setStatus(Integer.valueOf(getCellValueAsString(cell11)));
+                        try {
+                            course.setStatus(Integer.valueOf(getCellValueAsString(cell11)));
+                        } catch (NumberFormatException e) {
+                            log.warn("第{}行：状态格式错误，使用默认值", i + 1);
+                            course.setStatus(2); // 默认未开始
+                        }
                     } else {
                         course.setStatus(2); // 默认未开始
                     }
@@ -234,7 +252,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                 return LocalDate.parse(dateStr);
             }
         } catch (Exception e) {
-            log.error("日期解析失败: {}", e.getMessage());
+            String cellValue = getCellValueAsString(cell);
+            log.error("日期解析失败，输入值: {}, 错误: {}", cellValue, e.getMessage());
             return null;
         }
     }
@@ -253,7 +272,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                 return LocalTime.parse(timeStr);
             }
         } catch (Exception e) {
-            log.error("时间解析失败: {}", e.getMessage());
+            String cellValue = getCellValueAsString(cell);
+            log.error("时间解析失败，输入值: {}, 错误: {}", cellValue, e.getMessage());
             return null;
         }
     }

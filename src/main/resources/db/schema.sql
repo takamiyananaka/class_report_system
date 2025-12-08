@@ -51,7 +51,7 @@ CREATE TABLE tb_course_schedule (
     INDEX idx_teacher_id (teacher_id),
     INDEX idx_class_name (class_name),
     INDEX idx_weekday (weekday),
-    FOREIGN KEY (teacher_id) REFERENCES tb_teacher(id)
+    FOREIGN KEY (teacher_id) REFERENCES tb_teacher(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
 
 -- 默认管理员（密码：admin123）
