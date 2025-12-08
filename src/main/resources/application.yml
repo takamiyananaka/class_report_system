@@ -38,12 +38,18 @@ spring:
           max-wait: -1ms
       timeout: 3000ms
 
-mybatis:
+mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.xuegongbu.entity
+  type-aliases-package: com.xuegongbu.domain
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
 
 jwt:
   secret: class-report-system-jwt-secret-key-for-token-generation-2025

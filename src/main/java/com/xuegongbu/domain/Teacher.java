@@ -14,9 +14,9 @@ import org.hibernate.validator.constraints.Length;
 
 /**
 * 教师表
-* @TableName teacher
+* @TableName tb_teacher
 */
-@TableName(value = "teacher")
+@TableName(value = "tb_teacher")
 @Data
 public class Teacher implements Serializable {
 
@@ -75,10 +75,15 @@ public class Teacher implements Serializable {
     /**
     * 所属部门/学院
     */
-    @Size(max= 100,message="编码长度不能超过100")
+    @Size(max= 255,message="编码长度不能超过255")
     @ApiModelProperty("所属部门/学院")
-    @Length(max= 100,message="编码长度不能超过100")
+    @Length(max= 255,message="编码长度不能超过255")
     private String department;
+    /**
+    * 身份：1-只是教师，2-教师且是辅导员
+    */
+    @ApiModelProperty("身份：1-只是教师，2-教师且是辅导员")
+    private Integer identity;
     /**
     * 状态：0-禁用，1-启用
     */

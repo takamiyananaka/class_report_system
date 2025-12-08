@@ -51,13 +51,13 @@ CREATE TABLE tb_course_schedule (
     INDEX idx_teacher_id (teacher_id),
     INDEX idx_class_name (class_name),
     INDEX idx_weekday (weekday),
-    FOREIGN KEY (teacher_id) REFERENCES teacher(id)
+    FOREIGN KEY (teacher_id) REFERENCES tb_teacher(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
 
 -- 默认管理员（密码：admin123）
-INSERT INTO admin (username, password, real_name, phone, email)
+INSERT INTO tb_admin (username, password, real_name, phone, email)
 VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '系统管理员', '13800138000', 'admin@example.com');
 
 -- 测试教师（密码：teacher123）
-INSERT INTO teacher (username, password, real_name, teacher_no, phone, email, department, identity)
+INSERT INTO tb_teacher (username, password, real_name, teacher_no, phone, email, department, identity)
 VALUES ('teacher001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1);

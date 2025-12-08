@@ -1,5 +1,6 @@
 package com.xuegongbu.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.CourseScheduleService;
@@ -11,14 +12,14 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class CourseScheduleServiceImpl implements CourseScheduleService {
+public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper, CourseSchedule> implements CourseScheduleService {
 
     @Autowired
     private CourseScheduleMapper courseScheduleMapper;
 
     @Override
     public CourseSchedule findById(Long id) {
-        return courseScheduleMapper.findById(id);
+        return courseScheduleMapper.selectById(id);
     }
 
     @Override
@@ -52,14 +53,14 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
     @Override
     public CourseSchedule create(CourseSchedule courseSchedule) {
         courseScheduleMapper.insert(courseSchedule);
-        return courseScheduleMapper.findById(courseSchedule.getId());
+        return courseScheduleMapper.selectById(courseSchedule.getId());
     }
 
     @Override
     public CourseSchedule update(Long id, CourseSchedule courseSchedule) {
         courseSchedule.setId(id);
-        courseScheduleMapper.update(courseSchedule);
-        return courseScheduleMapper.findById(id);
+        courseScheduleMapper.updateById(courseSchedule);
+        return courseScheduleMapper.selectById(id);
     }
 
     @Override

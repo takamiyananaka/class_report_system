@@ -1,5 +1,6 @@
 package com.xuegongbu.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xuegongbu.domain.CourseSchedule;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -7,12 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 @Mapper
-public interface CourseScheduleMapper {
-    
-    /**
-     * 根据ID查询课表
-     */
-    CourseSchedule findById(@Param("id") Long id);
+public interface CourseScheduleMapper extends BaseMapper<CourseSchedule> {
     
     /**
      * 查询课表列表
@@ -45,19 +41,4 @@ public interface CourseScheduleMapper {
      * 根据班级名称查询课表
      */
     List<CourseSchedule> findByClassName(@Param("className") String className);
-    
-    /**
-     * 插入课表
-     */
-    int insert(CourseSchedule courseSchedule);
-    
-    /**
-     * 更新课表
-     */
-    int update(CourseSchedule courseSchedule);
-    
-    /**
-     * 删除课表
-     */
-    int deleteById(@Param("id") Long id);
 }

@@ -15,28 +15,7 @@
     </resultMap>
 
     <select id="findByUsername" resultMap="BaseResultMap">
-        SELECT * FROM admin WHERE username = #{username}
+        SELECT * FROM tb_admin WHERE username = #{username}
     </select>
-
-    <select id="findById" resultMap="BaseResultMap">
-        SELECT * FROM admin WHERE id = #{id}
-    </select>
-
-    <insert id="insert" parameterType="com.xuegongbu.domain.Admin" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO admin (username, password, real_name, phone, email, status)
-        VALUES (#{username}, #{password}, #{realName}, #{phone}, #{email}, #{status})
-    </insert>
-
-    <update id="update" parameterType="com.xuegongbu.domain.Admin">
-        UPDATE admin
-        <set>
-            <if test="password != null">password = #{password},</if>
-            <if test="realName != null">real_name = #{realName},</if>
-            <if test="phone != null">phone = #{phone},</if>
-            <if test="email != null">email = #{email},</if>
-            <if test="status != null">status = #{status},</if>
-        </set>
-        WHERE id = #{id}
-    </update>
 
 </mapper>
