@@ -4,14 +4,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.TeacherService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService {
-
-    @Autowired
-    private TeacherMapper teacherMapper;
-
-
+    // All methods inherited from ServiceImpl, no need for manual mapper injection
 }

@@ -1,8 +1,7 @@
 package com.xuegongbu.domain;
 
-
-import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
@@ -12,7 +11,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 管理员表
@@ -34,7 +32,7 @@ public class Admin implements Serializable {
     @NotBlank(message="[用户名]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("用户名")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String username;
     /**
     * 密码（BCrypt加密）
@@ -42,28 +40,28 @@ public class Admin implements Serializable {
     @NotBlank(message="[密码（BCrypt加密）]不能为空")
     @Size(max= 255,message="编码长度不能超过255")
     @ApiModelProperty("密码（BCrypt加密）")
-    @Length(max= 255,message="编码长度不能超过255")
+    @Size(max= 255,message="编码长度不能超过255")
     private String password;
     /**
     * 真实姓名
     */
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("真实姓名")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String realName;
     /**
     * 手机号
     */
     @Size(max= 20,message="编码长度不能超过20")
     @ApiModelProperty("手机号")
-    @Length(max= 20,message="编码长度不能超过20")
+    @Size(max= 20,message="编码长度不能超过20")
     private String phone;
     /**
     * 邮箱
     */
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("邮箱")
-    @Length(max= 100,message="编码长度不能超过100")
+    @Size(max= 100,message="编码长度不能超过100")
     private String email;
     /**
     * 状态：0-禁用，1-启用
@@ -80,14 +78,14 @@ public class Admin implements Serializable {
     */
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("最后登录IP")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String lastLoginIp;
     /**
     * 备注
     */
     @Size(max= 500,message="编码长度不能超过500")
     @ApiModelProperty("备注")
-    @Length(max= 500,message="编码长度不能超过500")
+    @Size(max= 500,message="编码长度不能超过500")
     private String remark;
     /**
     * 创建时间
