@@ -32,14 +32,7 @@ public class CourseSchedule implements Serializable {
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("课程名称")
     private String courseName;
-    
-    /**
-    * 教师ID
-    */
-    @NotNull(message="[教师ID]不能为空")
-    @ApiModelProperty("教师ID")
-    private Long teacherId;
-    
+
     /**
     * 班级名称
     */
@@ -84,15 +77,7 @@ public class CourseSchedule implements Serializable {
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("学期")
     private String semester;
-    
-    /**
-    * 学年
-    */
-    @NotBlank(message="[学年]不能为空")
-    @Size(max= 20,message="编码长度不能超过20")
-    @ApiModelProperty("学年")
-    private String schoolYear;
-    
+
     /**
     * 创建时间
     */
