@@ -29,13 +29,20 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         Map<String, Object> result = new HashMap<>();
         
         if (file == null || file.isEmpty()) {
-            throw new RuntimeException("文件不能为空");
+            throw new IllegalArgumentException("文件不能为空");
         }
         
-        // 检查文件扩展名
+        // 检查文件扩展名和Content-Type
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || (!originalFilename.endsWith(".xlsx") && !originalFilename.endsWith(".xls"))) {
-            throw new RuntimeException("文件格式不正确，只支持.xlsx或.xls格式");
+        String contentType = file.getContentType();
+        
+        if (originalFilename == null || (!originalFilename.toLowerCase().endsWith(".xlsx") && !originalFilename.toLowerCase().endsWith(".xls"))) {
+            throw new IllegalArgumentException("文件格式不正确，只支持.xlsx或.xls格式");
+        }
+        
+        // 验证Content-Type
+        if (contentType == null || (!contentType.contains("spreadsheetml") && !contentType.contains("excel") && !contentType.contains("ms-excel"))) {
+            throw new IllegalArgumentException("文件类型不正确，只支持Excel文件");
         }
         
         try {
@@ -46,7 +53,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     .doReadSync();
             
             if (excelDataList == null || excelDataList.isEmpty()) {
-                throw new RuntimeException("Excel文件中没有数据");
+                throw new IllegalArgumentException("Excel文件中没有数据");
             }
             
             log.info("从Excel读取到 {} 条数据", excelDataList.size());
@@ -148,42 +155,46 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             
         } catch (IOException e) {
             log.error("读取Excel文件失败", e);
-            throw new RuntimeException("读取Excel文件失败: " + e.getMessage());
+            throw new IllegalArgumentException("读取Excel文件失败: " + e.getMessage(), e);
+        } catch (IllegalArgumentException e) {
+            // 重新抛出参数异常
+            throw e;
         } catch (Exception e) {
             log.error("导入课表数据失败", e);
-            throw new RuntimeException("导入课表数据失败: " + e.getMessage());
+            throw new IllegalStateException("导入课表数据失败: " + e.getMessage(), e);
         }
     }
     
     /**
      * 解析时间字符串为LocalTime
+     * 支持格式：HH:mm:ss, HH:mm, H:mm, H:mm:ss
      */
     private LocalTime parseTime(String timeStr) {
         if (timeStr == null) {
-            throw new RuntimeException("时间不能为空");
+            throw new IllegalArgumentException("时间不能为空");
         }
         
         timeStr = timeStr.trim();
         
-        try {
-            // 尝试解析 HH:mm:ss 格式
-            if (timeStr.length() == 8 && timeStr.contains(":")) {
-                return LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm:ss"));
+        // 定义支持的时间格式，按最严格到最宽松的顺序
+        DateTimeFormatter[] formatters = {
+            DateTimeFormatter.ofPattern("HH:mm:ss"),
+            DateTimeFormatter.ofPattern("H:mm:ss"),
+            DateTimeFormatter.ofPattern("HH:mm"),
+            DateTimeFormatter.ofPattern("H:mm")
+        };
+        
+        // 尝试使用每个格式解析
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                return LocalTime.parse(timeStr, formatter);
+            } catch (Exception e) {
+                // 继续尝试下一个格式
             }
-            // 尝试解析 HH:mm 格式
-            else if (timeStr.length() == 5 && timeStr.contains(":")) {
-                return LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"));
-            }
-            // 尝试解析 H:mm 格式
-            else if (timeStr.contains(":")) {
-                return LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("H:mm"));
-            }
-            else {
-                throw new RuntimeException("时间格式不正确，应为HH:mm或HH:mm:ss格式");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("时间格式不正确: " + timeStr + "，应为HH:mm或HH:mm:ss格式");
         }
+        
+        // 所有格式都失败
+        throw new IllegalArgumentException("时间格式不正确: " + timeStr + "，支持的格式为 HH:mm、HH:mm:ss、H:mm 或 H:mm:ss");
     }
     
     /**
