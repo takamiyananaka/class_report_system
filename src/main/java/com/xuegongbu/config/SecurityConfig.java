@@ -42,6 +42,10 @@ public class SecurityConfig {
        return http.build();
    }
 
+   /**
+    * 密码加密器Bean - 使用BCrypt加密算法
+    * 数据库中所有密码都使用BCrypt加密存储
+    */
    @Bean
    public PasswordEncoder passwordEncoder() {
        return new BCryptPasswordEncoder();

@@ -28,8 +28,12 @@ CREATE TABLE tb_teacher (
     department VARCHAR(255) COMMENT '所属部门（辅导员身份时格式为：专业名+年级，多个值用分号分隔）',
     identity TINYINT DEFAULT 1 COMMENT '身份：1-只是教师，2-教师且是辅导员',
     status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+    last_login_time DATETIME COMMENT '最后登录时间',
+    last_login_ip VARCHAR(50) COMMENT '最后登录IP',
+    remark VARCHAR(500) COMMENT '备注',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
     INDEX idx_username (username),
     INDEX idx_teacher_no (teacher_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师表';
@@ -58,6 +62,6 @@ CREATE TABLE tb_course_schedule (
 INSERT INTO tb_admin (username, password, real_name, phone, email)
 VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '系统管理员', '13800138000', 'admin@example.com');
 
--- 测试教师（密码：teacher123）
+-- 测试教师（密码：123456）使用BCrypt加密
 INSERT INTO tb_teacher (username, password, real_name, teacher_no, phone, email, department, identity)
-VALUES ('teacher001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1);
+VALUES ('teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1);

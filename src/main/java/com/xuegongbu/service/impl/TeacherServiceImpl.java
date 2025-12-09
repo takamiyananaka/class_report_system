@@ -22,6 +22,7 @@ import java.util.Map;
 @Service
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService {
 
+    // BCrypt密码加密器 - 用于验证数据库中BCrypt加密的密码
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -44,7 +45,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             throw new BusinessException("账号已被禁用，请联系管理员");
         }
 
-        // 验证密码
+        // 验证密码 - 使用BCrypt验证明文密码与数据库中的加密密码
         if (!passwordEncoder.matches(loginRequest.getPassword(), teacher.getPassword())) {
             throw new BusinessException("用户名或密码错误");
         }
