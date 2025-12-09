@@ -77,4 +77,15 @@ public class Knife4jConfig {
                 .pathsToMatch("/course/**")
                 .build();
     }
+
+    /**
+     * 课表模块
+     */
+    @Bean
+    public GroupedOpenApi courseScheduleApi() {
+        return GroupedOpenApi.builder()
+                .group("04-课表模块")
+                .pathsToMatch("/courseSchedule/**")
+                .build();
+    }
 }
