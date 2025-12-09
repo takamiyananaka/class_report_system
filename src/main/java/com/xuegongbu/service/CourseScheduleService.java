@@ -1,10 +1,9 @@
 package com.xuegongbu.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.xuegongbu.domain.Admin;
+import com.xuegongbu.domain.CourseSchedule;
 import org.springframework.stereotype.Service;
 
 
-public interface AdminService extends IService<Admin> {
-
+public interface CourseScheduleService extends IService<CourseSchedule> {
 }
