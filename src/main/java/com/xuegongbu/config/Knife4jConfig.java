@@ -1,9 +1,9 @@
 package com.xuegongbu.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import io. swagger.v3.oas. models.info.Contact;
+import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info. License;
+import io.swagger.v3.oas.models.info.License;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +22,7 @@ public class Knife4jConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        . title("学工部课程考勤系统 API")
+                        .title("学工部课程考勤系统 API")
                         .version("1.0.0")
                         .description("学工部课程考勤系统接口文档，提供教师管理、课程管理、考勤管理等功能")
                         .contact(new Contact()
@@ -31,7 +31,7 @@ public class Knife4jConfig {
                                 .url("https://github.com/takamiyananaka/class_report_system"))
                         .license(new License()
                                 .name("MIT License")
-                                . url("https://opensource.org/licenses/MIT")));
+                                .url("https://opensource.org/licenses/MIT")));
     }
 
     /**
@@ -46,13 +46,13 @@ public class Knife4jConfig {
     }
 
     /**
-     * 认证模块
+     * 前台模块
      */
     @Bean
-    public GroupedOpenApi authApi() {
+    public GroupedOpenApi frontApi() {
         return GroupedOpenApi.builder()
-                .group("01-认证模块")
-                .pathsToMatch("/auth/**", "/login/**")
+                .group("01-前台模块")
+                .pathsToMatch("/front/**")
                 .build();
     }
 
@@ -75,28 +75,6 @@ public class Knife4jConfig {
         return GroupedOpenApi.builder()
                 .group("03-课程模块")
                 .pathsToMatch("/course/**")
-                .build();
-    }
-
-    /**
-     * 班级模块
-     */
-    @Bean
-    public GroupedOpenApi classApi() {
-        return GroupedOpenApi.builder()
-                .group("04-班级模块")
-                .pathsToMatch("/class/**")
-                .build();
-    }
-
-    /**
-     * 考勤模块
-     */
-    @Bean
-    public GroupedOpenApi attendanceApi() {
-        return GroupedOpenApi.builder()
-                .group("05-考勤模块")
-                .pathsToMatch("/attendance/**")
                 .build();
     }
 }

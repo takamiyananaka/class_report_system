@@ -11,7 +11,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
    @Bean
    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-       http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+       http.authorizeHttpRequests(auth -> auth
+               // 允许访问 Knife4j 文档相关路径
+               .requestMatchers(
+                   "/doc.html",
+                   "/v3/api-docs/**",
+                   "/swagger-ui/**",
+                   "/swagger-ui.html",
+                   "/swagger-resources/**",
+                   "/webjars/**"
+               ).permitAll()
+               .anyRequest().permitAll())
            .csrf(csrf -> csrf.disable());
        return http.build();
    }
