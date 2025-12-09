@@ -3,9 +3,9 @@
 
 USE class_report;
 
--- 添加最后登录时间字段（在status字段之后，如果有identity字段则在identity之后）
+-- 添加最后登录时间字段（在status字段之后）
 ALTER TABLE tb_teacher
-ADD COLUMN last_login_time DATETIME COMMENT '最后登录时间' AFTER identity;
+ADD COLUMN last_login_time DATETIME COMMENT '最后登录时间' AFTER status;
 
 -- 添加最后登录IP字段
 ALTER TABLE tb_teacher
