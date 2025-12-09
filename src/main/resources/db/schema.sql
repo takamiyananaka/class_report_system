@@ -62,6 +62,6 @@ CREATE TABLE tb_course_schedule (
 INSERT INTO tb_admin (username, password, real_name, phone, email)
 VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '系统管理员', '13800138000', 'admin@example.com');
 
--- 测试教师（密码：teacher123）
+-- 测试教师（密码：123456）使用BCrypt加密
 INSERT INTO tb_teacher (username, password, real_name, teacher_no, phone, email, department, identity)
-VALUES ('teacher001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1);
+VALUES ('teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1);

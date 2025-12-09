@@ -97,7 +97,7 @@ mysql -u root -p < src/main/resources/db/schema.sql
 - 创建 `class_report` 数据库
 - 创建 `tb_admin` 和 `tb_teacher` 表
 - 插入默认管理员账号：用户名 `admin`，密码 `admin123`
-- 插入测试教师账号：用户名 `teacher001`，密码 `teacher123`
+- 插入测试教师账号：用户名 `teacher001`，密码 `123456`
 
 ### 3. 启动Redis
 
@@ -177,7 +177,7 @@ Content-Type: application/json
 
 {
   "username": "teacher001",
-  "password": "teacher123"
+  "password": "123456"
 }
 ```
 
@@ -261,7 +261,7 @@ Authorization: Bearer {token}
 
 ### 教师
 - 用户名：`teacher001`
-- 密码：`teacher123`
+- 密码：`123456`
 
 ## 测试
 
