@@ -80,11 +80,6 @@ public class Teacher implements Serializable {
     @Size(max= 255,message="编码长度不能超过255")
     private String department;
     /**
-    * 身份：1-只是教师，2-教师且是辅导员
-    */
-    @ApiModelProperty("身份：1-只是教师，2-教师且是辅导员")
-    private Integer identity;
-    /**
     * 状态：0-禁用，1-启用
     */
     @ApiModelProperty("状态：0-禁用，1-启用")
