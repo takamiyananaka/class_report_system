@@ -3,9 +3,9 @@
 
 USE class_report;
 
--- 添加最后登录时间字段
+-- 添加最后登录时间字段（在status字段之后，如果有identity字段则在identity之后）
 ALTER TABLE tb_teacher
-ADD COLUMN last_login_time DATETIME COMMENT '最后登录时间' AFTER status;
+ADD COLUMN last_login_time DATETIME COMMENT '最后登录时间' AFTER identity;
 
 -- 添加最后登录IP字段
 ALTER TABLE tb_teacher
@@ -15,6 +15,6 @@ ADD COLUMN last_login_ip VARCHAR(50) COMMENT '最后登录IP' AFTER last_login_t
 ALTER TABLE tb_teacher
 ADD COLUMN remark VARCHAR(500) COMMENT '备注' AFTER last_login_ip;
 
--- 添加逻辑删除字段
+-- 添加逻辑删除字段（在update_time之后）
 ALTER TABLE tb_teacher
-ADD COLUMN is_deleted INT DEFAULT 0 COMMENT '是否删除：0-否，1-是' AFTER remark;
+ADD COLUMN is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是' AFTER update_time;

@@ -33,7 +33,7 @@ CREATE TABLE tb_teacher (
     remark VARCHAR(500) COMMENT '备注',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    is_deleted INT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
+    is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
     INDEX idx_username (username),
     INDEX idx_teacher_no (teacher_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师表';
