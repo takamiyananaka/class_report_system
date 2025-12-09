@@ -2,8 +2,8 @@ package com.xuegongbu.domain;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 考勤记录表
@@ -59,7 +58,7 @@ public class Attendance implements Serializable {
     */
     @Size(max= 255,message="编码长度不能超过255")
     @ApiModelProperty("抓取的图片URL")
-    @Length(max= 255,message="编码长度不能超过255")
+    @Size(max= 255,message="编码长度不能超过255")
     private String imageUrl;
     /**
     * 考勤类型：1-自动，2-手动
@@ -76,7 +75,7 @@ public class Attendance implements Serializable {
     */
     @Size(max= 500,message="编码长度不能超过500")
     @ApiModelProperty("备注")
-    @Length(max= 500,message="编码长度不能超过500")
+    @Size(max= 500,message="编码长度不能超过500")
     private String remark;
     /**
     * 创建时间

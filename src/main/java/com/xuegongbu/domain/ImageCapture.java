@@ -2,15 +2,14 @@ package com.xuegongbu.domain;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
 import java.time.LocalDateTime;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 图片抓取记录表
@@ -32,21 +31,21 @@ public class ImageCapture implements Serializable {
     @NotBlank(message="[来源URL]不能为空")
     @Size(max= 500,message="编码长度不能超过500")
     @ApiModelProperty("来源URL")
-    @Length(max= 500,message="编码长度不能超过500")
+    @Size(max= 500,message="编码长度不能超过500")
     private String sourceUrl;
     /**
     * 保存的图片URL
     */
     @Size(max= 255,message="编码长度不能超过255")
     @ApiModelProperty("保存的图片URL")
-    @Length(max= 255,message="编码长度不能超过255")
+    @Size(max= 255,message="编码长度不能超过255")
     private String imageUrl;
     /**
     * 教室号
     */
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("教室号")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String classroom;
     /**
     * 抓取时间
@@ -69,7 +68,7 @@ public class ImageCapture implements Serializable {
     */
     @Size(max= 500,message="编码长度不能超过500")
     @ApiModelProperty("错误信息")
-    @Length(max= 500,message="编码长度不能超过500")
+    @Size(max= 500,message="编码长度不能超过500")
     private String errorMessage;
     /**
     * 创建时间

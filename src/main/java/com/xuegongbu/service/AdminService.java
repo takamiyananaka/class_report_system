@@ -5,6 +5,4 @@ import com.xuegongbu.domain.Admin;
 
 public interface AdminService extends IService<Admin> {
 
-    
-    Admin findById(Long id);
 }

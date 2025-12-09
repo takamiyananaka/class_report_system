@@ -2,8 +2,8 @@ package com.xuegongbu.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
@@ -12,7 +12,6 @@ import java.time.LocalTime;
 import java.time.LocalDateTime;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 课程表
@@ -35,14 +34,14 @@ public class Course implements Serializable {
     @NotBlank(message="[课程名称]不能为空")
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("课程名称")
-    @Length(max= 100,message="编码长度不能超过100")
+    @Size(max= 100,message="编码长度不能超过100")
     private String courseName;
     /**
     * 课程编码
     */
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("课程编码")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String courseCode;
     /**
     * 教师ID
@@ -56,7 +55,7 @@ public class Course implements Serializable {
     @NotBlank(message="[教室号]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("教室号")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String classroom;
     /**
     * 上课时间（如：周一 1-2节）
@@ -64,7 +63,7 @@ public class Course implements Serializable {
     @NotBlank(message="[上课时间（如：周一 1-2节）]不能为空")
     @Size(max= 100,message="编码长度不能超过100")
     @ApiModelProperty("上课时间（如：周一 1-2节）")
-    @Length(max= 100,message="编码长度不能超过100")
+    @Size(max= 100,message="编码长度不能超过100")
     private String courseTime;
     /**
     * 上课日期
@@ -97,7 +96,7 @@ public class Course implements Serializable {
     */
     @Size(max= 20,message="编码长度不能超过20")
     @ApiModelProperty("学期（如：2024-2025-1）")
-    @Length(max= 20,message="编码长度不能超过20")
+    @Size(max= 20,message="编码长度不能超过20")
     private String semester;
     /**
     * 状态：0-已结束，1-进行中，2-未开始
@@ -109,7 +108,7 @@ public class Course implements Serializable {
     */
     @Size(max= 500,message="编码长度不能超过500")
     @ApiModelProperty("备注")
-    @Length(max= 500,message="编码长度不能超过500")
+    @Size(max= 500,message="编码长度不能超过500")
     private String remark;
     /**
     * 创建时间

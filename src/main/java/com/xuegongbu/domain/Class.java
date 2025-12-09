@@ -1,8 +1,7 @@
 package com.xuegongbu.domain;
 
-
-import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
@@ -12,7 +11,6 @@ import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModelProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 /**
 * 班级
@@ -35,7 +33,7 @@ public class Class implements Serializable {
     @NotBlank(message="[班级名字]不能为空")
     @Size(max= 20,message="编码长度不能超过20")
     @ApiModelProperty("班级名字")
-    @Length(max= 20,message="编码长度不能超过20")
+    @Size(max= 20,message="编码长度不能超过20")
     private String class_name;
     /**
     * 辅导员id
@@ -43,7 +41,7 @@ public class Class implements Serializable {
     @NotBlank(message="[辅导员id]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
     @ApiModelProperty("辅导员id")
-    @Length(max= 50,message="编码长度不能超过50")
+    @Size(max= 50,message="编码长度不能超过50")
     private String teacher_id;
     /**
     * 班级人数

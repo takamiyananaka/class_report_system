@@ -9,4 +9,5 @@ import java.util.List;
 
 public interface CourseService extends IService<Course> {
 
+
 }

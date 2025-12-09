@@ -6,16 +6,21 @@ server:
 spring:
   application:
     name: class-report-system
-  
   datasource:
     url: jdbc:mysql://localhost:3306/class_report?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: murasame521
     driver-class-name: com.mysql.cj.jdbc.Driver
+  security:
+    user:
+      name: admin
+      password: admin123
+
+
+
 
 
 mybatis-plus:
-  mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.xuegongbu.domain
   configuration:
     map-underscore-to-camel-case: true
@@ -36,3 +41,30 @@ jwt:
 logging:
   level:
     com.xuegongbu: debug
+
+# Knife4j 配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  group-configs:
+    - group:  'all'
+      paths-to-match: '/**'
+      packages-to-scan: com.xuegongbu.controller
+
+knife4j:
+  # 是否启用 Knife4j 增强功能
+  enable: true
+  # 生产环境建议关闭
+  production: false
+  # 基本信息
+  setting:
+    # 界面语言：zh_cn 中文、en_us 英文
+    language: zh_cn
+    enable-footer: false
+    enable-footer-custom: true
+    footer-custom-content: 'Copyright © 2025 学工部课程考勤系统'
+    title: '学工部课程考勤系统 API 文档'
