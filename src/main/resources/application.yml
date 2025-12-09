@@ -54,6 +54,8 @@ springdoc:
     - group:  'all'
       paths-to-match: '/**'
       packages-to-scan: com.xuegongbu.controller
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
 
 knife4j:
   # 是否启用 Knife4j 增强功能
