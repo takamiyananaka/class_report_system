@@ -23,6 +23,7 @@ public class CourseSchedule implements Serializable {
     * 主键ID
     */
     @ApiModelProperty("主键ID")
+    @com.baomidou.mybatisplus.annotation.TableId(type = com.baomidou.mybatisplus.annotation.IdType.ASSIGN_ID)
     private Long id;
     
     /**

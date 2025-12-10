@@ -24,6 +24,7 @@ public class ImageCapture implements Serializable {
     */
     @NotNull(message="[主键ID]不能为空")
     @ApiModelProperty("主键ID")
+    @com.baomidou.mybatisplus.annotation.TableId(type = com.baomidou.mybatisplus.annotation.IdType.ASSIGN_ID)
     private Long id;
     /**
     * 来源URL
