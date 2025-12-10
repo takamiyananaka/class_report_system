@@ -1,12 +1,16 @@
 package com.xuegongbu.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Teacher;
+import com.xuegongbu.dto.TeacherQueryDTO;
 import com.xuegongbu.service.TeacherService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -18,4 +22,178 @@ public class TeacherController {
     @Autowired
     private TeacherService teacherService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /**
+     * 多条件查询教师
+     */
+    @GetMapping("/query")
+    @ApiOperation(value = "多条件查询教师", notes = "支持按教师工号、部门、真实姓名（模糊）、电话号码查询。不提供任何条件则查询全部")
+    public Result<Page<Teacher>> query(TeacherQueryDTO queryDTO) {
+        log.info("查询教师请求，参数：{}", queryDTO);
+        
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        Page<Teacher> page = new Page<>(pageNum, pageSize);
+        
+        // 构建查询条件
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 教师工号条件（精确查询）
+        if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().trim().isEmpty()) {
+            queryWrapper.eq(Teacher::getTeacherNo, queryDTO.getTeacherNo().trim());
+        }
+        
+        // 部门条件（精确查询）
+        if (queryDTO.getDepartment() != null && !queryDTO.getDepartment().trim().isEmpty()) {
+            queryWrapper.eq(Teacher::getDepartment, queryDTO.getDepartment().trim());
+        }
+        
+        // 真实姓名条件（模糊查询）
+        if (queryDTO.getRealName() != null && !queryDTO.getRealName().trim().isEmpty()) {
+            queryWrapper.like(Teacher::getRealName, queryDTO.getRealName().trim());
+        }
+        
+        // 电话号码条件（精确查询）
+        if (queryDTO.getPhone() != null && !queryDTO.getPhone().trim().isEmpty()) {
+            queryWrapper.eq(Teacher::getPhone, queryDTO.getPhone().trim());
+        }
+        
+        // 按创建时间倒序排序
+        queryWrapper.orderByDesc(Teacher::getCreateTime);
+        
+        Page<Teacher> result = teacherService.page(page, queryWrapper);
+        
+        // 移除密码字段
+        result.getRecords().forEach(teacher -> teacher.setPassword(null));
+        
+        log.info("查询教师完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
+        return Result.success(result);
+    }
+
+    /**
+     * 根据教师工号查询教师
+     */
+    @GetMapping("/getByTeacherNo/{teacherNo}")
+    @ApiOperation(value = "根据教师工号查询教师", notes = "根据教师工号查询教师详情")
+    public Result<Teacher> getByTeacherNo(@PathVariable String teacherNo) {
+        log.info("查询教师详情，教师工号：{}", teacherNo);
+        
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Teacher::getTeacherNo, teacherNo);
+        Teacher teacher = teacherService.getOne(queryWrapper);
+        
+        if (teacher == null) {
+            return Result.error("教师不存在");
+        }
+        
+        // 移除密码字段
+        teacher.setPassword(null);
+        
+        log.info("查询教师详情完成");
+        return Result.success(teacher);
+    }
+
+    /**
+     * 创建教师
+     */
+    @PostMapping("/add")
+    @ApiOperation(value = "创建教师", notes = "创建新教师，ID自动生成")
+    public Result<Teacher> addTeacher(@RequestBody Teacher teacher) {
+        log.info("创建教师，教师信息：{}", teacher);
+        
+        // 验证必填字段
+        if (teacher.getUsername() == null || teacher.getUsername().trim().isEmpty()) {
+            return Result.error("用户名不能为空");
+        }
+        if (teacher.getPassword() == null || teacher.getPassword().trim().isEmpty()) {
+            return Result.error("密码不能为空");
+        }
+        if (teacher.getRealName() == null || teacher.getRealName().trim().isEmpty()) {
+            return Result.error("真实姓名不能为空");
+        }
+        if (teacher.getTeacherNo() == null || teacher.getTeacherNo().trim().isEmpty()) {
+            return Result.error("教师工号不能为空");
+        }
+        
+        // 检查教师工号是否已存在
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Teacher::getTeacherNo, teacher.getTeacherNo());
+        if (teacherService.count(queryWrapper) > 0) {
+            return Result.error("教师工号已存在");
+        }
+        
+        // 加密密码
+        teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
+        
+        // ID会由MyBatis-Plus自动生成（雪花算法）
+        teacherService.save(teacher);
+        
+        // 移除返回的密码字段
+        teacher.setPassword(null);
+        
+        log.info("创建教师完成，教师ID：{}", teacher.getId());
+        return Result.success(teacher);
+    }
+
+    /**
+     * 更新教师
+     */
+    @PutMapping("/update")
+    @ApiOperation(value = "更新教师", notes = "更新教师信息，通过教师工号定位")
+    public Result<String> updateTeacher(@RequestBody Teacher teacher) {
+        log.info("更新教师，教师工号：{}，教师信息：{}", teacher.getTeacherNo(), teacher);
+        
+        if (teacher.getTeacherNo() == null || teacher.getTeacherNo().trim().isEmpty()) {
+            return Result.error("教师工号不能为空");
+        }
+        
+        // 根据教师工号查询教师
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Teacher::getTeacherNo, teacher.getTeacherNo());
+        Teacher existingTeacher = teacherService.getOne(queryWrapper);
+        
+        if (existingTeacher == null) {
+            return Result.error("教师不存在");
+        }
+        
+        // 更新教师信息（使用查询到的ID）
+        teacher.setId(existingTeacher.getId());
+        
+        // 如果提供了新密码，则加密
+        if (teacher.getPassword() != null && !teacher.getPassword().trim().isEmpty()) {
+            teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
+        } else {
+            // 不更新密码
+            teacher.setPassword(null);
+        }
+        
+        teacherService.updateById(teacher);
+        log.info("更新教师完成");
+        return Result.success("更新成功");
+    }
+
+    /**
+     * 删除教师
+     */
+    @DeleteMapping("/delete/{teacherNo}")
+    @ApiOperation(value = "删除教师", notes = "通过教师工号删除教师（逻辑删除）")
+    public Result<String> deleteTeacher(@PathVariable String teacherNo) {
+        log.info("删除教师，教师工号：{}", teacherNo);
+        
+        // 根据教师工号查询教师
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Teacher::getTeacherNo, teacherNo);
+        Teacher teacher = teacherService.getOne(queryWrapper);
+        
+        if (teacher == null) {
+            return Result.error("教师不存在");
+        }
+        
+        teacherService.removeById(teacher.getId());
+        log.info("删除教师完成");
+        return Result.success("删除成功");
+    }
 }

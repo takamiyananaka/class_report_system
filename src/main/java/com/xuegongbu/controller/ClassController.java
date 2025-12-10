@@ -1,0 +1,150 @@
+package com.xuegongbu.controller;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xuegongbu.common.Result;
+import com.xuegongbu.domain.Class;
+import com.xuegongbu.dto.ClassQueryDTO;
+import com.xuegongbu.service.ClassService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
+
+/**
+ * 班级管理控制器
+ */
+@Slf4j
+@RestController
+@RequestMapping("/class")
+@Api(tags = "班级管理")
+public class ClassController {
+
+    @Autowired
+    private ClassService classService;
+
+    /**
+     * Excel导入班级
+     */
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ApiOperation(value = "Excel导入班级", notes = "通过上传Excel文件批量导入班级数据。Excel格式要求：第一行为表头，列顺序为：班级名称、辅导员工号、班级人数")
+    public Result<Map<String, Object>> importFromExcel(
+            @Parameter(description = "Excel文件", required = true, 
+                      content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestPart("file") MultipartFile file) {
+        try {
+            log.info("开始导入班级，文件名：{}", file.getOriginalFilename());
+            Map<String, Object> result = classService.importFromExcel(file);
+            log.info("班级导入完成：{}", result.get("message"));
+            return Result.success(result);
+        } catch (Exception e) {
+            log.error("班级导入失败", e);
+            return Result.error("导入失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 分页查询班级
+     */
+    @GetMapping("/query")
+    @ApiOperation(value = "分页查询班级", notes = "分页查询班级，支持多条件查询。可通过className（模糊）、teacherNo等参数进行过滤查询。不提供任何条件则查询全部")
+    public Result<Page<Class>> query(ClassQueryDTO queryDTO) {
+        log.info("查询班级请求，参数：{}", queryDTO);
+        Page<Class> result = classService.queryPage(queryDTO);
+        log.info("查询班级完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
+        return Result.success(result);
+    }
+
+    /**
+     * 创建班级
+     */
+    @PostMapping("/add")
+    @ApiOperation(value = "创建班级", notes = "创建新班级，ID自动生成")
+    public Result<Class> addClass(@RequestBody Class classEntity) {
+        log.info("创建班级，班级信息：{}", classEntity);
+        
+        // 验证必填字段
+        if (classEntity.getClass_name() == null || classEntity.getClass_name().trim().isEmpty()) {
+            return Result.error("班级名称不能为空");
+        }
+        if (classEntity.getTeacher_no() == null || classEntity.getTeacher_no().trim().isEmpty()) {
+            return Result.error("辅导员工号不能为空");
+        }
+        if (classEntity.getCount() == null || classEntity.getCount() <= 0) {
+            return Result.error("班级人数必须大于0");
+        }
+        
+        // ID会由MyBatis-Plus自动生成（雪花算法）
+        classService.save(classEntity);
+        log.info("创建班级完成，班级ID：{}", classEntity.getId());
+        return Result.success(classEntity);
+    }
+
+    /**
+     * 更新班级
+     */
+    @PutMapping("/update")
+    @ApiOperation(value = "更新班级", notes = "更新班级信息")
+    public Result<String> updateClass(@RequestBody Class classEntity) {
+        log.info("更新班级，班级ID：{}，班级信息：{}", classEntity.getId(), classEntity);
+        
+        if (classEntity.getId() == null) {
+            return Result.error("班级ID不能为空");
+        }
+        
+        classService.updateById(classEntity);
+        log.info("更新班级完成");
+        return Result.success("更新成功");
+    }
+
+    /**
+     * 删除班级
+     */
+    @DeleteMapping("/delete/{id}")
+    @ApiOperation(value = "删除班级", notes = "删除班级（逻辑删除）")
+    public Result<String> deleteClass(@PathVariable Long id) {
+        log.info("删除班级，班级ID：{}", id);
+        classService.removeById(id);
+        log.info("删除班级完成");
+        return Result.success("删除成功");
+    }
+
+    /**
+     * 查询班级详情
+     */
+    @GetMapping("/get/{id}")
+    @ApiOperation(value = "查询班级详情", notes = "根据班级ID查询班级详情")
+    public Result<Class> getClass(@PathVariable Long id) {
+        log.info("查询班级详情，班级ID：{}", id);
+        Class classEntity = classService.getById(id);
+        if (classEntity == null) {
+            return Result.error("班级不存在");
+        }
+        log.info("查询班级详情完成");
+        return Result.success(classEntity);
+    }
+
+    /**
+     * 下载班级导入模板
+     */
+    @GetMapping("/downloadTemplate")
+    @ApiOperation(value = "下载班级导入模板", notes = "下载Excel格式的班级导入模板文件")
+    public void downloadTemplate(jakarta.servlet.http.HttpServletResponse response) {
+        try {
+            log.info("下载班级导入模板");
+            classService.downloadTemplate(response);
+            log.info("下载班级导入模板完成");
+        } catch (Exception e) {
+            log.error("下载班级导入模板失败", e);
+            throw new com.xuegongbu.common.exception.BusinessException("下载模板失败: " + e.getMessage());
+        }
+    }
+}
