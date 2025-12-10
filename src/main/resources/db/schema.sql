@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS class_report DEFAULT CHARACTER SET utf8mb4 COLLATE
 USE class_report;
 
 -- 管理员表
-CREATE TABLE tb_admin (
+CREATE TABLE admin (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password VARCHAR(255) NOT NULL COMMENT '密码（BCrypt加密）',
@@ -17,7 +17,7 @@ CREATE TABLE tb_admin (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
 
 -- 教师表
-CREATE TABLE tb_teacher (
+CREATE TABLE teacher (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password VARCHAR(255) NOT NULL COMMENT '密码（BCrypt加密）',
@@ -39,7 +39,7 @@ CREATE TABLE tb_teacher (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师表';
 
 -- 课表表
-CREATE TABLE tb_course_schedule (
+CREATE TABLE course_schedule (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
     teacher_id BIGINT NOT NULL COMMENT '教师ID',
@@ -55,13 +55,13 @@ CREATE TABLE tb_course_schedule (
     INDEX idx_teacher_id (teacher_id),
     INDEX idx_class_name (class_name),
     INDEX idx_weekday (weekday),
-    FOREIGN KEY (teacher_id) REFERENCES tb_teacher(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
 
 -- 默认管理员（密码：admin123）
-INSERT INTO tb_admin (username, password, real_name, phone, email)
+INSERT INTO admin (username, password, real_name, phone, email)
 VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '系统管理员', '13800138000', 'admin@example.com');
 
 -- 测试教师（密码：123456）使用BCrypt加密
-INSERT INTO tb_teacher (username, password, real_name, teacher_no, phone, email, department, identity)
+INSERT INTO teacher (username, password, real_name, teacher_no, phone, email, department, identity)
 VALUES ('teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1);

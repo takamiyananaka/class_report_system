@@ -3,16 +3,12 @@
 
 USE class_report;
 
--- 为教师表添加identity字段（先检查是否存在）
-ALTER TABLE tb_teacher
-ADD COLUMN identity TINYINT DEFAULT 1 COMMENT '身份：1-只是教师，2-教师且是辅导员' AFTER department;
-
 -- 修改department字段长度以支持多个专业
-ALTER TABLE tb_teacher
+ALTER TABLE teacher
 MODIFY COLUMN department VARCHAR(255) COMMENT '所属部门（辅导员身份时格式为：专业名+年级，多个值用分号分隔）';
 
 -- 创建课表表
-CREATE TABLE IF NOT EXISTS tb_course_schedule (
+CREATE TABLE IF NOT EXISTS course_schedule (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
     teacher_id BIGINT NOT NULL COMMENT '教师ID',
@@ -28,5 +24,5 @@ CREATE TABLE IF NOT EXISTS tb_course_schedule (
     INDEX idx_teacher_id (teacher_id),
     INDEX idx_class_name (class_name),
     INDEX idx_weekday (weekday),
-    FOREIGN KEY (teacher_id) REFERENCES tb_teacher(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';

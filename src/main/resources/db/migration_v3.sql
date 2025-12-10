@@ -4,7 +4,7 @@
 USE class_report;
 
 -- 创建课程表
-CREATE TABLE IF NOT EXISTS tb_course (
+CREATE TABLE IF NOT EXISTS course (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
     course_code VARCHAR(50) COMMENT '课程编码',
