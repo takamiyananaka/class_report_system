@@ -28,11 +28,15 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> importFromExcel(MultipartFile file) {
+    public Map<String, Object> importFromExcel(MultipartFile file, Long teacherId) {
         Map<String, Object> result = new HashMap<>();
         
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件不能为空");
+        }
+        
+        if (teacherId == null) {
+            throw new IllegalArgumentException("教师ID不能为空");
         }
         
         // 检查文件扩展名和Content-Type
@@ -77,11 +81,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         failCount++;
                         continue;
                     }
-                    if (dto.getTeacherId() == null) {
-                        errorMessages.add(String.format("第%d行：教师ID不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
                     if (isBlank(dto.getClassName())) {
                         errorMessages.add(String.format("第%d行：班级名称不能为空", i + 2));
                         failCount++;
@@ -120,7 +119,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     
                     CourseSchedule courseSchedule = new CourseSchedule();
                     courseSchedule.setCourseName(dto.getCourseName().trim());
-                    courseSchedule.setTeacherId(dto.getTeacherId());
+                    courseSchedule.setTeacherId(teacherId); // 使用当前登录教师的ID
                     courseSchedule.setClassName(dto.getClassName().trim());
                     courseSchedule.setWeekday(dto.getWeekday());
                     courseSchedule.setStartTime(parseTime(dto.getStartTime()));
@@ -274,9 +273,10 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setWeekday(1);
             example.setStartTime("08:00");
             example.setEndTime("09:40");
-            example.setClassroom("思学楼楼A101");
+            example.setClassroom("思学楼A101");
             example.setSemester("1");
             example.setSchoolYear("2024-2025");
+            // 不再包含教师ID，将由系统根据当前登录教师自动填充
             templateData.add(example);
             
             // 写入Excel
