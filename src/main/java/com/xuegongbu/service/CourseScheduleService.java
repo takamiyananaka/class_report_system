@@ -25,4 +25,10 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @return 分页结果
      */
     Page<CourseSchedule> queryPage(CourseScheduleQueryDTO queryDTO);
+    
+    /**
+     * 下载课表导入模板
+     * @param response HTTP响应对象
+     */
+    void downloadTemplate(jakarta.servlet.http.HttpServletResponse response);
 }
