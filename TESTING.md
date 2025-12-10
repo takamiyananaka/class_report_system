@@ -37,7 +37,7 @@ source /path/to/src/main/resources/db/schema.sql
 
 数据库脚本会自动：
 1. 创建 `class_report` 数据库
-2. 创建 `tb_admin` 和 `tb_teacher` 表
+2. 创建 `admin` 和 `teacher` 表
 3. 插入测试数据：
    - 管理员：username=`admin`, password=`admin123`
    - 教师：username=`teacher001`, password=`teacher123`

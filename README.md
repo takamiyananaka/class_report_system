@@ -95,7 +95,7 @@ mysql -u root -p < src/main/resources/db/schema.sql
 
 脚本会自动：
 - 创建 `class_report` 数据库
-- 创建 `tb_admin` 和 `tb_teacher` 表
+- 创建 `admin` 和 `teacher` 表
 - 插入默认管理员账号：用户名 `admin`，密码 `admin123`
 - 插入测试教师账号：用户名 `teacher001`，密码 `123456`
 

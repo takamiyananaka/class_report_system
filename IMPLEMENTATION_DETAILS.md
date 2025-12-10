@@ -20,7 +20,7 @@
 #### 解决方案
 1. **创建CourseSchedule实体**
    - 文件：`src/main/java/com/xuegongbu/domain/CourseSchedule.java`
-   - 映射表：`tb_course_schedule`
+   - 映射表：`course_schedule`
    - 包含字段：id, courseName, teacherId, className, weekday, startTime, endTime, classroom, semester, schoolYear
 
 2. **更新Teacher实体**
@@ -28,10 +28,10 @@
    - 扩展 `department` 字段长度至255，支持多个专业
 
 3. **修正表名映射**
-   - Admin: `@TableName(value = "tb_admin")`
-   - Teacher: `@TableName(value = "tb_teacher")`
-   - Course: `@TableName(value = "tb_course")`
-   - CourseSchedule: `@TableName(value = "tb_course_schedule")`
+   - Admin: `@TableName(value = "admin")`
+   - Teacher: `@TableName(value = "teacher")`
+   - Course: `@TableName(value = "course")`
+   - CourseSchedule: `@TableName(value = "course_schedule")`
 
 ### 2. MyBatis-Plus集成
 
@@ -298,7 +298,7 @@ public Result<List<CourseSchedule>> getByTeacherId(@PathVariable Long teacherId)
 ```xml
 <select id="findByClassName" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/> 
-    FROM tb_course_schedule 
+    FROM course_schedule 
     WHERE class_name = #{className}
     ORDER BY weekday, start_time
 </select>
@@ -308,17 +308,17 @@ public Result<List<CourseSchedule>> getByTeacherId(@PathVariable Long teacherId)
 
 #### schema.sql - 初始化脚本
 创建基础表：
-- `tb_admin` - 管理员表
-- `tb_teacher` - 教师表（含identity字段）
-- `tb_course_schedule` - 课表表
+- `admin` - 管理员表
+- `teacher` - 教师表（含identity字段）
+- `course_schedule` - 课表表
 
 #### migration_v2.sql - 历史迁移
 为已存在的数据库添加：
-- `tb_teacher.identity` 字段
-- 扩展 `tb_teacher.department` 字段长度
+- `teacher.identity` 字段
+- 扩展 `teacher.department` 字段长度
 
 #### migration_v3.sql - 新增课程表
-创建 `tb_course` 表用于Excel导入
+创建 `course` 表用于Excel导入
 
 ### 7. 依赖管理优化
 

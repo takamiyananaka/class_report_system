@@ -122,7 +122,7 @@ The VARCHAR(255) length is sufficient for BCrypt hashes, which are typically 60 
 
 ### Database errors during login
 
-1. Ensure all required columns exist in tb_teacher table:
+1. Ensure all required columns exist in teacher table:
    - last_login_time
    - last_login_ip
    - is_deleted

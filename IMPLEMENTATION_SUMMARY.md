@@ -80,8 +80,8 @@ POST /api/teacher/auth/login
 
 ### ✅ 5. 数据库设计
 
-- ✅ tb_admin - 管理员表
-- ✅ tb_teacher - 教师表
+- ✅ admin - 管理员表
+- ✅ teacher - 教师表
 - ✅ 默认测试数据
 - ✅ 索引优化
 
