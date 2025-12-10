@@ -24,7 +24,7 @@ public class Class implements Serializable {
     * 主键ID
     */
     @ApiModelProperty("主键ID")
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
     * 班级名字
