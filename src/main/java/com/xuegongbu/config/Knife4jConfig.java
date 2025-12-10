@@ -1,22 +1,25 @@
 package com.xuegongbu.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.Info;
+import io.swagger. v3.oas.models. info.Contact;
+import io. swagger.v3.oas. models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-import org.springdoc.core.models.GroupedOpenApi;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger. v3.oas.models. security.SecurityScheme;
+import org.springdoc.core. models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Knife4j API 文档配置
- * 访问地址：http://localhost:8080/api/doc.html
+ * 访问地址：http://localhost:8080/doc.html
  */
 @Configuration
 public class Knife4jConfig {
 
     /**
-     * 配置 OpenAPI 基本信息
+     * 配置 OpenAPI 基本信息，并添加 JWT 认证
      */
     @Bean
     public OpenAPI customOpenAPI() {
@@ -27,11 +30,21 @@ public class Knife4jConfig {
                         .description("学工部课程考勤系统接口文档，提供教师管理、课程管理、考勤管理等功能")
                         .contact(new Contact()
                                 .name("虚动智能")
-                                .email("support@example.com")
+                                . email("support@example.com")
                                 .url("https://github.com/takamiyananaka/class_report_system"))
                         .license(new License()
                                 .name("MIT License")
-                                .url("https://opensource.org/licenses/MIT")));
+                                .url("https://opensource.org/licenses/MIT")))
+                // 添加JWT认证配置
+                .components(new Components()
+                        .addSecuritySchemes("Bearer Authentication",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        . description("请输入JWT Token，格式：直接输入token值即可，无需添加'Bearer '前缀")))
+                // 全局应用JWT认证
+                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"));
     }
 
     /**
