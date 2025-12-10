@@ -68,7 +68,7 @@ src/main/resources/
 │   ├── AdminMapper.xml
 │   └── TeacherMapper.xml
 ├── db/                                      # 数据库脚本
-│   └── schema.sql                          # 建表脚本
+│   └── complete_schema.sql                 # 完整数据库建表脚本（使用雪花算法ID）
 ├── application.yml                          # 主配置文件
 └── application-dev.yml                      # 开发环境配置
 ```
@@ -88,16 +88,21 @@ src/main/resources/
 执行数据库脚本：
 
 ```bash
-mysql -u root -p < src/main/resources/db/schema.sql
+mysql -u root -p < src/main/resources/db/complete_schema.sql
 ```
 
-或者在MySQL客户端中执行 `src/main/resources/db/schema.sql` 文件。
+或者在MySQL客户端中执行 `src/main/resources/db/complete_schema.sql` 文件。
 
 脚本会自动：
 - 创建 `class_report` 数据库
-- 创建 `admin` 和 `teacher` 表
+- 创建所有系统表（使用雪花算法生成ID）
 - 插入默认管理员账号：用户名 `admin`，密码 `admin123`
 - 插入测试教师账号：用户名 `teacher001`，密码 `123456`
+
+**重要变更说明：**
+- 所有表的ID字段现在使用雪花算法（Snowflake）生成，而非自增ID
+- 教师工号（teacher_no）字段为字符串类型
+- 班级表的teacher_id字段为字符串类型，存储教师工号
 
 ### 3. 启动Redis
 

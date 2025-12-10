@@ -26,7 +26,7 @@ public class Class implements Serializable {
     @NotNull(message="[id]不能为空")
     @ApiModelProperty("id")
     @TableId(type = IdType.ASSIGN_ID)
-    private Integer id;
+    private Long id;
     /**
     * 班级名字
     */
