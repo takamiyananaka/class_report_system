@@ -1,5 +1,6 @@
 package com.xuegongbu.domain;
 
+import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
@@ -8,7 +9,6 @@ import java.io.Serializable;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -25,6 +25,7 @@ public class Alert implements Serializable {
     */
     @NotNull(message="[主键ID]不能为空")
     @ApiModelProperty("主键ID")
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
     * 课程ID

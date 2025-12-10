@@ -2,8 +2,8 @@ package com.xuegongbu.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.Info;
+import io.swagger. v3.oas.models. info.Contact;
+import io. swagger.v3.oas. models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -43,7 +43,7 @@ public class Knife4jConfig {
                                 "5. 之后所有需要认证的接口都会自动带上 Authorization Header")
                         .contact(new Contact()
                                 .name("虚动智能")
-                                .email("support@example.com")
+                                . email("support@example.com")
                                 .url("https://github.com/takamiyananaka/class_report_system"))
                         .license(new License()
                                 .name("MIT License")

@@ -1,6 +1,6 @@
 package com.xuegongbu.domain;
 
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +24,7 @@ public class ImageCapture implements Serializable {
     */
     @NotNull(message="[主键ID]不能为空")
     @ApiModelProperty("主键ID")
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
     * 来源URL
