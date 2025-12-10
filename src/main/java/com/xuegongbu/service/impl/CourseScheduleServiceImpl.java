@@ -288,7 +288,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             log.info("课表导入模板下载成功");
         } catch (Exception e) {
             log.error("生成课表导入模板失败", e);
-            throw new IllegalStateException("生成课表导入模板失败: " + e.getMessage(), e);
+            throw new com.xuegongbu.common.exception.BusinessException("生成课表导入模板失败: " + e.getMessage());
         }
     }
 }

@@ -126,7 +126,7 @@ public class CourseScheduleController {
             log.info("下载课表导入模板完成");
         } catch (Exception e) {
             log.error("下载课表导入模板失败", e);
-            throw new RuntimeException("下载模板失败: " + e.getMessage());
+            throw new com.xuegongbu.common.exception.BusinessException("下载模板失败: " + e.getMessage());
         }
     }
 }

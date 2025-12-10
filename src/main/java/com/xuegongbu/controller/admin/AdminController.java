@@ -109,7 +109,7 @@ public class AdminController {
      * 创建教师
      */
     @PostMapping("/teachers")
-    @ApiOperation(value = "创建教师", notes = "管理员创建新教师")
+    @ApiOperation(value = "创建教师", notes = "管理员创建新教师，密码必须至少6位字符")
     public Result<String> createTeacher(@Valid @RequestBody TeacherRequest request) {
         log.info("管理员创建教师，用户名：{}", request.getUsername());
         
@@ -129,16 +129,19 @@ public class AdminController {
             return Result.error("教师工号已存在");
         }
         
+        // 验证密码
+        if (request.getPassword() == null || request.getPassword().isEmpty()) {
+            return Result.error("密码不能为空，请设置初始密码");
+        }
+        if (request.getPassword().length() < 6) {
+            return Result.error("密码长度不能少于6位");
+        }
+        
         Teacher teacher = new Teacher();
         BeanUtils.copyProperties(request, teacher);
         
         // 密码加密
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            teacher.setPassword(passwordEncoder.encode(request.getPassword()));
-        } else {
-            // 默认密码
-            teacher.setPassword(passwordEncoder.encode("123456"));
-        }
+        teacher.setPassword(passwordEncoder.encode(request.getPassword()));
         
         // 默认状态为启用
         if (teacher.getStatus() == null) {
@@ -154,7 +157,7 @@ public class AdminController {
      * 更新教师
      */
     @PutMapping("/teachers/{id}")
-    @ApiOperation(value = "更新教师", notes = "管理员更新教师信息")
+    @ApiOperation(value = "更新教师", notes = "管理员更新教师信息，如提供新密码则必须至少6位字符")
     public Result<String> updateTeacher(@PathVariable Long id, @Valid @RequestBody TeacherRequest request) {
         log.info("管理员更新教师，ID：{}", id);
         
@@ -191,6 +194,10 @@ public class AdminController {
         
         // 如果提供了新密码，则更新密码
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            // 验证密码长度
+            if (request.getPassword().length() < 6) {
+                return Result.error("密码长度不能少于6位");
+            }
             teacher.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         

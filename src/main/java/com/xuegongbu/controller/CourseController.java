@@ -104,6 +104,15 @@ public class CourseController {
     @GetMapping("/list")
     @ApiOperation(value = "查询教师的所有课程", notes = "查询当前登录教师的所有课程")
     public Result<List<Course>> listCourses(@RequestParam(required = false) Long teacherId) {
+        // 如果没有指定教师ID，使用当前登录教师的ID
+        if (teacherId == null) {
+            org.springframework.security.core.Authentication authentication = 
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof Long) {
+                teacherId = (Long) authentication.getPrincipal();
+            }
+        }
+        
         log.info("查询教师课程列表，教师ID：{}", teacherId);
         List<Course> courses = courseService.list(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Course>()
