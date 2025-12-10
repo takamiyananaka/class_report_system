@@ -80,7 +80,7 @@
 **接口**: `GET /teacher/{id}`
 
 **路径参数**:
-- `id`: 教师ID
+- `id`: 教师工号
 
 **响应**:
 ```json
@@ -144,7 +144,7 @@
     "id": 1,
     "courseName": "高等数学",
     "courseCode": "MATH101",
-    "teacherId": 1,
+    "teacherNo": 1,
     "classroom": "A101",
     "courseTime": "周一 1-2节",
     "courseDate": "2024-09-01",
@@ -176,14 +176,14 @@
       "id": 1,
       "courseName": "高等数学",
       "courseCode": "MATH101",
-      "teacherId": 1,
+      "teacherNo": 1,
       ...
     },
     {
       "id": 2,
       "courseName": "大学英语",
       "courseCode": "ENG101",
-      "teacherId": 2,
+      "teacherNo": 2,
       ...
     }
   ]
@@ -200,7 +200,7 @@
 ```json
 {
   "courseName": "高等数学",
-  "teacherId": 1,
+  "teacherNo": 1,
   "className": "计算机2024-1班",
   "weekday": 1,
   "startTime": "08:00:00",
@@ -219,7 +219,7 @@
   "data": {
     "id": 1,
     "courseName": "高等数学",
-    "teacherId": 1,
+    "teacherNo": 1,
     "className": "计算机2024-1班",
     "weekday": 1,
     "startTime": "08:00:00",
@@ -246,7 +246,7 @@
 
 **查询参数**:
 - `courseName`: 课程名称（可选）
-- `teacherId`: 教师ID（可选）
+- `teacherNo`: 教师工号（可选）
 - `className`: 班级名称（可选）
 - `weekday`: 星期几（可选，1-7）
 - `semester`: 学期（可选）
@@ -269,12 +269,12 @@
 }
 ```
 
-### 10. 根据教师ID查询课表
+### 10. 根据教师工号查询课表
 
-**接口**: `GET /course-schedule/teacher/{teacherId}`
+**接口**: `GET /course-schedule/teacher/{teacherNo}`
 
 **路径参数**:
-- `teacherId`: 教师ID
+- `teacherNo`: 教师工号
 
 **响应**:
 ```json
@@ -285,7 +285,7 @@
     {
       "id": 1,
       "courseName": "高等数学",
-      "teacherId": 1,
+      "teacherNo": 1,
       "className": "计算机2024-1班",
       "weekday": 1,
       ...
@@ -310,7 +310,7 @@
     {
       "id": 1,
       "courseName": "高等数学",
-      "teacherId": 1,
+      "teacherNo": 1,
       "className": "计算机2024-1班",
       "weekday": 1,
       ...
