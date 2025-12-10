@@ -36,14 +36,40 @@ public class CourseScheduleController {
      * Excel导入课表
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Excel导入课表", notes = "通过上传Excel文件批量导入课表数据。Excel格式要求：第一行为表头，列顺序为：课程名称、教师ID、班级名称、星期几(1-7)、开始时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、结束时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、教室、学期、学年")
+    @ApiOperation(value = "Excel导入课表", notes = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、班级名称、星期几(1-7)、开始时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、结束时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、教室、学期、学年")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             @RequestPart("file") MultipartFile file) {
         try {
             log.info("开始导入课表，文件名：{}", file.getOriginalFilename());
-            Map<String, Object> result = courseScheduleService.importFromExcel(file);
+            
+            // 获取当前登录教师的ID
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return Result.error("未登录或登录已过期，请重新登录");
+            }
+            
+            Long teacherId = null;
+            try {
+                Object principal = authentication.getPrincipal();
+                // 处理不同类型的principal
+                if (principal instanceof Long) {
+                    teacherId = (Long) principal;
+                } else if (principal instanceof String) {
+                    teacherId = Long.parseLong((String) principal);
+                }
+            } catch (NumberFormatException e) {
+                log.error("无法解析当前登录教师ID: {}", e.getMessage());
+                return Result.error("无法获取当前登录用户信息");
+            }
+            
+            if (teacherId == null) {
+                return Result.error("无法获取当前登录用户信息");
+            }
+            
+            log.info("当前登录教师ID: {}", teacherId);
+            Map<String, Object> result = courseScheduleService.importFromExcel(file, teacherId);
             log.info("课表导入完成：{}", result.get("message"));
             return Result.success(result);
         } catch (Exception e) {
