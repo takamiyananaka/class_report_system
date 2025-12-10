@@ -1,9 +1,12 @@
 package com.xuegongbu.service.impl;
 
 import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
+import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.CourseScheduleService;
 import lombok.extern.slf4j.Slf4j;
@@ -202,5 +205,54 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
      */
     private boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
+    }
+    
+    @Override
+    public Page<CourseSchedule> queryPage(CourseScheduleQueryDTO queryDTO) {
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        Page<CourseSchedule> page = new Page<>(pageNum, pageSize);
+        
+        // 构建查询条件
+        LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 教师ID条件
+        if (queryDTO.getTeacherId() != null) {
+            queryWrapper.eq(CourseSchedule::getTeacherId, queryDTO.getTeacherId());
+        }
+        
+        // 班级名称条件（模糊查询）
+        if (!isBlank(queryDTO.getClassName())) {
+            queryWrapper.like(CourseSchedule::getClassName, queryDTO.getClassName().trim());
+        }
+        
+        // 课程名称条件（模糊查询）
+        if (!isBlank(queryDTO.getCourseName())) {
+            queryWrapper.like(CourseSchedule::getCourseName, queryDTO.getCourseName().trim());
+        }
+        
+        // 星期几条件
+        if (queryDTO.getWeekday() != null) {
+            queryWrapper.eq(CourseSchedule::getWeekday, queryDTO.getWeekday());
+        }
+        
+        // 学期条件
+        if (!isBlank(queryDTO.getSemester())) {
+            queryWrapper.eq(CourseSchedule::getSemester, queryDTO.getSemester().trim());
+        }
+        
+        // 学年条件
+        if (!isBlank(queryDTO.getSchoolYear())) {
+            queryWrapper.eq(CourseSchedule::getSchoolYear, queryDTO.getSchoolYear().trim());
+        }
+        
+        // 按创建时间倒序排序
+        queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
+        
+        log.info("查询课表，条件：teacherId={}, className={}, courseName={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherId(), queryDTO.getClassName(), queryDTO.getCourseName(), pageNum, pageSize);
+        
+        return this.page(page, queryWrapper);
     }
 }

@@ -1,6 +1,9 @@
 package com.xuegongbu.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
+import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.service.CourseScheduleService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -10,6 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,5 +50,54 @@ public class CourseScheduleController {
             log.error("课表导入失败", e);
             return Result.error("导入失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 分页查询课表
+     * 默认查询当前登录教师的课表，也可以通过参数指定教师ID或班级名称查询
+     */
+    @GetMapping("/query")
+    @ApiOperation(value = "分页查询课表", notes = "分页查询课表，默认查询当前登录教师的课表。可通过teacherId、className等参数进行过滤查询")
+    public Result<Page<CourseSchedule>> query(CourseScheduleQueryDTO queryDTO) {
+        // 如果没有指定教师ID，则使用当前登录教师的ID
+        if (queryDTO.getTeacherId() == null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() != null) {
+                try {
+                    Long currentTeacherId = Long.parseLong(authentication.getPrincipal().toString());
+                    queryDTO.setTeacherId(currentTeacherId);
+                    log.info("使用当前登录教师ID查询课表: {}", currentTeacherId);
+                } catch (NumberFormatException e) {
+                    log.warn("无法获取当前登录教师ID，将查询所有课表");
+                }
+            }
+        }
+        
+        log.info("查询课表请求，参数：{}", queryDTO);
+        Page<CourseSchedule> result = courseScheduleService.queryPage(queryDTO);
+        log.info("查询课表完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
+        return Result.success(result);
+    }
+
+    /**
+     * 根据班级名称分页查询课表
+     */
+    @GetMapping("/queryByClass")
+    @ApiOperation(value = "根据班级名称查询课表", notes = "根据班级名称分页查询课表")
+    public Result<Page<CourseSchedule>> queryByClassName(
+            @RequestParam(value = "className", required = true) String className,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        
+        log.info("根据班级名称查询课表，班级：{}, pageNum={}, pageSize={}", className, pageNum, pageSize);
+        
+        CourseScheduleQueryDTO queryDTO = new CourseScheduleQueryDTO();
+        queryDTO.setClassName(className);
+        queryDTO.setPageNum(pageNum);
+        queryDTO.setPageSize(pageSize);
+        
+        Page<CourseSchedule> result = courseScheduleService.queryPage(queryDTO);
+        log.info("查询课表完成，共{}条记录", result.getTotal());
+        return Result.success(result);
     }
 }
