@@ -50,11 +50,11 @@ public class Course implements Serializable {
     @ApiModelProperty("教师ID")
     private Long teacherId;
     /**
-    * 教室号
+    * 教室名
     */
-    @NotBlank(message="[教室号]不能为空")
+    @NotBlank(message="[教室名]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
-    @ApiModelProperty("教室号")
+    @ApiModelProperty("教室名")
     @Size(max= 50,message="编码长度不能超过50")
     private String classroom;
     /**
