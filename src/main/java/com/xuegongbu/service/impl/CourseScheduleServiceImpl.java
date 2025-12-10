@@ -250,8 +250,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
         
-        log.info("查询课表，条件：teacherId={}, className={}, courseName={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherId(), queryDTO.getClassName(), queryDTO.getCourseName(), pageNum, pageSize);
+        log.info("查询课表，条件：teacherId={}, className={}, courseName={}, weekday={}, semester={}, schoolYear={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherId(), queryDTO.getClassName(), queryDTO.getCourseName(), 
+                queryDTO.getWeekday(), queryDTO.getSemester(), queryDTO.getSchoolYear(), pageNum, pageSize);
         
         return this.page(page, queryWrapper);
     }

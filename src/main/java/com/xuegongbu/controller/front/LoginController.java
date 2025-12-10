@@ -35,12 +35,18 @@ public class LoginController {
     @PostMapping("/logout")
     @ApiOperation(value = "教师登出", notes = "教师退出登录，清除认证上下文")
     public Result<String> logout() {
-        // 获取当前用户信息
-        Object principal = SecurityContextHolder.getContext().getAuthentication() != null ?
-                SecurityContextHolder.getContext().getAuthentication().getPrincipal() : null;
-        
-        if (principal != null) {
-            log.info("教师登出: 用户ID={}", principal);
+        // 获取当前用户信息（只记录非敏感信息）
+        try {
+            if (SecurityContextHolder.getContext().getAuthentication() != null) {
+                Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                if (principal instanceof Long) {
+                    log.info("教师登出: 用户ID={}", principal);
+                } else {
+                    log.info("教师登出: 用户类型={}", principal.getClass().getSimpleName());
+                }
+            }
+        } catch (Exception e) {
+            log.debug("获取登出用户信息失败", e);
         }
         
         // 清除Spring Security上下文

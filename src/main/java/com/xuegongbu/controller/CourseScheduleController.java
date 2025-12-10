@@ -64,11 +64,24 @@ public class CourseScheduleController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getPrincipal() != null) {
                 try {
-                    Long currentTeacherId = Long.parseLong(authentication.getPrincipal().toString());
-                    queryDTO.setTeacherId(currentTeacherId);
-                    log.info("使用当前登录教师ID查询课表: {}", currentTeacherId);
+                    Object principal = authentication.getPrincipal();
+                    Long currentTeacherId = null;
+                    
+                    // 处理不同类型的principal
+                    if (principal instanceof Long) {
+                        currentTeacherId = (Long) principal;
+                    } else if (principal instanceof String) {
+                        currentTeacherId = Long.parseLong((String) principal);
+                    }
+                    
+                    if (currentTeacherId != null) {
+                        queryDTO.setTeacherId(currentTeacherId);
+                        log.info("使用当前登录教师ID查询课表: {}", currentTeacherId);
+                    } else {
+                        log.warn("无法解析当前登录教师ID，将查询所有课表");
+                    }
                 } catch (NumberFormatException e) {
-                    log.warn("无法获取当前登录教师ID，将查询所有课表");
+                    log.warn("无法解析当前登录教师ID，将查询所有课表: {}", e.getMessage());
                 }
             }
         }
