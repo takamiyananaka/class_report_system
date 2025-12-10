@@ -35,11 +35,11 @@ public class CourseSchedule implements Serializable {
     private String courseName;
 
     /**
-    * 教师ID
+    * 教师工号
     */
-    @NotNull(message="[教师ID]不能为空")
-    @ApiModelProperty("教师ID")
-    private Long teacherId;
+    @NotNull(message="[教师工号]不能为空")
+    @ApiModelProperty("教师工号")
+    private Long teacherNo;
 
     /**
     * 班级名称

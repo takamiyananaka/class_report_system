@@ -6,7 +6,7 @@
 1. 实现admin登录和teacher的登录代码
 2. 修正实体类相关的代码错误，基于MyBatis-Plus编写对应的逻辑
 3. 实现通过Excel导入课程的代码
-4. 编写根据teacherId查询teacher以及根据classId查询class
+4. 编写根据teacherNo查询teacher以及根据classId查询class
 
 ## 详细实现方案
 
@@ -21,7 +21,7 @@
 1. **创建CourseSchedule实体**
    - 文件：`src/main/java/com/xuegongbu/domain/CourseSchedule.java`
    - 映射表：`course_schedule`
-   - 包含字段：id, courseName, teacherId, className, weekday, startTime, endTime, classroom, semester, schoolYear
+   - 包含字段：id, courseName, teacherNo, className, weekday, startTime, endTime, classroom, semester, schoolYear
 
 2. **更新Teacher实体**
    - 添加 `identity` 字段：标识教师身份（1-教师，2-辅导员）
@@ -175,7 +175,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course>
 |---|------|------|------|
 | 1 | 课程名称 | 是 | 文本 |
 | 2 | 课程编码 | 否 | 文本 |
-| 3 | 教师ID | 是 | 数字 |
+| 3 | 教师工号 | 是 | 数字 |
 | 4 | 教室号 | 是 | 文本 |
 | 5 | 上课时间 | 是 | 文本描述 |
 | 6 | 上课日期 | 是 | 日期格式 |
@@ -284,12 +284,12 @@ public Result<List<CourseSchedule>> getByClassName(@PathVariable String classNam
 }
 ```
 
-**按教师查询**: `GET /api/course-schedule/teacher/{teacherId}`
+**按教师查询**: `GET /api/course-schedule/teacher/{teacherNo}`
 
 ```java
-@GetMapping("/teacher/{teacherId}")
-public Result<List<CourseSchedule>> getByTeacherId(@PathVariable Long teacherId) {
-    List<CourseSchedule> list = courseScheduleService.findByTeacherId(teacherId);
+@GetMapping("/teacher/{teacherNo}")
+public Result<List<CourseSchedule>> getByTeacherId(@PathVariable Long teacherNo) {
+    List<CourseSchedule> list = courseScheduleService.findByTeacherId(teacherNo);
     return Result.success(list);
 }
 ```
@@ -412,7 +412,7 @@ mvn clean compile
 **查询测试**：
 - [ ] 根据ID查询教师
 - [ ] 根据班级名称查询课表
-- [ ] 根据教师ID查询课表
+- [ ] 根据教师工号查询课表
 - [ ] 不存在的ID返回404
 
 **Excel导入测试**：

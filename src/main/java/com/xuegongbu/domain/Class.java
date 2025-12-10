@@ -36,13 +36,13 @@ public class Class implements Serializable {
     @Size(max= 20,message="编码长度不能超过20")
     private String class_name;
     /**
-    * 辅导员id
+    * 辅导员工号
     */
-    @NotBlank(message="[辅导员id]不能为空")
+    @NotBlank(message="[辅导员工号]不能为空")
     @Size(max= 50,message="编码长度不能超过50")
-    @ApiModelProperty("辅导员id")
+    @ApiModelProperty("辅导员工号")
     @Size(max= 50,message="编码长度不能超过50")
-    private String teacher_id;
+    private String teacher_no;
     /**
     * 班级人数
     */

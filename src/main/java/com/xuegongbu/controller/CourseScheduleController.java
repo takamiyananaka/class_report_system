@@ -44,32 +44,32 @@ public class CourseScheduleController {
         try {
             log.info("开始导入课表，文件名：{}", file.getOriginalFilename());
             
-            // 获取当前登录教师的ID
+            // 获取当前登录教师的工号
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return Result.error("未登录或登录已过期，请重新登录");
             }
             
-            Long teacherId = null;
+            Long teacherNo = null;
             try {
                 Object principal = authentication.getPrincipal();
                 // 处理不同类型的principal
                 if (principal instanceof Long) {
-                    teacherId = (Long) principal;
+                    teacherNo = (Long) principal;
                 } else if (principal instanceof String) {
-                    teacherId = Long.parseLong((String) principal);
+                    teacherNo = Long.parseLong((String) principal);
                 }
             } catch (NumberFormatException e) {
-                log.error("无法解析当前登录教师ID: {}", e.getMessage());
+                log.error("无法解析当前登录教师工号: {}", e.getMessage());
                 return Result.error("无法获取当前登录用户信息");
             }
             
-            if (teacherId == null) {
+            if (teacherNo == null) {
                 return Result.error("无法获取当前登录用户信息");
             }
             
-            log.info("当前登录教师ID: {}", teacherId);
-            Map<String, Object> result = courseScheduleService.importFromExcel(file, teacherId);
+            log.info("当前登录教师工号: {}", teacherNo);
+            Map<String, Object> result = courseScheduleService.importFromExcel(file, teacherNo);
             log.info("课表导入完成：{}", result.get("message"));
             return Result.success(result);
         } catch (Exception e) {
@@ -83,31 +83,31 @@ public class CourseScheduleController {
      * 默认查询当前登录教师的课表，也可以通过参数指定教师ID或班级名称查询
      */
     @GetMapping("/query")
-    @ApiOperation(value = "分页查询课表", notes = "分页查询课表，默认查询当前登录教师的课表。可通过teacherId、className等参数进行过滤查询")
+    @ApiOperation(value = "分页查询课表", notes = "分页查询课表，默认查询当前登录教师的课表。可通过teacherNo、className等参数进行过滤查询")
     public Result<Page<CourseSchedule>> query(CourseScheduleQueryDTO queryDTO) {
-        // 如果没有指定教师ID，则使用当前登录教师的ID
-        if (queryDTO.getTeacherId() == null) {
+        // 如果没有指定教师工号，则使用当前登录教师的工号
+        if (queryDTO.getTeacherNo() == null) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getPrincipal() != null) {
                 try {
                     Object principal = authentication.getPrincipal();
-                    Long currentTeacherId = null;
+                    Long currentTeacherNo = null;
                     
                     // 处理不同类型的principal
                     if (principal instanceof Long) {
-                        currentTeacherId = (Long) principal;
+                        currentTeacherNo = (Long) principal;
                     } else if (principal instanceof String) {
-                        currentTeacherId = Long.parseLong((String) principal);
+                        currentTeacherNo = Long.parseLong((String) principal);
                     }
                     
-                    if (currentTeacherId != null) {
-                        queryDTO.setTeacherId(currentTeacherId);
-                        log.info("使用当前登录教师ID查询课表: {}", currentTeacherId);
+                    if (currentTeacherNo != null) {
+                        queryDTO.setTeacherNo(currentTeacherNo);
+                        log.info("使用当前登录教师工号查询课表: {}", currentTeacherNo);
                     } else {
-                        log.warn("无法解析当前登录教师ID，将查询所有课表");
+                        log.warn("无法解析当前登录教师工号，将查询所有课表");
                     }
                 } catch (NumberFormatException e) {
-                    log.warn("无法解析当前登录教师ID，将查询所有课表: {}", e.getMessage());
+                    log.warn("无法解析当前登录教师工号，将查询所有课表: {}", e.getMessage());
                 }
             }
         }

@@ -102,7 +102,7 @@ mysql -u root -p < src/main/resources/db/complete_schema.sql
 **重要变更说明：**
 - 所有表的ID字段现在使用雪花算法（Snowflake）生成，而非自增ID
 - 教师工号（teacher_no）字段为字符串类型
-- 班级表的teacher_id字段为字符串类型，存储教师工号
+- 班级表的teacher_no字段为字符串类型，存储教师工号
 
 ### 3. 启动Redis
 

@@ -8,7 +8,7 @@ Successfully implemented Excel-based course schedule import functionality for th
 ### 1. Domain Model Updates
 - **File**: `src/main/java/com/xuegongbu/domain/CourseSchedule.java`
 - **Changes**:
-  - Added `teacherId` field (Long, required)
+  - Added `teacherNo` field (Long, required)
   - Added `schoolYear` field (String, required)
   - Added proper validation annotations
 

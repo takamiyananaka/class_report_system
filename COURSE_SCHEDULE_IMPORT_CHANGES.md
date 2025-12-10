@@ -4,9 +4,9 @@
 
 根据需求，对课表Excel导入功能进行了以下修改：
 
-1. **移除Excel中的教师ID列**：课表导入不再需要在Excel中包含教师ID
-2. **自动填充教师ID**：系统根据当前登录教师身份自动填充教师ID
-3. **更新Excel模板**：下载的Excel模板不再包含教师ID列
+1. **移除Excel中的教师工号列**：课表导入不再需要在Excel中包含教师工号
+2. **自动填充教师工号**：系统根据当前登录教师身份自动填充教师工号
+3. **更新Excel模板**：下载的Excel模板不再包含教师工号列
 
 ## 修改的文件
 
@@ -14,12 +14,12 @@
 **位置**: `src/main/java/com/xuegongbu/dto/CourseScheduleExcelDTO.java`
 
 **变更**:
-- 移除了 `teacherId` 字段
+- 移除了 `teacherNo` 字段
 - 调整了其他字段的 `@ExcelProperty` index，从1开始递增
 
 **修改前的Excel列顺序**:
 ```
-课程名称(0) | 教师ID(1) | 班级名称(2) | 星期几(3) | ...
+课程名称(0) | 教师工号(1) | 班级名称(2) | 星期几(3) | ...
 ```
 
 **修改后的Excel列顺序**:
@@ -31,35 +31,35 @@
 **位置**: `src/main/java/com/xuegongbu/service/CourseScheduleService.java`
 
 **变更**:
-- `importFromExcel` 方法增加了 `Long teacherId` 参数
-- 方法签名从 `importFromExcel(MultipartFile file)` 改为 `importFromExcel(MultipartFile file, Long teacherId)`
+- `importFromExcel` 方法增加了 `Long teacherNo` 参数
+- 方法签名从 `importFromExcel(MultipartFile file)` 改为 `importFromExcel(MultipartFile file, Long teacherNo)`
 
 ### 3. CourseScheduleServiceImpl.java
 **位置**: `src/main/java/com/xuegongbu/service/impl/CourseScheduleServiceImpl.java`
 
 **变更**:
-1. 实现了新的方法签名，接收 `teacherId` 参数
-2. 添加了 `teacherId` 空值校验
-3. 移除了对Excel中 `teacherId` 字段的验证
-4. 在创建 `CourseSchedule` 对象时，使用传入的 `teacherId` 参数而不是从Excel读取
-5. 更新了 `downloadTemplate()` 方法，生成的模板示例不再包含 `teacherId`
+1. 实现了新的方法签名，接收 `teacherNo` 参数
+2. 添加了 `teacherNo` 空值校验
+3. 移除了对Excel中 `teacherNo` 字段的验证
+4. 在创建 `CourseSchedule` 对象时，使用传入的 `teacherNo` 参数而不是从Excel读取
+5. 更新了 `downloadTemplate()` 方法，生成的模板示例不再包含 `teacherNo`
 
 **关键代码变更**:
 ```java
 // 新增参数验证
-if (teacherId == null) {
-    throw new IllegalArgumentException("教师ID不能为空");
+if (teacherNo == null) {
+    throw new IllegalArgumentException("教师工号不能为空");
 }
 
 // 移除了这部分验证
 // if (dto.getTeacherId() == null) {
-//     errorMessages.add(String.format("第%d行：教师ID不能为空", i + 2));
+//     errorMessages.add(String.format("第%d行：教师工号不能为空", i + 2));
 //     failCount++;
 //     continue;
 // }
 
-// 使用传入的teacherId而不是从Excel读取
-courseSchedule.setTeacherId(teacherId); // 使用当前登录教师的ID
+// 使用传入的teacherNo而不是从Excel读取
+courseSchedule.setTeacherId(teacherNo); // 使用当前登录教师的ID
 ```
 
 ### 4. CourseScheduleController.java
@@ -68,7 +68,7 @@ courseSchedule.setTeacherId(teacherId); // 使用当前登录教师的ID
 **变更**:
 1. 从Spring Security上下文中获取当前登录教师的ID
 2. 添加了登录状态验证
-3. 将教师ID传递给服务层
+3. 将教师工号传递给服务层
 
 **关键代码**:
 ```java
@@ -78,34 +78,34 @@ if (authentication == null || authentication.getPrincipal() == null) {
     return Result.error("未登录或登录已过期，请重新登录");
 }
 
-Long teacherId = null;
+Long teacherNo = null;
 try {
     Object principal = authentication.getPrincipal();
     if (principal instanceof Long) {
-        teacherId = (Long) principal;
+        teacherNo = (Long) principal;
     } else if (principal instanceof String) {
-        teacherId = Long.parseLong((String) principal);
+        teacherNo = Long.parseLong((String) principal);
     }
 } catch (NumberFormatException e) {
-    log.error("无法解析当前登录教师ID: {}", e.getMessage());
+    log.error("无法解析当前登录教师工号: {}", e.getMessage());
     return Result.error("无法获取当前登录用户信息");
 }
 
-if (teacherId == null) {
+if (teacherNo == null) {
     return Result.error("无法获取当前登录用户信息");
 }
 
 // 调用服务层方法
-Map<String, Object> result = courseScheduleService.importFromExcel(file, teacherId);
+Map<String, Object> result = courseScheduleService.importFromExcel(file, teacherNo);
 ```
 
 ### 5. COURSE_SCHEDULE_IMPORT.md
 **位置**: `COURSE_SCHEDULE_IMPORT.md`
 
 **变更**:
-- 更新了Excel列顺序说明，移除了教师ID列
-- 更新了Excel示例，不再包含教师ID
-- 更新了数据验证规则，移除了教师ID的验证
+- 更新了Excel列顺序说明，移除了教师工号列
+- 更新了Excel示例，不再包含教师工号
+- 更新了数据验证规则，移除了教师工号的验证
 - 添加了必须登录的说明
 - 更新了错误处理说明
 - 添加了版本2.0.0的更新日志
@@ -191,7 +191,7 @@ curl -X POST "http://localhost:8080/courseSchedule/import" \
 ### 向后不兼容
 ⚠️ **重要**: 此次修改不向后兼容
 
-- **旧版Excel文件无法直接使用**: 包含教师ID列的旧Excel文件将导致列对齐错误
+- **旧版Excel文件无法直接使用**: 包含教师工号列的旧Excel文件将导致列对齐错误
 - **需要重新下载模板**: 用户需要使用新的Excel模板
 - **列索引已变更**: 所有列的索引位置都发生了变化
 
@@ -206,7 +206,7 @@ curl -X POST "http://localhost:8080/courseSchedule/import" \
 1. **正常导入测试**: 使用新模板导入课表，验证数据正确性
 2. **未登录测试**: 不带Token调用接口，应返回错误
 3. **Token过期测试**: 使用过期Token，应返回错误
-4. **模板下载测试**: 下载新模板，验证不包含教师ID列
+4. **模板下载测试**: 下载新模板，验证不包含教师工号列
 
 ### 安全测试
 1. **越权测试**: 尝试使用其他教师的Token，验证只能导入自己的课表
@@ -218,8 +218,8 @@ curl -X POST "http://localhost:8080/courseSchedule/import" \
 
 ## 维护注意事项
 
-1. **日志记录**: 所有导入操作都会记录教师ID，便于审计
-2. **错误处理**: 保持了原有的错误处理机制，只是移除了对教师ID的验证
+1. **日志记录**: 所有导入操作都会记录教师工号，便于审计
+2. **错误处理**: 保持了原有的错误处理机制，只是移除了对教师工号的验证
 3. **事务管理**: 导入操作仍然在事务中执行，确保数据一致性
 
 ## 版本信息

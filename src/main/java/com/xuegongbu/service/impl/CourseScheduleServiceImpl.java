@@ -28,15 +28,15 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> importFromExcel(MultipartFile file, Long teacherId) {
+    public Map<String, Object> importFromExcel(MultipartFile file, Long teacherNo) {
         Map<String, Object> result = new HashMap<>();
         
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件不能为空");
         }
         
-        if (teacherId == null) {
-            throw new IllegalArgumentException("教师ID不能为空");
+        if (teacherNo == null) {
+            throw new IllegalArgumentException("教师工号不能为空");
         }
         
         // 检查文件扩展名和Content-Type
@@ -119,7 +119,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     
                     CourseSchedule courseSchedule = new CourseSchedule();
                     courseSchedule.setCourseName(dto.getCourseName().trim());
-                    courseSchedule.setTeacherId(teacherId); // 使用当前登录教师的ID
+                    courseSchedule.setTeacherNo(teacherNo); // 使用当前登录教师的工号
                     courseSchedule.setClassName(dto.getClassName().trim());
                     courseSchedule.setWeekday(dto.getWeekday());
                     courseSchedule.setStartTime(parseTime(dto.getStartTime()));
@@ -216,9 +216,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         // 构建查询条件
         LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
         
-        // 教师ID条件
-        if (queryDTO.getTeacherId() != null) {
-            queryWrapper.eq(CourseSchedule::getTeacherId, queryDTO.getTeacherId());
+        // 教师工号条件
+        if (queryDTO.getTeacherNo() != null) {
+            queryWrapper.eq(CourseSchedule::getTeacherNo, queryDTO.getTeacherNo());
         }
         
         // 班级名称条件（模糊查询）
@@ -249,8 +249,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
         
-        log.info("查询课表，条件：teacherId={}, className={}, courseName={}, weekday={}, semester={}, schoolYear={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherId(), queryDTO.getClassName(), queryDTO.getCourseName(), 
+        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, weekday={}, semester={}, schoolYear={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), 
                 queryDTO.getWeekday(), queryDTO.getSemester(), queryDTO.getSchoolYear(), pageNum, pageSize);
         
         return this.page(page, queryWrapper);

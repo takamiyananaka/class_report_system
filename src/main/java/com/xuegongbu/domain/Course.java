@@ -44,11 +44,11 @@ public class Course implements Serializable {
     @Size(max= 50,message="编码长度不能超过50")
     private String courseCode;
     /**
-    * 教师ID
+    * 教师工号
     */
-    @NotNull(message="[教师ID]不能为空")
-    @ApiModelProperty("教师ID")
-    private Long teacherId;
+    @NotNull(message="[教师工号]不能为空")
+    @ApiModelProperty("教师工号")
+    private Long teacherNo;
     /**
     * 教室名
     */
