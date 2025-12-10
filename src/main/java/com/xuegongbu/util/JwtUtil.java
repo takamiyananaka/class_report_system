@@ -2,6 +2,7 @@ package com.xuegongbu.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import java.util.Date;
 
 /**
  * JWT工具类
+ * 使用HS384算法生成和验证JWT Token
  */
 @Slf4j
 @Component
@@ -25,26 +27,30 @@ public class JwtUtil {
     private Long expiration;
 
     /**
-     * 生成密钥
+     * 生成密钥 - 使用HS384算法
      */
     private SecretKey getSecretKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     /**
-     * 生成JWT token
+     * 生成JWT token - 使用HS384算法
      */
     public String generateToken(Long userId, String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(getSecretKey())
+                .signWith(getSecretKey(), SignatureAlgorithm.HS384)
                 .compact();
+        
+        log.info("生成JWT Token成功 - 用户ID: {}, 用户名: {}, 过期时间: {}", userId, username, expiryDate);
+        return token;
     }
 
     /**
@@ -69,9 +75,18 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             Claims claims = getClaimsFromToken(token);
-            return claims != null && !isTokenExpired(claims);
+            if (claims == null) {
+                log.warn("Token验证失败: 无法解析Claims");
+                return false;
+            }
+            if (isTokenExpired(claims)) {
+                log.warn("Token验证失败: Token已过期，过期时间: {}", claims.getExpiration());
+                return false;
+            }
+            log.info("Token验证成功 - 用户ID: {}, 用户名: {}", claims.getSubject(), claims.get("username"));
+            return true;
         } catch (Exception e) {
-            log.error("Token验证失败: {}", e.getMessage());
+            log.error("Token验证失败: {} - {}", e.getClass().getSimpleName(), e.getMessage());
             return false;
         }
     }
@@ -87,7 +102,7 @@ public class JwtUtil {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (Exception e) {
-            log.error("解析token失败: {}", e.getMessage());
+            log.error("解析token失败: {} - {}", e.getClass().getSimpleName(), e.getMessage());
             return null;
         }
     }

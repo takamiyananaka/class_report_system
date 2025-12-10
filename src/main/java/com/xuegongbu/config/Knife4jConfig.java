@@ -6,20 +6,27 @@ import io.swagger. v3.oas.models. info.Contact;
 import io. swagger.v3.oas. models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger. v3.oas.models. security.SecurityScheme;
-import org.springdoc.core. models.GroupedOpenApi;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Knife4j API 文档配置
  * 访问地址：http://localhost:8080/doc.html
+ * 
+ * JWT认证使用说明：
+ * 1. 先调用 /front/login 接口登录获取 Token
+ * 2. 点击右上角 "Authorize" 按钮
+ * 3. 在弹出的对话框中输入 Token（不需要加 "Bearer " 前缀）
+ * 4. 点击 "Authorize" 确认
+ * 5. 之后所有需要认证的接口都会自动带上 Token
  */
 @Configuration
 public class Knife4jConfig {
 
     /**
-     * 配置 OpenAPI 基本信息，并添加 JWT 认证
+     * 配置 OpenAPI 基本信息和JWT认证
      */
     @Bean
     public OpenAPI customOpenAPI() {
@@ -27,7 +34,13 @@ public class Knife4jConfig {
                 .info(new Info()
                         .title("学工部课程考勤系统 API")
                         .version("1.0.0")
-                        .description("学工部课程考勤系统接口文档，提供教师管理、课程管理、考勤管理等功能")
+                        .description("学工部课程考勤系统接口文档，提供教师管理、课程管理、考勤管理等功能\n\n" +
+                                "**JWT认证使用说明：**\n" +
+                                "1. 先调用 `/front/login` 接口登录获取 Token\n" +
+                                "2. 点击右上角 **Authorize** 按钮\n" +
+                                "3. 在弹出的对话框中输入 Token（不需要加 \"Bearer \" 前缀）\n" +
+                                "4. 点击 **Authorize** 确认\n" +
+                                "5. 之后所有需要认证的接口都会自动带上 Authorization Header")
                         .contact(new Contact()
                                 .name("虚动智能")
                                 . email("support@example.com")
@@ -35,15 +48,13 @@ public class Knife4jConfig {
                         .license(new License()
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
-                // 添加JWT认证配置
                 .components(new Components()
                         .addSecuritySchemes("Bearer Authentication",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        . description("请输入JWT Token，格式：直接输入token值即可，无需添加'Bearer '前缀")))
-                // 全局应用JWT认证
+                                        .description("请输入JWT Token（不需要加 'Bearer ' 前缀）")))
                 .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"));
     }
 

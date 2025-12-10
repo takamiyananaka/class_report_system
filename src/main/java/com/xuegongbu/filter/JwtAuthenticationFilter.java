@@ -30,10 +30,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
+        String requestPath = request.getRequestURI();
         String authHeader = request.getHeader("Authorization");
         
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader == null) {
+            log.debug("JWT认证过滤器 - 未找到Authorization Header，请求路径: {}", requestPath);
+        } else if (!authHeader.startsWith("Bearer ")) {
+            log.warn("JWT认证过滤器 - Authorization Header格式错误，应以'Bearer '开头，实际值前缀: {}, 请求路径: {}", 
+                    authHeader.substring(0, Math.min(20, authHeader.length())), requestPath);
+        } else {
             String token = authHeader.substring(7);
+            log.debug("JWT认证过滤器 - 处理Token，长度: {}, 请求路径: {}", token.length(), requestPath);
             
             if (jwtUtil.validateToken(token)) {
                 Long userId = jwtUtil.getUserIdFromToken(token);
@@ -45,8 +52,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.debug("JWT认证成功，用户ID: {}, 用户名: {}", userId, username);
+                    log.info("JWT认证成功 - 用户ID: {}, 用户名: {}, 请求路径: {}", userId, username, requestPath);
+                } else {
+                    log.warn("JWT认证失败 - 无法从Token中提取用户信息，用户ID: {}, 用户名: {}, 请求路径: {}", 
+                            userId, username, requestPath);
                 }
+            } else {
+                log.warn("JWT认证失败 - Token验证失败，请求路径: {}", requestPath);
             }
         }
         
