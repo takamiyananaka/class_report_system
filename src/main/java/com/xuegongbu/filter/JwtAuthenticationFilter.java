@@ -31,18 +31,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         
         String requestPath = request.getRequestURI();
-        log.info("JWT认证过滤器 - 请求路径: {}", requestPath);
-        
         String authHeader = request.getHeader("Authorization");
         
         if (authHeader == null) {
-            log.info("JWT认证过滤器 - 未找到Authorization Header，请求路径: {}", requestPath);
+            log.debug("JWT认证过滤器 - 未找到Authorization Header，请求路径: {}", requestPath);
         } else if (!authHeader.startsWith("Bearer ")) {
-            log.warn("JWT认证过滤器 - Authorization Header格式错误，应以'Bearer '开头，实际值: {}, 请求路径: {}", 
+            log.warn("JWT认证过滤器 - Authorization Header格式错误，应以'Bearer '开头，实际值前缀: {}, 请求路径: {}", 
                     authHeader.substring(0, Math.min(20, authHeader.length())), requestPath);
         } else {
             String token = authHeader.substring(7);
-            log.info("JWT认证过滤器 - 成功提取Token，长度: {}, 请求路径: {}", token.length(), requestPath);
+            log.debug("JWT认证过滤器 - 处理Token，长度: {}, 请求路径: {}", token.length(), requestPath);
             
             if (jwtUtil.validateToken(token)) {
                 Long userId = jwtUtil.getUserIdFromToken(token);
