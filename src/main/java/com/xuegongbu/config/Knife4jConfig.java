@@ -26,7 +26,7 @@ public class Knife4jConfig {
                         .version("1.0.0")
                         .description("学工部课程考勤系统接口文档，提供教师管理、课程管理、考勤管理等功能")
                         .contact(new Contact()
-                                .name("开发团队")
+                                .name("虚动智能")
                                 .email("support@example.com")
                                 .url("https://github.com/takamiyananaka/class_report_system"))
                         .license(new License()
