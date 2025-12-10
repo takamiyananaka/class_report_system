@@ -14,9 +14,9 @@ import lombok.Data;
 
 /**
 * 管理员表
-* @TableName tb_admin
+* @TableName admin
 */
-@TableName(value = "tb_admin")
+@TableName(value = "admin")
 @Data
 public class Admin implements Serializable {
 

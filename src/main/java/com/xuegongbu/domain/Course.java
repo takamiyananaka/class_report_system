@@ -15,9 +15,9 @@ import lombok.Data;
 
 /**
 * 课程表
-* @TableName tb_course
+* @TableName course
 */
-@TableName(value = "tb_course")
+@TableName(value = "course")
 @Data
 public class Course implements Serializable {
 

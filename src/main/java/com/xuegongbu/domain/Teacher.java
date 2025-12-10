@@ -13,9 +13,9 @@ import lombok.Data;
 
 /**
 * 教师表
-* @TableName tb_teacher
+* @TableName teacher
 */
-@TableName(value = "tb_teacher")
+@TableName(value = "teacher")
 @Data
 public class Teacher implements Serializable {
 
