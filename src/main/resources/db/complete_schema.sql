@@ -58,12 +58,12 @@ CREATE TABLE IF NOT EXISTS teacher (
 CREATE TABLE IF NOT EXISTS class (
     id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
     class_name VARCHAR(20) NOT NULL COMMENT '班级名字',
-    teacher_id VARCHAR(50) NOT NULL COMMENT '辅导员工号',
+    teacher_no VARCHAR(50) NOT NULL COMMENT '辅导员工号',
     count INT NOT NULL COMMENT '班级人数',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_delete TINYINT DEFAULT 0 COMMENT '是否删除: 0-否, 1-是',
-    INDEX idx_teacher_id (teacher_id)
+    INDEX idx_teacher_no (teacher_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='班级表';
 
 -- ====================================
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS class (
 CREATE TABLE IF NOT EXISTS course_schedule (
     id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
-    teacher_id BIGINT NOT NULL COMMENT '教师ID',
+    teacher_no BIGINT NOT NULL COMMENT '教师工号',
     class_name VARCHAR(100) NOT NULL COMMENT '班级名称',
     weekday TINYINT NOT NULL COMMENT '星期几（1-7）',
     start_time TIME NOT NULL COMMENT '开始时间',
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     school_year VARCHAR(20) NOT NULL COMMENT '学年',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_teacher_id (teacher_id),
+    INDEX idx_teacher_no (teacher_no),
     INDEX idx_class_name (class_name),
     INDEX idx_weekday (weekday)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS course (
     id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
     course_code VARCHAR(50) COMMENT '课程编码',
-    teacher_id BIGINT NOT NULL COMMENT '教师ID',
+    teacher_no BIGINT NOT NULL COMMENT '教师工号',
     classroom VARCHAR(50) NOT NULL COMMENT '教室号',
     course_time VARCHAR(100) NOT NULL COMMENT '上课时间（如：周一 1-2节）',
     course_date DATE NOT NULL COMMENT '上课日期',
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS course (
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_deleted INT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
-    INDEX idx_teacher_id (teacher_id),
+    INDEX idx_teacher_no (teacher_no),
     INDEX idx_course_date (course_date),
     INDEX idx_course_name (course_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程表';
@@ -190,7 +190,7 @@ VALUES (1000000000000000002, 'teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEG
 -- ====================================
 -- 1. 所有表的ID字段都使用BIGINT类型，支持雪花算法生成的长整型ID
 -- 2. 教师工号(teacher_no)使用VARCHAR类型，支持字符串格式
--- 3. 班级表的teacher_id字段为VARCHAR类型，存储教师工号而非ID
+-- 3. 班级表的teacher_no字段为VARCHAR类型，存储教师工号而非ID
 -- 4. 移除了外键约束，使用应用层面的数据一致性控制
 -- 5. 所有表都支持逻辑删除（除了image_capture表）
 -- 6. 使用utf8mb4字符集，支持emoji和特殊字符
