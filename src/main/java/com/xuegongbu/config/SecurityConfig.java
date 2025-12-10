@@ -30,14 +30,15 @@ public class SecurityConfig {
                    "/swagger-ui.html",
                    "/swagger-resources/**",
                    "/webjars/**"
-                ,"/course/**", "/courseSchedule/**", "/teacher/**", "/admin/**"
                ).permitAll()
                // 允许前台登录接口
                .requestMatchers("/front/login").permitAll()
                // 允许管理员登录接口
                .requestMatchers("/admin/login").permitAll()
+               // 允许下载课表模板接口
+               . requestMatchers("/courseSchedule/downloadTemplate").permitAll()
                // 需要认证的接口
-//               .requestMatchers("/course/**", "/courseSchedule/**", "/teacher/**", "/admin/**").authenticated()
+               .requestMatchers("/course/**", "/courseSchedule/**", "/teacher/**", "/admin/**").authenticated()
                .anyRequest().permitAll())
            .csrf(csrf -> csrf.disable())
            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
