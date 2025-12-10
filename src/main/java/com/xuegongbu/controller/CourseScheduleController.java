@@ -113,4 +113,20 @@ public class CourseScheduleController {
         log.info("查询课表完成，共{}条记录", result.getTotal());
         return Result.success(result);
     }
+
+    /**
+     * 下载课表导入模板
+     */
+    @GetMapping("/downloadTemplate")
+    @ApiOperation(value = "下载课表导入模板", notes = "下载Excel格式的课表导入模板文件")
+    public void downloadTemplate(jakarta.servlet.http.HttpServletResponse response) {
+        try {
+            log.info("下载课表导入模板");
+            courseScheduleService.downloadTemplate(response);
+            log.info("下载课表导入模板完成");
+        } catch (Exception e) {
+            log.error("下载课表导入模板失败", e);
+            throw new RuntimeException("下载模板失败: " + e.getMessage());
+        }
+    }
 }

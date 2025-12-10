@@ -23,8 +23,8 @@ public class Admin implements Serializable {
     /**
     * 主键ID
     */
-    @NotNull(message="[主键ID]不能为空")
     @ApiModelProperty("主键ID")
+    @com.baomidou.mybatisplus.annotation.TableId(type = com.baomidou.mybatisplus.annotation.IdType.ASSIGN_ID)
     private Long id;
     /**
     * 用户名
@@ -91,16 +91,19 @@ public class Admin implements Serializable {
     * 创建时间
     */
     @ApiModelProperty("创建时间")
+    @com.baomidou.mybatisplus.annotation.TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createTime;
     /**
     * 更新时间
     */
     @ApiModelProperty("更新时间")
+    @com.baomidou.mybatisplus.annotation.TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
     /**
     * 是否删除：0-否，1-是
     */
     @ApiModelProperty("是否删除：0-否，1-是")
+    @com.baomidou.mybatisplus.annotation.TableLogic
     private Integer isDeleted;
 
 }

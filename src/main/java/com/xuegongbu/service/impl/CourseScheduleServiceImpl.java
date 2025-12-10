@@ -256,4 +256,39 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         
         return this.page(page, queryWrapper);
     }
+
+    @Override
+    public void downloadTemplate(jakarta.servlet.http.HttpServletResponse response) {
+        try {
+            // 设置响应头
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = java.net.URLEncoder.encode("课表导入模板", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+            
+            // 创建模板数据
+            List<CourseScheduleExcelDTO> templateData = new ArrayList<>();
+            CourseScheduleExcelDTO example = new CourseScheduleExcelDTO();
+            example.setCourseName("高等数学");
+            example.setTeacherId(1L);
+            example.setClassName("计算机2024-1班");
+            example.setWeekday(1);
+            example.setStartTime("08:00");
+            example.setEndTime("09:40");
+            example.setClassroom("教学楼A101");
+            example.setSemester("1");
+            example.setSchoolYear("2024-2025");
+            templateData.add(example);
+            
+            // 写入Excel
+            EasyExcel.write(response.getOutputStream(), CourseScheduleExcelDTO.class)
+                    .sheet("课表模板")
+                    .doWrite(templateData);
+            
+            log.info("课表导入模板下载成功");
+        } catch (Exception e) {
+            log.error("生成课表导入模板失败", e);
+            throw new IllegalStateException("生成课表导入模板失败: " + e.getMessage(), e);
+        }
+    }
 }
