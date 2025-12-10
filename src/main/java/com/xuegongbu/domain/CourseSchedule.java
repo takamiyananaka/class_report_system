@@ -1,6 +1,6 @@
 package com.xuegongbu.domain;
 
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
@@ -23,7 +23,7 @@ public class CourseSchedule implements Serializable {
     * 主键ID
     */
     @ApiModelProperty("主键ID")
-    @com.baomidou.mybatisplus.annotation.TableId(type = com.baomidou.mybatisplus.annotation.IdType.ASSIGN_ID)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     
     /**
