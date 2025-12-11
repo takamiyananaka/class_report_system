@@ -29,34 +29,5 @@ import java.util.Map;
 @Slf4j
 @Service
 public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements CourseService {
-    @Autowired
-    private DeviceService deviceService;
-    @Override
-    public List<Attendance> queryAttendanceByCourseId(Long courseId) {
-        //获取到课程信息
-        Course course = this.getById(courseId);
-        if(course == null){
-            throw new BusinessException("无效的id");
-        }
 
-        return List.of();
-    }
-
-    @Override
-    public void manualAttendance(Long courseId) {
-        //获取到课程信息
-        Course course = this.getById(courseId);
-        if(course == null){
-            throw new BusinessException("无效的id");
-        }
-        //检查当前是否在上课时间内
-        if(course.getCourseDate().isBefore(LocalDate.now()) || course.getCourseDate().isAfter(LocalDate.now())){
-            throw new BusinessException("不在上课时间");
-        }
-
-        String className = course.getClassName();
-        Map<String, String> deviceUrls = deviceService.getDeviceUrl(className);
-        //调用模型获取当前教室人数
-        int count = CountUtil.getCount(deviceUrls);
-    }
 }
