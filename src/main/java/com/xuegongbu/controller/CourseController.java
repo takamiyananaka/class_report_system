@@ -4,6 +4,7 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.Course;
 import com.xuegongbu.service.CourseService;
+import com.xuegongbu.util.AuthenticationUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -104,13 +105,9 @@ public class CourseController {
     @GetMapping("/list")
     @ApiOperation(value = "查询教师的所有课程", notes = "查询当前登录教师的所有课程")
     public Result<List<Course>> listCourses(@RequestParam(required = false) Long teacherNo) {
-        // 如果没有指定教师工号，使用当前登录教师的工号
+        // 如果没有指定教师工号，使用当前登录教师的工号（或默认值）
         if (teacherNo == null) {
-            org.springframework.security.core.Authentication authentication = 
-                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof Long) {
-                teacherNo = (Long) authentication.getPrincipal();
-            }
+            teacherNo = AuthenticationUtil.getCurrentTeacherNo();
         }
         
         log.info("查询教师课程列表，教师工号：{}", teacherNo);

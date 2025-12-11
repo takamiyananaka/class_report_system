@@ -8,6 +8,7 @@ import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.ClassQueryDTO;
 import com.xuegongbu.service.ClassService;
 import com.xuegongbu.service.TeacherService;
+import com.xuegongbu.util.AuthenticationUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,8 +16,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,37 +48,21 @@ public class ClassController {
         try {
             log.info("开始导入班级，文件名：{}", file.getOriginalFilename());
             
-            // 获取当前登录教师的ID
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || authentication.getPrincipal() == null) {
-                return Result.error("未登录或登录已过期，请重新登录");
-            }
-            
-            Long teacherId = null;
-            try {
-                Object principal = authentication.getPrincipal();
-                if (principal instanceof Long) {
-                    teacherId = (Long) principal;
-                } else if (principal instanceof String) {
-                    teacherId = Long.parseLong((String) principal);
-                }
-            } catch (NumberFormatException e) {
-                log.error("无法解析当前登录教师ID: {}", e.getMessage());
-                return Result.error("无法获取当前登录用户信息");
-            }
-            
-            if (teacherId == null) {
-                return Result.error("无法获取当前登录用户信息");
-            }
+            // 获取当前登录教师的ID，如果未登录则使用默认值
+            Long teacherId = AuthenticationUtil.getCurrentTeacherNo();
+            log.info("当前教师ID: {}", teacherId);
             
             // 根据教师ID查询教师工号
             Teacher teacher = teacherService.getById(teacherId);
+            String teacherNo;
             if (teacher == null) {
-                return Result.error("教师信息不存在");
+                // 如果找不到教师信息，使用默认值
+                teacherNo = com.xuegongbu.common.Constants.DEFAULT_TEACHER_NO_STR;
+                log.warn("未找到教师信息，使用默认教师工号: {}", teacherNo);
+            } else {
+                teacherNo = teacher.getTeacherNo();
+                log.info("当前登录教师工号: {}", teacherNo);
             }
-            
-            String teacherNo = teacher.getTeacherNo();
-            log.info("当前登录教师工号: {}", teacherNo);
             
             Map<String, Object> result = classService.importFromExcel(file, teacherNo);
             log.info("班级导入完成：{}", result.get("message"));
