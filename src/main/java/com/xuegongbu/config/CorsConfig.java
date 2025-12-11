@@ -37,6 +37,8 @@ public class CorsConfig {
         // 允许本地开发环境（请根据实际需要添加或修改）
         config.addAllowedOriginPattern("http://localhost:*");
         config.addAllowedOriginPattern("http://127.0.0.1:*");
+        config.addAllowedOriginPattern("https://localhost:*");
+        config.addAllowedOriginPattern("https://127.0.0.1:*");
         
         // 生产环境请取消注释并配置具体的前端域名，例如：
         // config.addAllowedOrigin("https://your-frontend-domain.com");
