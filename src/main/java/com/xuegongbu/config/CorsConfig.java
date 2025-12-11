@@ -17,14 +17,15 @@ public class CorsConfig {
      * 配置CORS配置源
      * 
      * 允许规则：
-     * 1. 允许本地开发环境的跨域请求 (localhost的常见端口)
-     * 2. 允许所有HTTP方法 (GET, POST, PUT, DELETE, OPTIONS等)
-     * 3. 允许所有请求头
+     * 1. 允许本地开发环境的跨域请求 (localhost和127.0.0.1的所有端口)
+     * 2. 允许常用的HTTP方法 (GET, POST, PUT, DELETE, OPTIONS, PATCH)
+     * 3. 允许常用的请求头 (Authorization, Content-Type, Accept等)
      * 4. 允许携带认证信息 (如Cookie、JWT Token等)
      * 5. 预检请求缓存时间：3600秒
      * 
      * 安全说明：
      * - 默认配置仅允许本地开发环境访问
+     * - 明确指定允许的HTTP方法和请求头，提高安全性
      * - 生产环境请在下方添加具体的前端域名
      * 
      * @return UrlBasedCorsConfigurationSource CORS配置源
@@ -34,8 +35,8 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         
         // 允许本地开发环境（请根据实际需要添加或修改）
-        config.addAllowedOriginPattern("http://localhost:[*]");
-        config.addAllowedOriginPattern("http://127.0.0.1:[*]");
+        config.addAllowedOriginPattern("http://localhost:*");
+        config.addAllowedOriginPattern("http://127.0.0.1:*");
         
         // 生产环境请取消注释并配置具体的前端域名，例如：
         // config.addAllowedOrigin("https://your-frontend-domain.com");
@@ -44,11 +45,20 @@ public class CorsConfig {
         // 允许携带认证信息（Cookie、Authorization头等）
         config.setAllowCredentials(true);
         
-        // 允许所有HTTP方法
-        config.addAllowedMethod("*");
+        // 允许常用的HTTP方法
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("OPTIONS");
+        config.addAllowedMethod("PATCH");
         
-        // 允许所有请求头
-        config.addAllowedHeader("*");
+        // 允许常用的请求头
+        config.addAllowedHeader("Authorization");
+        config.addAllowedHeader("Content-Type");
+        config.addAllowedHeader("Accept");
+        config.addAllowedHeader("Origin");
+        config.addAllowedHeader("X-Requested-With");
         
         // 暴露的响应头，前端可以访问这些头信息
         config.addExposedHeader("Authorization");
