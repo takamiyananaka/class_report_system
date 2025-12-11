@@ -45,17 +45,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(token)) {
                 Long userId = jwtUtil.getUserIdFromToken(token);
                 String username = jwtUtil.getUsernameFromToken(token);
+                String teacherNo = jwtUtil.getTeacherNoFromToken(token);
                 
                 if (userId != null && username != null) {
+                    // 使用teacherNo作为principal（如果是管理员则teacherNo为null，使用userId）
+                    Object principal = teacherNo != null ? teacherNo : userId;
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
+                            new UsernamePasswordAuthenticationToken(principal, null, new ArrayList<>());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.info("JWT认证成功 - 用户ID: {}, 用户名: {}, 请求路径: {}", userId, username, requestPath);
+                    log.info("JWT认证成功 - 用户ID: {}, 用户名: {}, 教师工号: {}, 请求路径: {}", userId, username, teacherNo, requestPath);
                 } else {
-                    log.warn("JWT认证失败 - 无法从Token中提取用户信息，用户ID: {}, 用户名: {}, 请求路径: {}", 
-                            userId, username, requestPath);
+                    log.warn("JWT认证失败 - 无法从Token中提取用户信息，用户ID: {}, 用户名: {}, 教师工号: {}, 请求路径: {}", 
+                            userId, username, teacherNo, requestPath);
                 }
             } else {
                 log.warn("JWT认证失败 - Token验证失败，请求路径: {}", requestPath);

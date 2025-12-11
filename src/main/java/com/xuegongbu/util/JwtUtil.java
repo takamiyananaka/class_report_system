@@ -37,19 +37,20 @@ public class JwtUtil {
     /**
      * 生成JWT token - 使用HS384算法
      */
-    public String generateToken(Long userId, String username) {
+    public String generateToken(Long userId, String username, String teacherNo) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         String token = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("username", username)
+                .claim("teacherNo", teacherNo)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSecretKey(), SignatureAlgorithm.HS384)
                 .compact();
         
-        log.info("生成JWT Token成功 - 用户ID: {}, 用户名: {}, 过期时间: {}", userId, username, expiryDate);
+        log.info("生成JWT Token成功 - 用户ID: {}, 用户名: {}, 教师工号: {}, 过期时间: {}", userId, username, teacherNo, expiryDate);
         return token;
     }
 
@@ -67,6 +68,14 @@ public class JwtUtil {
     public String getUsernameFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims != null ? claims.get("username", String.class) : null;
+    }
+
+    /**
+     * 从token中获取教师工号
+     */
+    public String getTeacherNoFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims != null ? claims.get("teacherNo", String.class) : null;
     }
 
     /**

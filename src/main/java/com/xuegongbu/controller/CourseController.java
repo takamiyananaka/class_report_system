@@ -108,8 +108,19 @@ public class CourseController {
         if (teacherNo == null) {
             org.springframework.security.core.Authentication authentication = 
                 org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof Long) {
-                teacherNo = (Long) authentication.getPrincipal();
+            if (authentication != null && authentication.getPrincipal() != null) {
+                try {
+                    Object principal = authentication.getPrincipal();
+                    // principal现在是teacherNo (String)，需要转换为Long
+                    if (principal instanceof String) {
+                        teacherNo = Long.parseLong((String) principal);
+                    } else if (principal instanceof Long) {
+                        teacherNo = (Long) principal;
+                    }
+                } catch (NumberFormatException e) {
+                    log.error("无法解析教师工号: {}", e.getMessage());
+                    return Result.error("无法获取当前登录用户信息");
+                }
             }
         }
         
