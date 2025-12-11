@@ -1,23 +1,21 @@
 package com.xuegongbu.config;
 
-import com.xuegongbu.filter. JwtAuthenticationFilter;
-import org.springframework.beans.factory. annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.xuegongbu.filter.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security. config.http.SessionCreationPolicy;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password. PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework. security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors. CorsConfiguration;
-import org. springframework.web.cors.CorsConfigurationSource;
-import org. springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -26,14 +24,13 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // 从配置文件读取允许的域名
-    @Value("${cors.allowed.origins}")
-    private List<String> allowedOrigins;
+    @Autowired
+    private CorsProperties corsProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                        . requestMatchers(
+                        .requestMatchers(
                                 "/doc.html",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -47,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/courseSchedule/downloadTemplate").permitAll()
                         .requestMatchers("/course/**", "/courseSchedule/**", "/teacher/**", "/admin/**").authenticated()
                         .anyRequest().permitAll())
-                .csrf(csrf -> csrf. disable())
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -59,7 +56,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // 从配置文件读取允许的域名
-        allowedOrigins. forEach(origin -> {
+        corsProperties.getOrigins().forEach(origin -> {
             if (origin.contains("*")) {
                 config.addAllowedOriginPattern(origin);
             } else {
