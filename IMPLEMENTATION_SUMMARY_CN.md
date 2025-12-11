@@ -10,14 +10,15 @@
 - ✅ 将所有课程CRUD操作迁移到`CourseScheduleController`
 - ✅ 新增以下接口：
   - `POST /courseSchedule/add` - 创建课表，教师工号自动从登录状态获取
-  - `PUT /courseSchedule/update` - 更新课表，只能更新自己的课表
-  - `DELETE /courseSchedule/delete/{id}` - 删除课表，只能删除自己的课表
-  - `GET /courseSchedule/get/{id}` - 查询课表详情，只能查询自己的课表
+  - `PUT /courseSchedule/update` - 更新课表，通过课程名称+班级名称定位，只能更新自己的课表
+  - `DELETE /courseSchedule/delete?courseName=xxx&className=xxx` - 删除课表，通过课程名称+班级名称定位
+  - `GET /courseSchedule/get?courseName=xxx&className=xxx` - 查询课表详情，通过课程名称+班级名称定位
   - `GET /courseSchedule/query` - 多条件查询（教师工号+班级名称+课程名称）
 - ✅ 创建时必填字段：courseName, className, weekday, startTime, endTime, classroom, semester, schoolYear
-- ✅ ID使用雪花算法自动生成
+- ✅ ID使用雪花算法自动生成，但不在API中使用
 - ✅ 教师工号自动从登录上下文获取
 - ✅ 权限控制：教师只能操作自己的课表
+- ✅ **所有操作使用课程名称+班级名称作为标识，不使用ID**
 
 ### 2. 教师管理增强 ✅
 
@@ -56,13 +57,14 @@
   - `GET /class/downloadTemplate` - 下载Excel导入模板
   - `GET /class/query` - 多条件查询（班级名称模糊查询、辅导员工号精确查询）
   - `POST /class/add` - 创建班级
-  - `PUT /class/update` - 更新班级
-  - `DELETE /class/delete/{id}` - 删除班级
-  - `GET /class/get/{id}` - 查询班级详情
+  - `PUT /class/update` - 更新班级，通过班级名称定位
+  - `DELETE /class/delete?className=xxx` - 删除班级，通过班级名称定位
+  - `GET /class/get?className=xxx` - 查询班级详情，通过班级名称定位
 - ✅ Excel导入格式：班级名称、辅导员工号、班级人数
-- ✅ ID使用雪花算法自动生成
+- ✅ ID使用雪花算法自动生成，但不在API中使用
 - ✅ 支持逻辑删除
 - ✅ 完善的错误处理和数据验证
+- ✅ **所有操作使用班级名称作为标识，不使用ID**
 
 ## 技术实现细节
 
@@ -72,6 +74,10 @@
 @TableId(type = IdType.ASSIGN_ID)
 private Long id;
 ```
+**重要**：ID仅用于数据库内部，不在API操作中使用。所有CRUD操作使用自然标识符：
+- 课表：课程名称 + 班级名称 + 教师工号
+- 班级：班级名称
+- 教师：教师工号
 
 ### 权限控制
 - 通过JWT Token获取当前登录教师的ID
