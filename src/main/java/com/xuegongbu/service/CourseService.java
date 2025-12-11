@@ -14,7 +14,5 @@ import java.util.List;
 public interface CourseService extends IService<Course> {
 
 
-    List<Attendance> queryAttendanceByCourseId(Long courseId);
 
-    void manualAttendance(Long courseId);
 }

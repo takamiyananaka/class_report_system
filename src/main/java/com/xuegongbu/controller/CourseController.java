@@ -24,31 +24,7 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-    /**
-     * 查询课程考勤记录
-     */
-    @GetMapping("/queryAttendance")
-    @ApiOperation(value = "查询课程考勤记录", notes = "查询课程考勤记录")
-    public Result<List<Attendance>> queryAttendanceByCourseId(
-            @RequestParam(value = "courseId", required = true) Long courseId) {
-        log.info("查询课程考勤记录，课程ID：{}", courseId);
-        List<Attendance> attendanceList = courseService.queryAttendanceByCourseId(courseId);
-        log.info("查询课程考勤记录完成，结果：{}", attendanceList);
-        return Result.success(attendanceList);
-    }
 
-    /**
-     * 手动考勤
-     */
-    @PostMapping("/manualAttendance")
-    @ApiOperation(value = "手动考勤", notes = "手动考勤")
-    public Result<String> manualAttendance(
-            @RequestParam(value = "courseId", required = true) Long courseId){
-        log.info("手动考勤，课程ID：{}", courseId);
-        courseService.manualAttendance(courseId);
-        log.info("手动考勤完成");
-        return Result.success("考勤记录生成完成");
-    }
 
     /**
      * 创建课程

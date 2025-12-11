@@ -86,8 +86,8 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                     }
                     
                     Class classEntity = new Class();
-                    classEntity.setClass_name(dto.getClassName().trim());
-                    classEntity.setTeacher_no(teacherNo.trim()); // 使用传入的教师工号
+                    classEntity.setClassName(dto.getClassName().trim());
+                    classEntity.setTeacherNo(teacherNo.trim()); // 使用传入的教师工号
                     classEntity.setCount(dto.getCount());
                     
                     classList.add(classEntity);
@@ -148,16 +148,16 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         
         // 班级名称条件（模糊查询）
         if (!isBlank(queryDTO.getClassName())) {
-            queryWrapper.like(Class::getClass_name, queryDTO.getClassName().trim());
+            queryWrapper.like(Class::getClassName, queryDTO.getClassName().trim());
         }
         
         // 辅导员工号条件
         if (!isBlank(queryDTO.getTeacherNo())) {
-            queryWrapper.eq(Class::getTeacher_no, queryDTO.getTeacherNo().trim());
+            queryWrapper.eq(Class::getTeacherNo, queryDTO.getTeacherNo().trim());
         }
         
         // 按创建时间倒序排序
-        queryWrapper.orderByDesc(Class::getCreate_time);
+        queryWrapper.orderByDesc(Class::getCreateTime);
         
         log.info("查询班级，条件：className={}, teacherNo={}, pageNum={}, pageSize={}", 
                 queryDTO.getClassName(), queryDTO.getTeacherNo(), pageNum, pageSize);
