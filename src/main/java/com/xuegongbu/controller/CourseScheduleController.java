@@ -155,4 +155,230 @@ public class CourseScheduleController {
             throw new com.xuegongbu.common.exception.BusinessException("下载模板失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 创建课表
+     */
+    @PostMapping("/add")
+    @ApiOperation(value = "创建课表", notes = "教师创建新课表，教师工号从登录状态获取，ID自动生成")
+    public Result<CourseSchedule> addCourseSchedule(@RequestBody CourseSchedule courseSchedule) {
+        log.info("创建课表，课表信息：{}", courseSchedule);
+        
+        // 获取当前登录教师的ID
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return Result.error("未登录或登录已过期，请重新登录");
+        }
+        
+        Long teacherId = null;
+        try {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Long) {
+                teacherId = (Long) principal;
+            } else if (principal instanceof String) {
+                teacherId = Long.parseLong((String) principal);
+            }
+        } catch (NumberFormatException e) {
+            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        if (teacherId == null) {
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        // 将教师ID设置为teacherNo（这里假设使用ID作为teacherNo）
+        // 注意：根据实际情况，可能需要先查询Teacher表获取真实的teacherNo
+        courseSchedule.setTeacherNo(teacherId);
+        
+        // 验证必填字段
+        if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
+            return Result.error("课程名称不能为空");
+        }
+        if (courseSchedule.getClassName() == null || courseSchedule.getClassName().trim().isEmpty()) {
+            return Result.error("班级名称不能为空");
+        }
+        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday() < 1 || courseSchedule.getWeekday() > 7) {
+            return Result.error("星期几必须是1-7之间的数字");
+        }
+        if (courseSchedule.getStartTime() == null) {
+            return Result.error("开始时间不能为空");
+        }
+        if (courseSchedule.getEndTime() == null) {
+            return Result.error("结束时间不能为空");
+        }
+        if (courseSchedule.getClassroom() == null || courseSchedule.getClassroom().trim().isEmpty()) {
+            return Result.error("教室不能为空");
+        }
+        if (courseSchedule.getSemester() == null || courseSchedule.getSemester().trim().isEmpty()) {
+            return Result.error("学期不能为空");
+        }
+        if (courseSchedule.getSchoolYear() == null || courseSchedule.getSchoolYear().trim().isEmpty()) {
+            return Result.error("学年不能为空");
+        }
+        
+        // ID会由MyBatis-Plus自动生成（雪花算法）
+        courseScheduleService.save(courseSchedule);
+        log.info("创建课表完成，课表ID：{}", courseSchedule.getId());
+        return Result.success(courseSchedule);
+    }
+
+    /**
+     * 更新课表
+     */
+    @PutMapping("/update")
+    @ApiOperation(value = "更新课表", notes = "教师更新课表信息，通过课程名称和班级名称定位，只能更新自己的课表")
+    public Result<String> updateCourseSchedule(@RequestBody CourseSchedule courseSchedule) {
+        log.info("更新课表，课程名称：{}，班级名称：{}，课表信息：{}", 
+                courseSchedule.getCourseName(), courseSchedule.getClassName(), courseSchedule);
+        
+        if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
+            return Result.error("课程名称不能为空");
+        }
+        if (courseSchedule.getClassName() == null || courseSchedule.getClassName().trim().isEmpty()) {
+            return Result.error("班级名称不能为空");
+        }
+        
+        // 获取当前登录教师的ID
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return Result.error("未登录或登录已过期，请重新登录");
+        }
+        
+        Long teacherId = null;
+        try {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Long) {
+                teacherId = (Long) principal;
+            } else if (principal instanceof String) {
+                teacherId = Long.parseLong((String) principal);
+            }
+        } catch (NumberFormatException e) {
+            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        if (teacherId == null) {
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        // 根据课程名称、班级名称和教师ID查询课表
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim())
+                   .eq(CourseSchedule::getClassName, courseSchedule.getClassName().trim())
+                   .eq(CourseSchedule::getTeacherNo, teacherId);
+        
+        CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
+        if (existing == null) {
+            return Result.error("课表不存在或无权限修改");
+        }
+        
+        // 设置ID以便更新
+        courseSchedule.setId(existing.getId());
+        courseSchedule.setTeacherNo(teacherId);
+        
+        courseScheduleService.updateById(courseSchedule);
+        log.info("更新课表完成");
+        return Result.success("更新成功");
+    }
+
+    /**
+     * 删除课表
+     */
+    @DeleteMapping("/delete")
+    @ApiOperation(value = "删除课表", notes = "教师删除课表，通过课程名称和班级名称定位，只能删除自己的课表")
+    public Result<String> deleteCourseSchedule(
+            @RequestParam(value = "courseName", required = true) String courseName,
+            @RequestParam(value = "className", required = true) String className) {
+        log.info("删除课表，课程名称：{}，班级名称：{}", courseName, className);
+        
+        // 获取当前登录教师的ID
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return Result.error("未登录或登录已过期，请重新登录");
+        }
+        
+        Long teacherId = null;
+        try {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Long) {
+                teacherId = (Long) principal;
+            } else if (principal instanceof String) {
+                teacherId = Long.parseLong((String) principal);
+            }
+        } catch (NumberFormatException e) {
+            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        if (teacherId == null) {
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        // 根据课程名称、班级名称和教师ID查询课表
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
+                   .eq(CourseSchedule::getClassName, className.trim())
+                   .eq(CourseSchedule::getTeacherNo, teacherId);
+        
+        CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
+        if (existing == null) {
+            return Result.error("课表不存在或无权限删除");
+        }
+        
+        courseScheduleService.removeById(existing.getId());
+        log.info("删除课表完成");
+        return Result.success("删除成功");
+    }
+
+    /**
+     * 查询课表详情
+     */
+    @GetMapping("/get")
+    @ApiOperation(value = "查询课表详情", notes = "根据课程名称和班级名称查询课表详情，只能查询自己的课表")
+    public Result<CourseSchedule> getCourseSchedule(
+            @RequestParam(value = "courseName", required = true) String courseName,
+            @RequestParam(value = "className", required = true) String className) {
+        log.info("查询课表详情，课程名称：{}，班级名称：{}", courseName, className);
+        
+        // 获取当前登录教师的ID
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return Result.error("未登录或登录已过期，请重新登录");
+        }
+        
+        Long teacherId = null;
+        try {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Long) {
+                teacherId = (Long) principal;
+            } else if (principal instanceof String) {
+                teacherId = Long.parseLong((String) principal);
+            }
+        } catch (NumberFormatException e) {
+            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        if (teacherId == null) {
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        // 根据课程名称、班级名称和教师ID查询课表
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
+                   .eq(CourseSchedule::getClassName, className.trim())
+                   .eq(CourseSchedule::getTeacherNo, teacherId);
+        
+        CourseSchedule courseSchedule = courseScheduleService.getOne(queryWrapper);
+        if (courseSchedule == null) {
+            return Result.error("课表不存在或无权限查看");
+        }
+        
+        log.info("查询课表详情完成");
+        return Result.success(courseSchedule);
+    }
 }
