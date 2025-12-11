@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS teacher (
     phone VARCHAR(20) COMMENT '手机号',
     email VARCHAR(100) COMMENT '邮箱',
     department VARCHAR(255) COMMENT '所属部门（辅导员身份时格式为：专业名+年级，多个值用分号分隔）',
-    identity TINYINT DEFAULT 1 COMMENT '身份：1-只是教师，2-教师且是辅导员',
+    identity TINYINT DEFAULT 2 COMMENT '身份：1-只是教师，2-教师且是辅导员',
     status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
     last_login_time DATETIME COMMENT '最后登录时间',
     last_login_ip VARCHAR(50) COMMENT '最后登录IP',
