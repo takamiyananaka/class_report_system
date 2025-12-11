@@ -34,6 +34,10 @@ public class SecurityConfig {
     * 4. 其他业务接口 (/course/**, /courseSchedule/**, /teacher/**, /admin/**) - 需要JWT认证
     * 5. 其他路径 - 允许匿名访问
     * 
+    * CORS配置：
+    * - 启用跨域资源共享，使用CorsConfig中定义的规则
+    * - 允许前端应用跨域访问API
+    * 
     * JWT认证：
     * - 通过 JwtAuthenticationFilter 过滤器验证 Authorization Header 中的 Bearer Token
     * - Token验证成功后，将用户信息设置到 SecurityContext 中
@@ -63,6 +67,8 @@ public class SecurityConfig {
                .anyRequest().permitAll())
            // 禁用CSRF（使用JWT认证，不需要CSRF保护）
            .csrf(csrf -> csrf.disable())
+           // 启用CORS（使用CorsConfig中配置的规则）
+           .cors(cors -> cors.configure(http))
            // 使用无状态会话（JWT认证不需要Session）
            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
            // 添加JWT认证过滤器（在UsernamePasswordAuthenticationFilter之前执行）
