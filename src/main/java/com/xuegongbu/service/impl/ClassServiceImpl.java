@@ -26,11 +26,15 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> importFromExcel(MultipartFile file) {
+    public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
         Map<String, Object> result = new HashMap<>();
         
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件不能为空");
+        }
+        
+        if (teacherNo == null || teacherNo.trim().isEmpty()) {
+            throw new IllegalArgumentException("辅导员工号不能为空");
         }
         
         // 检查文件扩展名和Content-Type
@@ -75,11 +79,6 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getTeacherNo())) {
-                        errorMessages.add(String.format("第%d行：辅导员工号不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
                     if (dto.getCount() == null || dto.getCount() <= 0) {
                         errorMessages.add(String.format("第%d行：班级人数必须大于0", i + 2));
                         failCount++;
@@ -88,7 +87,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                     
                     Class classEntity = new Class();
                     classEntity.setClass_name(dto.getClassName().trim());
-                    classEntity.setTeacher_no(dto.getTeacherNo().trim());
+                    classEntity.setTeacher_no(teacherNo.trim()); // 使用传入的教师工号
                     classEntity.setCount(dto.getCount());
                     
                     classList.add(classEntity);
@@ -179,7 +178,6 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             List<ClassExcelDTO> templateData = new ArrayList<>();
             ClassExcelDTO example = new ClassExcelDTO();
             example.setClassName("25计算机类-1班");
-            example.setTeacherNo("T001");
             example.setCount(45);
             templateData.add(example);
             

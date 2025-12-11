@@ -13,9 +13,10 @@ public interface ClassService extends IService<Class> {
     /**
      * 从Excel文件导入班级数据
      * @param file Excel文件
+     * @param teacherNo 辅导员工号（从当前登录用户获取）
      * @return 导入结果
      */
-    Map<String, Object> importFromExcel(MultipartFile file);
+    Map<String, Object> importFromExcel(MultipartFile file, String teacherNo);
     
     /**
      * 分页查询班级

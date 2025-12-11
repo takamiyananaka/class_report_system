@@ -4,16 +4,19 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Class;
+import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.ClassQueryDTO;
 import com.xuegongbu.service.ClassService;
+import com.xuegongbu.service.TeacherService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,18 +34,54 @@ public class ClassController {
     @Autowired
     private ClassService classService;
 
+    @Autowired
+    private TeacherService teacherService;
+
     /**
      * Excel导入班级
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Excel导入班级", notes = "通过上传Excel文件批量导入班级数据。Excel格式要求：第一行为表头，列顺序为：班级名称、辅导员工号、班级人数")
+    @ApiOperation(value = "Excel导入班级", notes = "通过上传Excel文件批量导入班级数据。辅导员工号自动从当前登录用户获取。Excel格式要求：第一行为表头，列顺序为：班级名称、班级人数")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             @RequestPart("file") MultipartFile file) {
         try {
             log.info("开始导入班级，文件名：{}", file.getOriginalFilename());
-            Map<String, Object> result = classService.importFromExcel(file);
+            
+            // 获取当前登录教师的ID
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return Result.error("未登录或登录已过期，请重新登录");
+            }
+            
+            Long teacherId = null;
+            try {
+                Object principal = authentication.getPrincipal();
+                if (principal instanceof Long) {
+                    teacherId = (Long) principal;
+                } else if (principal instanceof String) {
+                    teacherId = Long.parseLong((String) principal);
+                }
+            } catch (NumberFormatException e) {
+                log.error("无法解析当前登录教师ID: {}", e.getMessage());
+                return Result.error("无法获取当前登录用户信息");
+            }
+            
+            if (teacherId == null) {
+                return Result.error("无法获取当前登录用户信息");
+            }
+            
+            // 根据教师ID查询教师工号
+            Teacher teacher = teacherService.getById(teacherId);
+            if (teacher == null) {
+                return Result.error("教师信息不存在");
+            }
+            
+            String teacherNo = teacher.getTeacherNo();
+            log.info("当前登录教师工号: {}", teacherNo);
+            
+            Map<String, Object> result = classService.importFromExcel(file, teacherNo);
             log.info("班级导入完成：{}", result.get("message"));
             return Result.success(result);
         } catch (Exception e) {

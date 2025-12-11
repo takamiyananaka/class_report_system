@@ -18,14 +18,8 @@ public class ClassExcelDTO implements Serializable {
     private String className;
 
     /**
-     * 辅导员工号
-     */
-    @ExcelProperty(index = 1, value = "辅导员工号")
-    private String teacherNo;
-
-    /**
      * 班级人数
      */
-    @ExcelProperty(index = 2, value = "班级人数")
+    @ExcelProperty(index = 1, value = "班级人数")
     private Integer count;
 }
