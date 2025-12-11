@@ -92,13 +92,26 @@ public class ClassController {
      * 更新班级
      */
     @PutMapping("/update")
-    @ApiOperation(value = "更新班级", notes = "更新班级信息")
+    @ApiOperation(value = "更新班级", notes = "通过班级名称更新班级信息")
     public Result<String> updateClass(@RequestBody Class classEntity) {
-        log.info("更新班级，班级ID：{}，班级信息：{}", classEntity.getId(), classEntity);
+        log.info("更新班级，班级名称：{}，班级信息：{}", classEntity.getClass_name(), classEntity);
         
-        if (classEntity.getId() == null) {
-            return Result.error("班级ID不能为空");
+        if (classEntity.getClass_name() == null || classEntity.getClass_name().trim().isEmpty()) {
+            return Result.error("班级名称不能为空");
         }
+        
+        // 根据班级名称查询班级
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Class> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(Class::getClass_name, classEntity.getClass_name().trim());
+        
+        Class existing = classService.getOne(queryWrapper);
+        if (existing == null) {
+            return Result.error("班级不存在");
+        }
+        
+        // 设置ID以便更新
+        classEntity.setId(existing.getId());
         
         classService.updateById(classEntity);
         log.info("更新班级完成");
@@ -108,11 +121,22 @@ public class ClassController {
     /**
      * 删除班级
      */
-    @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除班级", notes = "删除班级（逻辑删除）")
-    public Result<String> deleteClass(@PathVariable Long id) {
-        log.info("删除班级，班级ID：{}", id);
-        classService.removeById(id);
+    @DeleteMapping("/delete")
+    @ApiOperation(value = "删除班级", notes = "通过班级名称删除班级（逻辑删除）")
+    public Result<String> deleteClass(@RequestParam(value = "className", required = true) String className) {
+        log.info("删除班级，班级名称：{}", className);
+        
+        // 根据班级名称查询班级
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Class> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(Class::getClass_name, className.trim());
+        
+        Class existing = classService.getOne(queryWrapper);
+        if (existing == null) {
+            return Result.error("班级不存在");
+        }
+        
+        classService.removeById(existing.getId());
         log.info("删除班级完成");
         return Result.success("删除成功");
     }
@@ -120,11 +144,17 @@ public class ClassController {
     /**
      * 查询班级详情
      */
-    @GetMapping("/get/{id}")
-    @ApiOperation(value = "查询班级详情", notes = "根据班级ID查询班级详情")
-    public Result<Class> getClass(@PathVariable Long id) {
-        log.info("查询班级详情，班级ID：{}", id);
-        Class classEntity = classService.getById(id);
+    @GetMapping("/get")
+    @ApiOperation(value = "查询班级详情", notes = "根据班级名称查询班级详情")
+    public Result<Class> getClass(@RequestParam(value = "className", required = true) String className) {
+        log.info("查询班级详情，班级名称：{}", className);
+        
+        // 根据班级名称查询班级
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Class> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(Class::getClass_name, className.trim());
+        
+        Class classEntity = classService.getOne(queryWrapper);
         if (classEntity == null) {
             return Result.error("班级不存在");
         }

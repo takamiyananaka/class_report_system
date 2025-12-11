@@ -227,12 +227,16 @@ public class CourseScheduleController {
      * 更新课表
      */
     @PutMapping("/update")
-    @ApiOperation(value = "更新课表", notes = "教师更新课表信息，只能更新自己的课表")
+    @ApiOperation(value = "更新课表", notes = "教师更新课表信息，通过课程名称和班级名称定位，只能更新自己的课表")
     public Result<String> updateCourseSchedule(@RequestBody CourseSchedule courseSchedule) {
-        log.info("更新课表，课表ID：{}，课表信息：{}", courseSchedule.getId(), courseSchedule);
+        log.info("更新课表，课程名称：{}，班级名称：{}，课表信息：{}", 
+                courseSchedule.getCourseName(), courseSchedule.getClassName(), courseSchedule);
         
-        if (courseSchedule.getId() == null) {
-            return Result.error("课表ID不能为空");
+        if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
+            return Result.error("课程名称不能为空");
+        }
+        if (courseSchedule.getClassName() == null || courseSchedule.getClassName().trim().isEmpty()) {
+            return Result.error("班级名称不能为空");
         }
         
         // 获取当前登录教师的ID
@@ -258,14 +262,21 @@ public class CourseScheduleController {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 验证课表是否属于当前教师
-        CourseSchedule existing = courseScheduleService.getById(courseSchedule.getId());
+        // 根据课程名称、班级名称和教师ID查询课表
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim())
+                   .eq(CourseSchedule::getClassName, courseSchedule.getClassName().trim())
+                   .eq(CourseSchedule::getTeacherNo, teacherId);
+        
+        CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
         if (existing == null) {
-            return Result.error("课表不存在");
+            return Result.error("课表不存在或无权限修改");
         }
-        if (!existing.getTeacherNo().equals(teacherId)) {
-            return Result.error("无权限修改其他教师的课表");
-        }
+        
+        // 设置ID以便更新
+        courseSchedule.setId(existing.getId());
+        courseSchedule.setTeacherNo(teacherId);
         
         courseScheduleService.updateById(courseSchedule);
         log.info("更新课表完成");
@@ -275,10 +286,12 @@ public class CourseScheduleController {
     /**
      * 删除课表
      */
-    @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除课表", notes = "教师删除课表，只能删除自己的课表")
-    public Result<String> deleteCourseSchedule(@PathVariable Long id) {
-        log.info("删除课表，课表ID：{}", id);
+    @DeleteMapping("/delete")
+    @ApiOperation(value = "删除课表", notes = "教师删除课表，通过课程名称和班级名称定位，只能删除自己的课表")
+    public Result<String> deleteCourseSchedule(
+            @RequestParam(value = "courseName", required = true) String courseName,
+            @RequestParam(value = "className", required = true) String className) {
+        log.info("删除课表，课程名称：{}，班级名称：{}", courseName, className);
         
         // 获取当前登录教师的ID
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -303,16 +316,19 @@ public class CourseScheduleController {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 验证课表是否属于当前教师
-        CourseSchedule existing = courseScheduleService.getById(id);
+        // 根据课程名称、班级名称和教师ID查询课表
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
+                   .eq(CourseSchedule::getClassName, className.trim())
+                   .eq(CourseSchedule::getTeacherNo, teacherId);
+        
+        CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
         if (existing == null) {
-            return Result.error("课表不存在");
-        }
-        if (!existing.getTeacherNo().equals(teacherId)) {
-            return Result.error("无权限删除其他教师的课表");
+            return Result.error("课表不存在或无权限删除");
         }
         
-        courseScheduleService.removeById(id);
+        courseScheduleService.removeById(existing.getId());
         log.info("删除课表完成");
         return Result.success("删除成功");
     }
@@ -320,10 +336,12 @@ public class CourseScheduleController {
     /**
      * 查询课表详情
      */
-    @GetMapping("/get/{id}")
-    @ApiOperation(value = "查询课表详情", notes = "根据课表ID查询课表详情，只能查询自己的课表")
-    public Result<CourseSchedule> getCourseSchedule(@PathVariable Long id) {
-        log.info("查询课表详情，课表ID：{}", id);
+    @GetMapping("/get")
+    @ApiOperation(value = "查询课表详情", notes = "根据课程名称和班级名称查询课表详情，只能查询自己的课表")
+    public Result<CourseSchedule> getCourseSchedule(
+            @RequestParam(value = "courseName", required = true) String courseName,
+            @RequestParam(value = "className", required = true) String className) {
+        log.info("查询课表详情，课程名称：{}，班级名称：{}", courseName, className);
         
         // 获取当前登录教师的ID
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -348,14 +366,16 @@ public class CourseScheduleController {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        CourseSchedule courseSchedule = courseScheduleService.getById(id);
-        if (courseSchedule == null) {
-            return Result.error("课表不存在");
-        }
+        // 根据课程名称、班级名称和教师ID查询课表
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
+                   .eq(CourseSchedule::getClassName, className.trim())
+                   .eq(CourseSchedule::getTeacherNo, teacherId);
         
-        // 验证课表是否属于当前教师
-        if (!courseSchedule.getTeacherNo().equals(teacherId)) {
-            return Result.error("无权限查看其他教师的课表");
+        CourseSchedule courseSchedule = courseScheduleService.getOne(queryWrapper);
+        if (courseSchedule == null) {
+            return Result.error("课表不存在或无权限查看");
         }
         
         log.info("查询课表详情完成");
