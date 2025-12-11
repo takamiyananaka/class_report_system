@@ -2,6 +2,7 @@ package com.xuegongbu.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xuegongbu.common.Constants;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.Teacher;
@@ -57,7 +58,7 @@ public class ClassController {
             String teacherNo;
             if (teacher == null) {
                 // 如果找不到教师信息，使用默认值
-                teacherNo = com.xuegongbu.common.Constants.DEFAULT_TEACHER_NO_STR;
+                teacherNo = Constants.DEFAULT_TEACHER_NO_STR;
                 log.warn("未找到教师信息，使用默认教师工号: {}", teacherNo);
             } else {
                 teacherNo = teacher.getTeacherNo();
