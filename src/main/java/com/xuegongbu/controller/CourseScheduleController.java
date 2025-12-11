@@ -118,27 +118,6 @@ public class CourseScheduleController {
         return Result.success(result);
     }
 
-    /**
-     * 根据班级名称分页查询课表
-     */
-    @GetMapping("/queryByClass")
-    @ApiOperation(value = "根据班级名称查询课表", notes = "根据班级名称分页查询课表")
-    public Result<Page<CourseSchedule>> queryByClassName(
-            @RequestParam(value = "className", required = true) String className,
-            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-        
-        log.info("根据班级名称查询课表，班级：{}, pageNum={}, pageSize={}", className, pageNum, pageSize);
-        
-        CourseScheduleQueryDTO queryDTO = new CourseScheduleQueryDTO();
-        queryDTO.setClassName(className);
-        queryDTO.setPageNum(pageNum);
-        queryDTO.setPageSize(pageSize);
-        
-        Page<CourseSchedule> result = courseScheduleService.queryPage(queryDTO);
-        log.info("查询课表完成，共{}条记录", result.getTotal());
-        return Result.success(result);
-    }
 
     /**
      * 下载课表导入模板
