@@ -106,10 +106,10 @@ public class ClassController {
         log.info("创建班级，班级信息：{}", classEntity);
         
         // 验证必填字段
-        if (classEntity.getClass_name() == null || classEntity.getClass_name().trim().isEmpty()) {
+        if (classEntity.getClassName() == null || classEntity.getClassName().trim().isEmpty()) {
             return Result.error("班级名称不能为空");
         }
-        if (classEntity.getTeacher_no() == null || classEntity.getTeacher_no().trim().isEmpty()) {
+        if (classEntity.getTeacherNo() == null || classEntity.getTeacherNo().trim().isEmpty()) {
             return Result.error("辅导员工号不能为空");
         }
         if (classEntity.getCount() == null || classEntity.getCount() <= 0) {
@@ -128,16 +128,16 @@ public class ClassController {
     @PutMapping("/update")
     @ApiOperation(value = "更新班级", notes = "通过班级名称更新班级信息")
     public Result<String> updateClass(@RequestBody Class classEntity) {
-        log.info("更新班级，班级名称：{}，班级信息：{}", classEntity.getClass_name(), classEntity);
+        log.info("更新班级，班级名称：{}，班级信息：{}", classEntity.getClassName(), classEntity);
         
-        if (classEntity.getClass_name() == null || classEntity.getClass_name().trim().isEmpty()) {
+        if (classEntity.getClassName() == null || classEntity.getClassName().trim().isEmpty()) {
             return Result.error("班级名称不能为空");
         }
         
         // 根据班级名称查询班级
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Class> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(Class::getClass_name, classEntity.getClass_name().trim());
+        queryWrapper.eq(Class::getClassName, classEntity.getClassName().trim());
         
         Class existing = classService.getOne(queryWrapper);
         if (existing == null) {
@@ -163,7 +163,7 @@ public class ClassController {
         // 根据班级名称查询班级
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Class> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(Class::getClass_name, className.trim());
+        queryWrapper.eq(Class::getClassName, className.trim());
         
         Class existing = classService.getOne(queryWrapper);
         if (existing == null) {
@@ -186,7 +186,7 @@ public class ClassController {
         // 根据班级名称查询班级
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Class> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(Class::getClass_name, className.trim());
+        queryWrapper.eq(Class::getClassName, className.trim());
         
         Class classEntity = classService.getOne(queryWrapper);
         if (classEntity == null) {
