@@ -53,16 +53,22 @@ public class ClassController {
             Long teacherId = AuthenticationUtil.getCurrentTeacherNo();
             log.info("当前教师ID: {}", teacherId);
             
-            // 根据教师ID查询教师工号
-            Teacher teacher = teacherService.getById(teacherId);
             String teacherNo;
-            if (teacher == null) {
-                // 如果找不到教师信息，使用默认值
+            // 如果是默认值，直接使用默认教师工号字符串，避免不必要的数据库查询
+            if (teacherId.equals(Constants.DEFAULT_TEACHER_NO)) {
                 teacherNo = Constants.DEFAULT_TEACHER_NO_STR;
-                log.warn("未找到教师信息，使用默认教师工号: {}", teacherNo);
+                log.warn("使用默认教师工号: {}", teacherNo);
             } else {
-                teacherNo = teacher.getTeacherNo();
-                log.info("当前登录教师工号: {}", teacherNo);
+                // 根据教师ID查询教师工号
+                Teacher teacher = teacherService.getById(teacherId);
+                if (teacher == null) {
+                    // 如果找不到教师信息，使用默认值
+                    teacherNo = Constants.DEFAULT_TEACHER_NO_STR;
+                    log.warn("未找到教师信息，使用默认教师工号: {}", teacherNo);
+                } else {
+                    teacherNo = teacher.getTeacherNo();
+                    log.info("当前登录教师工号: {}", teacherNo);
+                }
             }
             
             Map<String, Object> result = classService.importFromExcel(file, teacherNo);
