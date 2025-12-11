@@ -49,36 +49,31 @@ public class ClassController {
         try {
             log.info("开始导入班级，文件名：{}", file.getOriginalFilename());
             
-            // 获取当前登录教师的ID
+            // 获取当前登录教师的工号
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return Result.error("未登录或登录已过期，请重新登录");
             }
             
-            Long teacherId = null;
+            String teacherNo = null;
             try {
                 Object principal = authentication.getPrincipal();
-                if (principal instanceof Long) {
-                    teacherId = (Long) principal;
-                } else if (principal instanceof String) {
-                    teacherId = Long.parseLong((String) principal);
+                // principal现在直接是teacherNo (String)
+                if (principal instanceof String) {
+                    teacherNo = (String) principal;
+                } else if (principal instanceof Long) {
+                    // 兼容管理员登录（principal是userId）
+                    teacherNo = String.valueOf(principal);
                 }
-            } catch (NumberFormatException e) {
-                log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            } catch (Exception e) {
+                log.error("无法解析当前登录教师工号: {}", e.getMessage());
                 return Result.error("无法获取当前登录用户信息");
             }
             
-            if (teacherId == null) {
+            if (teacherNo == null) {
                 return Result.error("无法获取当前登录用户信息");
             }
             
-            // 根据教师ID查询教师工号
-            Teacher teacher = teacherService.getById(teacherId);
-            if (teacher == null) {
-                return Result.error("教师信息不存在");
-            }
-            
-            String teacherNo = teacher.getTeacherNo();
             log.info("当前登录教师工号: {}", teacherNo);
             
             Map<String, Object> result = classService.importFromExcel(file, teacherNo);
