@@ -4,7 +4,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 /**
  * 跨域资源共享(CORS)配置类
@@ -15,26 +14,32 @@ import org.springframework.web.filter.CorsFilter;
 public class CorsConfig {
 
     /**
-     * 配置CORS过滤器
+     * 配置CORS配置源
      * 
      * 允许规则：
-     * 1. 允许所有来源的跨域请求 (开发环境配置，生产环境建议配置具体的前端域名)
+     * 1. 允许本地开发环境的跨域请求 (localhost的常见端口)
      * 2. 允许所有HTTP方法 (GET, POST, PUT, DELETE, OPTIONS等)
      * 3. 允许所有请求头
      * 4. 允许携带认证信息 (如Cookie、JWT Token等)
      * 5. 预检请求缓存时间：3600秒
      * 
-     * @return CorsFilter CORS过滤器
+     * 安全说明：
+     * - 默认配置仅允许本地开发环境访问
+     * - 生产环境请在下方添加具体的前端域名
+     * 
+     * @return UrlBasedCorsConfigurationSource CORS配置源
      */
     @Bean
-    public CorsFilter corsFilter() {
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // 允许所有来源（开发环境）
-        // 生产环境建议改为具体的前端域名，例如：
-        // config.addAllowedOrigin("http://localhost:3000");
+        // 允许本地开发环境（请根据实际需要添加或修改）
+        config.addAllowedOriginPattern("http://localhost:[*]");
+        config.addAllowedOriginPattern("http://127.0.0.1:[*]");
+        
+        // 生产环境请取消注释并配置具体的前端域名，例如：
         // config.addAllowedOrigin("https://your-frontend-domain.com");
-        config.addAllowedOriginPattern("*");
+        // config.addAllowedOrigin("https://www.your-frontend-domain.com");
         
         // 允许携带认证信息（Cookie、Authorization头等）
         config.setAllowCredentials(true);
@@ -56,6 +61,6 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         
-        return new CorsFilter(source);
+        return source;
     }
 }

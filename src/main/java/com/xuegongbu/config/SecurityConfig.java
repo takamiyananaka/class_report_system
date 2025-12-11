@@ -68,7 +68,7 @@ public class SecurityConfig {
            // 禁用CSRF（使用JWT认证，不需要CSRF保护）
            .csrf(csrf -> csrf.disable())
            // 启用CORS（使用CorsConfig中配置的规则）
-           .cors(cors -> cors.configure(http))
+           .cors(cors -> {})
            // 使用无状态会话（JWT认证不需要Session）
            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
            // 添加JWT认证过滤器（在UsernamePasswordAuthenticationFilter之前执行）
