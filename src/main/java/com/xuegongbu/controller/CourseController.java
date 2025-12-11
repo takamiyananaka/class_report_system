@@ -8,6 +8,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,9 +56,39 @@ public class CourseController {
      * 创建课程
      */
     @PostMapping("/add")
-    @ApiOperation(value = "创建课程", notes = "教师创建新课程")
+    @ApiOperation(value = "创建课程", notes = "教师创建新课程，教师工号从登录状态获取")
     public Result<Course> addCourse(@RequestBody Course course) {
         log.info("创建课程，课程信息：{}", course);
+        
+        // 获取当前登录教师的工号
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return Result.error("未登录或登录已过期，请重新登录");
+        }
+        
+        Long teacherNo = null;
+        try {
+            Object principal = authentication.getPrincipal();
+            // principal现在是teacherNo (String)，需要转换为Long
+            if (principal instanceof String) {
+                teacherNo = Long.parseLong((String) principal);
+            } else if (principal instanceof Long) {
+                // 兼容管理员登录
+                teacherNo = (Long) principal;
+            }
+        } catch (NumberFormatException e) {
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        if (teacherNo == null) {
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        // 设置教师工号
+        course.setTeacherNo(teacherNo);
+        log.info("设置课程教师工号: {}", teacherNo);
+        
         courseService.save(course);
         log.info("创建课程完成，课程ID：{}", course.getId());
         return Result.success(course);
