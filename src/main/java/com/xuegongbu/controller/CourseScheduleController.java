@@ -53,11 +53,12 @@ public class CourseScheduleController {
             Long teacherNo = null;
             try {
                 Object principal = authentication.getPrincipal();
-                // 处理不同类型的principal
-                if (principal instanceof Long) {
-                    teacherNo = (Long) principal;
-                } else if (principal instanceof String) {
+                // principal现在是teacherNo (String)，需要转换为Long
+                if (principal instanceof String) {
                     teacherNo = Long.parseLong((String) principal);
+                } else if (principal instanceof Long) {
+                    // 兼容管理员登录（principal是userId）
+                    teacherNo = (Long) principal;
                 }
             } catch (NumberFormatException e) {
                 log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -93,11 +94,12 @@ public class CourseScheduleController {
                     Object principal = authentication.getPrincipal();
                     Long currentTeacherNo = null;
                     
-                    // 处理不同类型的principal
-                    if (principal instanceof Long) {
-                        currentTeacherNo = (Long) principal;
-                    } else if (principal instanceof String) {
+                    // principal现在是teacherNo (String)，需要转换为Long
+                    if (principal instanceof String) {
                         currentTeacherNo = Long.parseLong((String) principal);
+                    } else if (principal instanceof Long) {
+                        // 兼容管理员登录
+                        currentTeacherNo = (Long) principal;
                     }
                     
                     if (currentTeacherNo != null) {
@@ -143,32 +145,33 @@ public class CourseScheduleController {
     public Result<CourseSchedule> addCourseSchedule(@RequestBody CourseSchedule courseSchedule) {
         log.info("创建课表，课表信息：{}", courseSchedule);
         
-        // 获取当前登录教师的ID
+        // 获取当前登录教师的工号
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherId = null;
+        Long teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof Long) {
-                teacherId = (Long) principal;
-            } else if (principal instanceof String) {
-                teacherId = Long.parseLong((String) principal);
+            // principal现在是teacherNo (String)，需要转换为Long
+            if (principal instanceof String) {
+                teacherNo = Long.parseLong((String) principal);
+            } else if (principal instanceof Long) {
+                // 兼容管理员登录
+                teacherNo = (Long) principal;
             }
         } catch (NumberFormatException e) {
-            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
         
-        if (teacherId == null) {
+        if (teacherNo == null) {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 将教师ID设置为teacherNo（这里假设使用ID作为teacherNo）
-        // 注意：根据实际情况，可能需要先查询Teacher表获取真实的teacherNo
-        courseSchedule.setTeacherNo(teacherId);
+        // 设置教师工号
+        courseSchedule.setTeacherNo(teacherNo);
         
         // 验证必填字段
         if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
@@ -218,35 +221,37 @@ public class CourseScheduleController {
             return Result.error("班级名称不能为空");
         }
         
-        // 获取当前登录教师的ID
+        // 获取当前登录教师的工号
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherId = null;
+        Long teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof Long) {
-                teacherId = (Long) principal;
-            } else if (principal instanceof String) {
-                teacherId = Long.parseLong((String) principal);
+            // principal现在是teacherNo (String)，需要转换为Long
+            if (principal instanceof String) {
+                teacherNo = Long.parseLong((String) principal);
+            } else if (principal instanceof Long) {
+                // 兼容管理员登录
+                teacherNo = (Long) principal;
             }
         } catch (NumberFormatException e) {
-            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
         
-        if (teacherId == null) {
+        if (teacherNo == null) {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 根据课程名称、班级名称和教师ID查询课表
+        // 根据课程名称、班级名称和教师工号查询课表
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim())
                    .eq(CourseSchedule::getClassName, courseSchedule.getClassName().trim())
-                   .eq(CourseSchedule::getTeacherNo, teacherId);
+                   .eq(CourseSchedule::getTeacherNo, teacherNo);
         
         CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
         if (existing == null) {
@@ -255,7 +260,7 @@ public class CourseScheduleController {
         
         // 设置ID以便更新
         courseSchedule.setId(existing.getId());
-        courseSchedule.setTeacherNo(teacherId);
+        courseSchedule.setTeacherNo(teacherNo);
         
         courseScheduleService.updateById(courseSchedule);
         log.info("更新课表完成");
@@ -272,35 +277,37 @@ public class CourseScheduleController {
             @RequestParam(value = "className", required = true) String className) {
         log.info("删除课表，课程名称：{}，班级名称：{}", courseName, className);
         
-        // 获取当前登录教师的ID
+        // 获取当前登录教师的工号
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherId = null;
+        Long teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof Long) {
-                teacherId = (Long) principal;
-            } else if (principal instanceof String) {
-                teacherId = Long.parseLong((String) principal);
+            // principal现在是teacherNo (String)，需要转换为Long
+            if (principal instanceof String) {
+                teacherNo = Long.parseLong((String) principal);
+            } else if (principal instanceof Long) {
+                // 兼容管理员登录
+                teacherNo = (Long) principal;
             }
         } catch (NumberFormatException e) {
-            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
         
-        if (teacherId == null) {
+        if (teacherNo == null) {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 根据课程名称、班级名称和教师ID查询课表
+        // 根据课程名称、班级名称和教师工号查询课表
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
                    .eq(CourseSchedule::getClassName, className.trim())
-                   .eq(CourseSchedule::getTeacherNo, teacherId);
+                   .eq(CourseSchedule::getTeacherNo, teacherNo);
         
         CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
         if (existing == null) {
@@ -322,35 +329,37 @@ public class CourseScheduleController {
             @RequestParam(value = "className", required = true) String className) {
         log.info("查询课表详情，课程名称：{}，班级名称：{}", courseName, className);
         
-        // 获取当前登录教师的ID
+        // 获取当前登录教师的工号
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherId = null;
+        Long teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof Long) {
-                teacherId = (Long) principal;
-            } else if (principal instanceof String) {
-                teacherId = Long.parseLong((String) principal);
+            // principal现在是teacherNo (String)，需要转换为Long
+            if (principal instanceof String) {
+                teacherNo = Long.parseLong((String) principal);
+            } else if (principal instanceof Long) {
+                // 兼容管理员登录
+                teacherNo = (Long) principal;
             }
         } catch (NumberFormatException e) {
-            log.error("无法解析当前登录教师ID: {}", e.getMessage());
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
         
-        if (teacherId == null) {
+        if (teacherNo == null) {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 根据课程名称、班级名称和教师ID查询课表
+        // 根据课程名称、班级名称和教师工号查询课表
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
                    .eq(CourseSchedule::getClassName, className.trim())
-                   .eq(CourseSchedule::getTeacherNo, teacherId);
+                   .eq(CourseSchedule::getTeacherNo, teacherNo);
         
         CourseSchedule courseSchedule = courseScheduleService.getOne(queryWrapper);
         if (courseSchedule == null) {

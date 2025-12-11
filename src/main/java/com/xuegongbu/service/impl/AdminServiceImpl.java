@@ -53,8 +53,8 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         admin.setLastLoginTime(LocalDateTime.now());
         this.updateById(admin);
 
-        // 生成token
-        String token = jwtUtil.generateToken(admin.getId(), admin.getUsername());
+        // 生成token (管理员没有teacherNo，传null)
+        String token = jwtUtil.generateToken(admin.getId(), admin.getUsername(), null);
 
         // 构造用户信息（不包含密码）
         Map<String, Object> userInfo = new HashMap<>();

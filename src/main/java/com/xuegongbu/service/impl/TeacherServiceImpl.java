@@ -55,7 +55,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         this.updateById(teacher);
 
         // 生成token
-        String token = jwtUtil.generateToken(teacher.getId(), teacher.getUsername());
+        String token = jwtUtil.generateToken(teacher.getId(), teacher.getUsername(), teacher.getTeacherNo());
 
         // 构造用户信息（不包含密码）
         Map<String, Object> userInfo = new HashMap<>();

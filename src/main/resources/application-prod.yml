@@ -5,14 +5,11 @@ spring:
     password: murasame521
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-# CORS跨域配置 - 开发环境
 cors:
   allowed:
     origins:
-      - http://localhost:*
-      - http://127.0.0.1:*
-      - https://localhost:*
-      - https://127.0.0.1:*
+      - http://117.72.173.242:*
+      - https://117.72.173.242:*
 
 logging:
   level:

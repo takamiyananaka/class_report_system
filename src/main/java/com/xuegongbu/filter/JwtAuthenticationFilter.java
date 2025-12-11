@@ -11,10 +11,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * JWT认证过滤器
@@ -25,6 +28,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    /**
+     * 不需要进行JWT认证的路径
+     */
+    private static final List<String> EXCLUDED_PATHS = Arrays.asList(
+            "/doc.html",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/swagger-resources/**",
+            "/webjars/**",
+            "/favicon.ico",
+            "/front/login",
+            "/admin/login",
+            "/courseSchedule/downloadTemplate"
+    );
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String requestPath = request.getRequestURI();
+        
+        // 检查请求路径是否在排除列表中
+        for (String pattern : EXCLUDED_PATHS) {
+            if (pathMatcher.match(pattern, requestPath)) {
+                log.trace("JWT认证过滤器 - 跳过路径: {}", requestPath);
+                return true;
+            }
+        }
+        
+        return false;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -45,17 +81,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(token)) {
                 Long userId = jwtUtil.getUserIdFromToken(token);
                 String username = jwtUtil.getUsernameFromToken(token);
+                String teacherNo = jwtUtil.getTeacherNoFromToken(token);
                 
                 if (userId != null && username != null) {
+                    // 使用teacherNo作为principal（如果是管理员则teacherNo为null，使用userId）
+                    Object principal = teacherNo != null ? teacherNo : userId;
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
+                            new UsernamePasswordAuthenticationToken(principal, null, new ArrayList<>());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.info("JWT认证成功 - 用户ID: {}, 用户名: {}, 请求路径: {}", userId, username, requestPath);
+                    log.info("JWT认证成功 - 用户ID: {}, 用户名: {}, 教师工号: {}, 请求路径: {}", userId, username, teacherNo, requestPath);
                 } else {
-                    log.warn("JWT认证失败 - 无法从Token中提取用户信息，用户ID: {}, 用户名: {}, 请求路径: {}", 
-                            userId, username, requestPath);
+                    log.warn("JWT认证失败 - 无法从Token中提取用户信息，用户ID: {}, 用户名: {}, 教师工号: {}, 请求路径: {}", 
+                            userId, username, teacherNo, requestPath);
                 }
             } else {
                 log.warn("JWT认证失败 - Token验证失败，请求路径: {}", requestPath);

@@ -1,12 +1,10 @@
 server:
   port: 8080
-
-
 spring:
   application:
     name: class-report-system
   datasource:
-    url: jdbc:mysql://localhost:3306/class_report?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url:  jdbc:mysql://localhost:3306/class_report?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: murasame521
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -16,7 +14,7 @@ spring:
       password: admin123
   data:
     redis:
-      host: 117.72.173.242
+      host:  117.72.173.242
       port: 6379
       password: 123456
       lettuce:
@@ -26,6 +24,8 @@ spring:
           min-idle: 1
           max-wait: 10s
           time-between-eviction-runs: 10s
+  profiles:
+    active: dev
 
 
 mybatis-plus:
@@ -53,14 +53,14 @@ logging:
 # Knife4j 配置
 springdoc:
   api-docs:
-    enabled: true
+    enabled:  true
     path: /v3/api-docs
   swagger-ui:
     enabled: true
-    path: /swagger-ui.html
+    path: /swagger-ui. html
   group-configs:
     - group:  'all'
-      paths-to-match: '/**'
+      paths-to-match:  '/**'
       packages-to-scan: com.xuegongbu.controller
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
@@ -78,3 +78,12 @@ knife4j:
     enable-footer-custom: true
     footer-custom-content: 'Copyright © 2025 学工部课程考勤系统'
     title: '学工部课程考勤系统 API 文档'
+
+# CORS 跨域配置 - 默认配置（会被环境特定配置覆盖）
+cors:
+  allowed:
+    origins:
+      - http://localhost:*
+      - http://127.0.0.1:*
+      - https://localhost:*
+      - https://127.0.0.1:*

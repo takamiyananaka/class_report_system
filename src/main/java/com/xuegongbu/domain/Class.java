@@ -52,7 +52,6 @@ public class Class implements Serializable {
     /**
     * 创建时间
     */
-    @NotNull(message="[创建时间]不能为空")
     @ApiModelProperty("创建时间")
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createTime;
