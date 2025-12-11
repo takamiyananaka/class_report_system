@@ -26,6 +26,8 @@ spring:
           min-idle: 1
           max-wait: 10s
           time-between-eviction-runs: 10s
+  profiles:
+    active: dev
 
 
 mybatis-plus:

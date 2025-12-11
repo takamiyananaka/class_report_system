@@ -27,7 +27,7 @@ public class SecurityConfig {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // 从配置文件读取允许的域名
-    @Value("${cors.allowed. origins}")
+    @Value("${cors.allowed.origins}")
     private List<String> allowedOrigins;
 
     @Bean
