@@ -93,12 +93,12 @@ This document describes the new API endpoints added in this PR.
 
 ### Excel Import Classes
 - **Endpoint**: `POST /class/import`
-- **Description**: Batch import classes from Excel file
+- **Description**: Batch import classes from Excel file. Teacher number is automatically obtained from the currently logged-in user.
 - **Request**: multipart/form-data with file parameter
 - **Excel Format**: First row is header, columns:
   1. 班级名称 (Class Name)
-  2. 辅导员工号 (Teacher Number)
-  3. 班级人数 (Student Count)
+  2. 班级人数 (Student Count)
+- **Note**: Teacher number (辅导员工号) is automatically filled from the logged-in user's information, no need to include in Excel
 - **Response**: Import result with success/fail counts and error messages
 
 ### Query Classes

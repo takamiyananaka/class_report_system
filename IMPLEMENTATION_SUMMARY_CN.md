@@ -53,18 +53,19 @@
   - `ClassExcelDTO` - Excel导入DTO
   - `ClassQueryDTO` - 查询条件DTO
 - ✅ 新增以下接口：
-  - `POST /class/import` - Excel批量导入班级
+  - `POST /class/import` - Excel批量导入班级（辅导员工号自动从登录用户获取）
   - `GET /class/downloadTemplate` - 下载Excel导入模板
   - `GET /class/query` - 多条件查询（班级名称模糊查询、辅导员工号精确查询）
   - `POST /class/add` - 创建班级
   - `PUT /class/update` - 更新班级，通过班级名称定位
   - `DELETE /class/delete?className=xxx` - 删除班级，通过班级名称定位
   - `GET /class/get?className=xxx` - 查询班级详情，通过班级名称定位
-- ✅ Excel导入格式：班级名称、辅导员工号、班级人数
+- ✅ Excel导入格式：**班级名称、班级人数**（辅导员工号自动填充）
 - ✅ ID使用雪花算法自动生成，但不在API中使用
 - ✅ 支持逻辑删除
 - ✅ 完善的错误处理和数据验证
 - ✅ **所有操作使用班级名称作为标识，不使用ID**
+- ✅ **Excel不需要输入辅导员工号，自动从当前登录用户获取**
 
 ## 技术实现细节
 
