@@ -51,7 +51,7 @@ public class Knife4jConfig {
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
                 .components(new Components()
-                        .addSecuritySchemes("BearerAuth",
+                        .addSecuritySchemes("Authorization",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
@@ -140,7 +140,7 @@ public class Knife4jConfig {
                             // 确保每个操作都有安全要求
                             if (operation.getSecurity() == null || operation.getSecurity().isEmpty()) {
                                 operation.addSecurityItem(
-                                    new SecurityRequirement().addList("BearerAuth")
+                                    new SecurityRequirement().addList("Authorization")
                                 );
                             }
                         });
