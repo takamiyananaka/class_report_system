@@ -1,11 +1,9 @@
 package com.xuegongbu.service.impl;
-
 import com.xuegongbu.domain.Device;
 import com.xuegongbu.service.DeviceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +35,7 @@ public class DeviceServiceImpl implements DeviceService {
     public Map<String, String> getDeviceUrl(String classroomName)  {
         //redis读取
         Device device = (Device) redisTemplate.opsForValue().get(classroomName);
+        log.info("redis读取: {},{}",device,classroomName);
         String deviceId = device.getDeviceId();
         String baseUrl1 = "https://ddxk.swpu.edu.cn:8063/live/";
         String baseUrl2 = "https://ddxk.swpu.edu.cn:8064/live/";

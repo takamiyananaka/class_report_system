@@ -66,15 +66,16 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         if (LocalTime.now().isBefore(course.getStartTime()) || LocalTime.now().isAfter(course.getEndTime())) {
             throw new BusinessException("不在上课时间");
         }
+        String classroomName = course.getClassroom();
         String className = course.getClassName();
-        Map<String, String> deviceUrls = deviceService.getDeviceUrl(className);
+        Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
         //调用模型
         CountResponse countResponse = countUtil.getCount(deviceUrls);
         //生成考勤记录
         //由当前时间按照"HH:MM"格式生成checkTime
         LocalDateTime checkTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         //根据班级名字获取班级信息
-        Class clazz = classMapper.selectOne(new QueryWrapper<Class>().eq("class_name", className));
+        Class clazz = classMapper.selectOne(new QueryWrapper<Class>().eq("class_name",className));
         Attendance attendance = new Attendance();
         attendance.setCourseId(courseId);
         attendance.setCheckTime(checkTime);
@@ -87,6 +88,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         attendance.setRemark("手动考勤");
 
         save(attendance);
+
     }
 
     @Override
