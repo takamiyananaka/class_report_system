@@ -203,6 +203,61 @@ public class ClassController {
     }
 
     /**
+     * 根据ID查询班级详情
+     */
+    @GetMapping("/get/{id}")
+    @ApiOperation(value = "根据ID查询班级详情", notes = "根据班级ID查询班级详情")
+    public Result<Class> getClassById(@PathVariable Long id) {
+        log.info("根据ID查询班级详情，班级ID：{}", id);
+        
+        Class classEntity = classService.getById(id);
+        if (classEntity == null) {
+            return Result.error("班级不存在");
+        }
+        log.info("查询班级详情完成");
+        return Result.success(classEntity);
+    }
+
+    /**
+     * 根据ID更新班级
+     */
+    @PutMapping("/update/{id}")
+    @ApiOperation(value = "根据ID更新班级", notes = "通过班级ID更新班级信息")
+    public Result<String> updateClassById(@PathVariable Long id, @RequestBody Class classEntity) {
+        log.info("根据ID更新班级，班级ID：{}，班级信息：{}", id, classEntity);
+        
+        Class existing = classService.getById(id);
+        if (existing == null) {
+            return Result.error("班级不存在");
+        }
+        
+        // 设置ID以便更新
+        classEntity.setId(id);
+        
+        classService.updateById(classEntity);
+        log.info("更新班级完成");
+        return Result.success("更新成功");
+    }
+
+    /**
+     * 根据ID删除班级
+     */
+    @DeleteMapping("/delete/{id}")
+    @ApiOperation(value = "根据ID删除班级", notes = "通过班级ID删除班级（逻辑删除）")
+    public Result<String> deleteClassById(@PathVariable Long id) {
+        log.info("根据ID删除班级，班级ID：{}", id);
+        
+        Class existing = classService.getById(id);
+        if (existing == null) {
+            return Result.error("班级不存在");
+        }
+        
+        classService.removeById(id);
+        log.info("删除班级完成");
+        return Result.success("删除成功");
+    }
+
+    /**
      * 下载班级导入模板
      */
     @GetMapping("/downloadTemplate")

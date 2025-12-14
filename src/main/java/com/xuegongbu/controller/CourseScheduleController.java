@@ -369,4 +369,60 @@ public class CourseScheduleController {
         log.info("查询课表详情完成");
         return Result.success(courseSchedule);
     }
+
+    /**
+     * 根据ID查询课表详情
+     */
+    @GetMapping("/get/{id}")
+    @ApiOperation(value = "根据ID查询课表详情", notes = "根据课表ID查询课表详情")
+    public Result<CourseSchedule> getCourseScheduleById(@PathVariable Long id) {
+        log.info("根据ID查询课表详情，课表ID：{}", id);
+        
+        CourseSchedule courseSchedule = courseScheduleService.getById(id);
+        if (courseSchedule == null) {
+            return Result.error("课表不存在");
+        }
+        
+        log.info("查询课表详情完成");
+        return Result.success(courseSchedule);
+    }
+
+    /**
+     * 根据ID更新课表
+     */
+    @PutMapping("/update/{id}")
+    @ApiOperation(value = "根据ID更新课表", notes = "通过课表ID更新课表信息")
+    public Result<String> updateCourseScheduleById(@PathVariable Long id, @RequestBody CourseSchedule courseSchedule) {
+        log.info("根据ID更新课表，课表ID：{}，课表信息：{}", id, courseSchedule);
+        
+        CourseSchedule existing = courseScheduleService.getById(id);
+        if (existing == null) {
+            return Result.error("课表不存在");
+        }
+        
+        // 设置ID以便更新
+        courseSchedule.setId(id);
+        
+        courseScheduleService.updateById(courseSchedule);
+        log.info("更新课表完成");
+        return Result.success("更新成功");
+    }
+
+    /**
+     * 根据ID删除课表
+     */
+    @DeleteMapping("/delete/{id}")
+    @ApiOperation(value = "根据ID删除课表", notes = "通过课表ID删除课表")
+    public Result<String> deleteCourseScheduleById(@PathVariable Long id) {
+        log.info("根据ID删除课表，课表ID：{}", id);
+        
+        CourseSchedule existing = courseScheduleService.getById(id);
+        if (existing == null) {
+            return Result.error("课表不存在");
+        }
+        
+        courseScheduleService.removeById(id);
+        log.info("删除课表完成");
+        return Result.success("删除成功");
+    }
 }
