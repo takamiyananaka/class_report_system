@@ -17,6 +17,12 @@ public class ClassQueryDTO {
     @ApiModelProperty(value = "辅导员工号", example = "T001")
     private String teacherNo;
 
+    @ApiModelProperty(value = "年级列表（支持多选）", example = "[\"2023级\", \"2024级\"]")
+    private java.util.List<String> grades;
+
+    @ApiModelProperty(value = "专业列表（支持多选）", example = "[\"计算机科学与技术\", \"软件工程\"]")
+    private java.util.List<String> majors;
+
     @ApiModelProperty(value = "页码（从1开始）", example = "1")
     private Integer pageNum = 1;
 

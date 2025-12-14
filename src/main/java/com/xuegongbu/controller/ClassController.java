@@ -41,7 +41,7 @@ public class ClassController {
      * Excel导入班级
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Excel导入班级", notes = "通过上传Excel文件批量导入班级数据。辅导员工号自动从当前登录用户获取。Excel格式要求：第一行为表头，列顺序为：班级名称、班级人数")
+    @ApiOperation(value = "Excel导入班级", notes = "通过上传Excel文件批量导入班级数据。辅导员工号自动从当前登录用户获取。Excel格式要求：第一行为表头，列顺序为：班级名称、班级人数、年级、专业")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -114,6 +114,12 @@ public class ClassController {
         }
         if (classEntity.getCount() == null || classEntity.getCount() <= 0) {
             return Result.error("班级人数必须大于0");
+        }
+        if (classEntity.getGrade() == null || classEntity.getGrade().trim().isEmpty()) {
+            return Result.error("年级不能为空");
+        }
+        if (classEntity.getMajor() == null || classEntity.getMajor().trim().isEmpty()) {
+            return Result.error("专业不能为空");
         }
         
         // ID会由MyBatis-Plus自动生成（雪花算法）

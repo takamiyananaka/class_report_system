@@ -22,4 +22,16 @@ public class ClassExcelDTO implements Serializable {
      */
     @ExcelProperty(index = 1, value = "班级人数")
     private Integer count;
+
+    /**
+     * 年级
+     */
+    @ExcelProperty(index = 2, value = "年级")
+    private String grade;
+
+    /**
+     * 专业
+     */
+    @ExcelProperty(index = 3, value = "专业")
+    private String major;
 }

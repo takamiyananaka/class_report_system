@@ -84,11 +84,23 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                         failCount++;
                         continue;
                     }
+                    if (isBlank(dto.getGrade())) {
+                        errorMessages.add(String.format("第%d行：年级不能为空", i + 2));
+                        failCount++;
+                        continue;
+                    }
+                    if (isBlank(dto.getMajor())) {
+                        errorMessages.add(String.format("第%d行：专业不能为空", i + 2));
+                        failCount++;
+                        continue;
+                    }
                     
                     Class classEntity = new Class();
                     classEntity.setClassName(dto.getClassName().trim());
                     classEntity.setTeacherNo(teacherNo.trim()); // 使用传入的教师工号
                     classEntity.setCount(dto.getCount());
+                    classEntity.setGrade(dto.getGrade().trim());
+                    classEntity.setMajor(dto.getMajor().trim());
                     
                     classList.add(classEntity);
                     successCount++;
@@ -156,11 +168,21 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             queryWrapper.eq(Class::getTeacherNo, queryDTO.getTeacherNo().trim());
         }
         
+        // 年级条件（多选）
+        if (queryDTO.getGrades() != null && !queryDTO.getGrades().isEmpty()) {
+            queryWrapper.in(Class::getGrade, queryDTO.getGrades());
+        }
+        
+        // 专业条件（多选）
+        if (queryDTO.getMajors() != null && !queryDTO.getMajors().isEmpty()) {
+            queryWrapper.in(Class::getMajor, queryDTO.getMajors());
+        }
+        
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(Class::getCreateTime);
         
-        log.info("查询班级，条件：className={}, teacherNo={}, pageNum={}, pageSize={}", 
-                queryDTO.getClassName(), queryDTO.getTeacherNo(), pageNum, pageSize);
+        log.info("查询班级，条件：className={}, teacherNo={}, grades={}, majors={}, pageNum={}, pageSize={}", 
+                queryDTO.getClassName(), queryDTO.getTeacherNo(), queryDTO.getGrades(), queryDTO.getMajors(), pageNum, pageSize);
         
         return this.page(page, queryWrapper);
     }
@@ -179,6 +201,8 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             ClassExcelDTO example = new ClassExcelDTO();
             example.setClassName("25计算机类-1班");
             example.setCount(45);
+            example.setGrade("2025级");
+            example.setMajor("计算机科学与技术");
             templateData.add(example);
             
             // 写入Excel
