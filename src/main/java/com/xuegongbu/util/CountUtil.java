@@ -37,7 +37,7 @@ public class CountUtil {
          *   "device_id": "1247505953717374976"
          * }
          */
-        String url = "http://localhost:8082/count";
+        String url = "http://localhost:8081/count";
         
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("source", deviceUrls.get("highChn2"));
