@@ -1,0 +1,107 @@
+package com.xuegongbu.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuegongbu.common.exception.BusinessException;
+import com.xuegongbu.domain.Attendance;
+import com.xuegongbu.domain.Class;
+import com.xuegongbu.domain.Course;
+import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.CountResponse;
+import com.xuegongbu.mapper.AttendanceMapper;
+import com.xuegongbu.mapper.ClassMapper;
+import com.xuegongbu.mapper.CourseScheduleMapper;
+import com.xuegongbu.service.*;
+import com.xuegongbu.util.CountUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@Service
+public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attendance> implements AttendanceService {
+
+    @Autowired
+    private DeviceService deviceService;
+    @Autowired
+    private CourseScheduleMapper courseScheduleMapper;
+    @Autowired
+    private ClassMapper classMapper;
+    @Autowired
+    private CountUtil countUtil;
+
+    /**
+     * 查询课程的所有考勤记录
+     *
+     * @param courseId
+     * @return
+     */
+    @Override
+    public List<Attendance> queryAllAttendanceByCourseId(Long courseId) {
+        //获取到课程信息
+        CourseSchedule course = courseScheduleMapper.selectById(courseId);
+        if (course == null) {
+            throw new BusinessException("无效的id");
+        }
+        //查询课程的所有考勤记录
+        return list(new QueryWrapper<Attendance>().eq("course_id", courseId));
+    }
+
+    @Override
+    public void manualAttendance(Long courseId) {
+        //获取到课程信息
+        CourseSchedule course = courseScheduleMapper.selectById(courseId);
+        if (course == null) {
+            throw new BusinessException("无效的id");
+        }
+        //检查是否在上课时间内
+        if (LocalTime.now().isBefore(course.getStartTime()) || LocalTime.now().isAfter(course.getEndTime())) {
+            throw new BusinessException("不在上课时间");
+        }
+        String className = course.getClassName();
+        Map<String, String> deviceUrls = deviceService.getDeviceUrl(className);
+        //调用模型
+        CountResponse countResponse = countUtil.getCount(deviceUrls);
+        //生成考勤记录
+        //由当前时间按照"HH:MM"格式生成checkTime
+        LocalDateTime checkTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        //根据班级名字获取班级信息
+        Class clazz = classMapper.selectOne(new QueryWrapper<Class>().eq("class_name", className));
+        Attendance attendance = new Attendance();
+        attendance.setCourseId(courseId);
+        attendance.setCheckTime(checkTime);
+        attendance.setActualCount((int) Math.round(countResponse.getSummary().getAverageCount()));
+        attendance.setExpectedCount(clazz.getCount());
+        attendance.setAttendanceRate(BigDecimal.valueOf(countResponse.getSummary().getAverageCount() / clazz.getCount()));
+        attendance.setImageUrl(countResponse.getSampleUrl());
+        attendance.setCheckType(2);
+        attendance.setStatus(1);
+        attendance.setRemark("手动考勤");
+
+        save(attendance);
+    }
+
+    @Override
+    public Attendance queryCurrentAttendance(Long courseId) {
+        //获取到课程信息
+        CourseSchedule course = courseScheduleMapper.selectById(courseId);
+        if (course == null) {
+            throw new BusinessException("无效的id");
+        }
+        //查询当前时间段内的考勤记录
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        Attendance attendance = getOne(new QueryWrapper<Attendance>().eq("course_id", courseId).ge("check_time", now));
+        if (attendance == null){
+            throw new BusinessException("当前考勤记录生成中");
+        }
+        return attendance;
+    }
+}
