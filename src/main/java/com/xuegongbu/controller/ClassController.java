@@ -207,7 +207,7 @@ public class ClassController {
      */
     @GetMapping("/get/{id}")
     @ApiOperation(value = "根据ID查询班级详情", notes = "根据班级ID查询班级详情")
-    public Result<Class> getClassById(@PathVariable Long id) {
+    public Result<Class> getClassById(@PathVariable String id) {
         log.info("根据ID查询班级详情，班级ID：{}", id);
         
         Class classEntity = classService.getById(id);
@@ -223,7 +223,7 @@ public class ClassController {
      */
     @PutMapping("/update/{id}")
     @ApiOperation(value = "根据ID更新班级", notes = "通过班级ID更新班级信息")
-    public Result<String> updateClassById(@PathVariable Long id, @RequestBody Class classEntity) {
+    public Result<String> updateClassById(@PathVariable String id, @RequestBody Class classEntity) {
         log.info("根据ID更新班级，班级ID：{}，班级信息：{}", id, classEntity);
         
         Class existing = classService.getById(id);
@@ -244,7 +244,7 @@ public class ClassController {
      */
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "根据ID删除班级", notes = "通过班级ID删除班级（逻辑删除）")
-    public Result<String> deleteClassById(@PathVariable Long id) {
+    public Result<String> deleteClassById(@PathVariable String id) {
         log.info("根据ID删除班级，班级ID：{}", id);
         
         Class existing = classService.getById(id);

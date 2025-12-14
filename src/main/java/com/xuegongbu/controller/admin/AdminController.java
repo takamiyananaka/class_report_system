@@ -94,7 +94,7 @@ public class AdminController {
      */
     @GetMapping("/teachers/{id}")
     @ApiOperation(value = "根据ID查询教师", notes = "管理员根据教师ID查询教师详情")
-    public Result<TeacherVO> getTeacher(@PathVariable Long id) {
+    public Result<TeacherVO> getTeacher(@PathVariable String id) {
         log.info("管理员查询教师详情，ID：{}", id);
         Teacher teacher = teacherService.getById(id);
         if (teacher == null) {
@@ -158,7 +158,7 @@ public class AdminController {
      */
     @PutMapping("/teachers/{id}")
     @ApiOperation(value = "更新教师", notes = "管理员更新教师信息，如提供新密码则必须至少6位字符")
-    public Result<String> updateTeacher(@PathVariable Long id, @Valid @RequestBody TeacherRequest request) {
+    public Result<String> updateTeacher(@PathVariable String id, @Valid @RequestBody TeacherRequest request) {
         log.info("管理员更新教师，ID：{}", id);
         
         Teacher teacher = teacherService.getById(id);
@@ -215,7 +215,7 @@ public class AdminController {
      */
     @DeleteMapping("/teachers/{id}")
     @ApiOperation(value = "删除教师", notes = "管理员删除教师")
-    public Result<String> deleteTeacher(@PathVariable Long id) {
+    public Result<String> deleteTeacher(@PathVariable String id) {
         log.info("管理员删除教师，ID：{}", id);
         
         Teacher teacher = teacherService.getById(id);

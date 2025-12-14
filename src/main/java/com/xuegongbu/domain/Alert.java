@@ -26,18 +26,18 @@ public class Alert implements Serializable {
     @NotNull(message="[主键ID]不能为空")
     @ApiModelProperty("主键ID")
     @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
+    private String id;
     /**
     * 课程ID
     */
     @NotNull(message="[课程ID]不能为空")
     @ApiModelProperty("课程ID")
-    private Long courseId;
+    private String courseId;
     /**
     * 考勤记录ID
     */
     @ApiModelProperty("考勤记录ID")
-    private Long attendanceId;
+    private String attendanceId;
     /**
     * 预警类型：1-人数不足，2-迟到过多，3-旷课严重
     */

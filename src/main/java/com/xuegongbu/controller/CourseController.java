@@ -42,19 +42,11 @@ public class CourseController {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherNo = null;
-        try {
-            Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)，需要转换为Long
-            if (principal instanceof String) {
-                teacherNo = Long.parseLong((String) principal);
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录
-                teacherNo = (Long) principal;
-            }
-        } catch (NumberFormatException e) {
-            log.error("无法解析当前登录教师工号: {}", e.getMessage());
-            return Result.error("无法获取当前登录用户信息");
+        String teacherNo = null;
+        Object principal = authentication.getPrincipal();
+        // principal现在是teacherNo (String)
+        if (principal instanceof String) {
+            teacherNo = (String) principal;
         }
         
         if (teacherNo == null) {
@@ -87,7 +79,7 @@ public class CourseController {
      */
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除课程", notes = "教师删除课程")
-    public Result<String> deleteCourse(@PathVariable Long id) {
+    public Result<String> deleteCourse(@PathVariable String id) {
         log.info("删除课程，课程ID：{}", id);
         courseService.removeById(id);
         log.info("删除课程完成");
@@ -99,7 +91,7 @@ public class CourseController {
      */
     @GetMapping("/get/{id}")
     @ApiOperation(value = "查询课程详情", notes = "根据课程ID查询课程详情")
-    public Result<Course> getCourse(@PathVariable Long id) {
+    public Result<Course> getCourse(@PathVariable String id) {
         log.info("查询课程详情，课程ID：{}", id);
         Course course = courseService.getById(id);
         log.info("查询课程详情完成");
@@ -111,23 +103,16 @@ public class CourseController {
      */
     @GetMapping("/list")
     @ApiOperation(value = "查询教师的所有课程", notes = "查询当前登录教师的所有课程")
-    public Result<List<Course>> listCourses(@RequestParam(required = false) Long teacherNo) {
+    public Result<List<Course>> listCourses(@RequestParam(required = false) String teacherNo) {
         // 如果没有指定教师工号，使用当前登录教师的工号
         if (teacherNo == null) {
             org.springframework.security.core.Authentication authentication = 
                 org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getPrincipal() != null) {
-                try {
-                    Object principal = authentication.getPrincipal();
-                    // principal现在是teacherNo (String)，需要转换为Long
-                    if (principal instanceof String) {
-                        teacherNo = Long.parseLong((String) principal);
-                    } else if (principal instanceof Long) {
-                        teacherNo = (Long) principal;
-                    }
-                } catch (NumberFormatException e) {
-                    log.error("无法解析教师工号: {}", e.getMessage());
-                    return Result.error("无法获取当前登录用户信息");
+                Object principal = authentication.getPrincipal();
+                // principal现在是teacherNo (String)
+                if (principal instanceof String) {
+                    teacherNo = (String) principal;
                 }
             }
         }

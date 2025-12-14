@@ -23,7 +23,7 @@ public class AttendanceController {
     @GetMapping("/queryAttendance")
     @ApiOperation(value = "查询课程所有考勤记录", notes = "查询课程所有考勤记录")
     public Result<List<Attendance>> queryAttendanceByCourseId(
-            @RequestParam(value = "courseId", required = true) Long courseId) {
+            @RequestParam(value = "courseId", required = true) String courseId) {
         log.info("查询课程考勤记录，课程ID：{}", courseId);
         List<Attendance> attendanceList = attendanceService.queryAllAttendanceByCourseId(courseId);
         log.info("查询课程考勤记录完成，结果：{}", attendanceList);
@@ -36,7 +36,7 @@ public class AttendanceController {
     @PostMapping("/manualAttendance")
     @ApiOperation(value = "手动考勤", notes = "手动考勤")
     public Result<String> manualAttendance(
-            @RequestParam(value = "courseId", required = true) Long courseId){
+            @RequestParam(value = "courseId", required = true) String courseId){
         log.info("手动考勤，课程ID：{}", courseId);
         attendanceService.manualAttendance(courseId);
         log.info("手动考勤完成");
@@ -48,7 +48,7 @@ public class AttendanceController {
      */
     @GetMapping("/queryCurrentAttendance")
     @ApiOperation(value = "查询当前考勤记录", notes = "查询当前考勤记录")
-    public Result<Attendance> queryCurrentAttendance(@RequestParam(value = "courseId", required = true) Long courseId){
+    public Result<Attendance> queryCurrentAttendance(@RequestParam(value = "courseId", required = true) String courseId){
         log.info("查询当前考勤记录，课程ID：{}", courseId);
         Attendance attendance = attendanceService.queryCurrentAttendance(courseId);
         return Result.success(attendance);
@@ -59,7 +59,7 @@ public class AttendanceController {
      */
     @GetMapping("/get/{id}")
     @ApiOperation(value = "根据ID查询考勤记录", notes = "根据考勤ID查询考勤详情")
-    public Result<Attendance> getAttendanceById(@PathVariable Long id) {
+    public Result<Attendance> getAttendanceById(@PathVariable String id) {
         log.info("根据ID查询考勤记录，考勤ID：{}", id);
         Attendance attendance = attendanceService.getById(id);
         if (attendance == null) {
@@ -92,7 +92,7 @@ public class AttendanceController {
      */
     @PutMapping("/update/{id}")
     @ApiOperation(value = "根据ID更新考勤记录", notes = "通过考勤ID更新考勤信息")
-    public Result<String> updateAttendanceById(@PathVariable Long id, @RequestBody Attendance attendance) {
+    public Result<String> updateAttendanceById(@PathVariable String id, @RequestBody Attendance attendance) {
         log.info("根据ID更新考勤记录，考勤ID：{}，考勤信息：{}", id, attendance);
         
         Attendance existing = attendanceService.getById(id);
@@ -113,7 +113,7 @@ public class AttendanceController {
      */
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "根据ID删除考勤记录", notes = "通过考勤ID删除考勤记录")
-    public Result<String> deleteAttendanceById(@PathVariable Long id) {
+    public Result<String> deleteAttendanceById(@PathVariable String id) {
         log.info("根据ID删除考勤记录，考勤ID：{}", id);
         
         Attendance existing = attendanceService.getById(id);

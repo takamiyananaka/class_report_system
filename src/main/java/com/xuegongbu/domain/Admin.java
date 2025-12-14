@@ -25,7 +25,7 @@ public class Admin implements Serializable {
     */
     @ApiModelProperty("主键ID")
     @com.baomidou.mybatisplus.annotation.TableId(type = com.baomidou.mybatisplus.annotation.IdType.ASSIGN_ID)
-    private Long id;
+    private String id;
     /**
     * 用户名
     */

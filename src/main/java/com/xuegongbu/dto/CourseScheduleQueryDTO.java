@@ -12,7 +12,7 @@ import lombok.Data;
 public class CourseScheduleQueryDTO {
 
     @ApiModelProperty(value = "教师工号", example = "1")
-    private Long teacherNo;
+    private String teacherNo;
 
     @ApiModelProperty(value = "班级名称", example = "计算机2021级1班")
     private String className;
