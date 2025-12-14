@@ -19,6 +19,8 @@ public class DeviceServiceImpl implements DeviceService {
     public DeviceServiceImpl(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate =redisTemplate;
     }
+
+
     //批量获取设备url
     @Override
     public Map<String, Map<String, String>> getDeviceUrls(List<String> classroomNames)  {
@@ -32,7 +34,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     //获取单个设备url
     @Override
-    public Map<String, String> getDeviceUrl(String classroomName) {
+    public Map<String, String> getDeviceUrl(String classroomName)  {
         //redis读取
         Device device = (Device) redisTemplate.opsForValue().get(classroomName);
         String deviceId = device.getDeviceId();
@@ -43,7 +45,8 @@ public class DeviceServiceImpl implements DeviceService {
                         {"deviceModel","HH" },
                         {"highChn0",baseUrl2+"phc0_"+deviceId+urlSuffix},
                         {"highChn1",baseUrl1+"phc1_"+deviceId+urlSuffix },
-                        {"highChn2",baseUrl2+"phc2_"+deviceId+urlSuffix }
+                        {"highChn2",baseUrl2+"phc2_"+deviceId+urlSuffix },
+                        {"device_id",deviceId}
                 })
                 .collect(HashMap::new, (map, entry) -> map.put((String) entry[0], (String) entry[1]), HashMap::putAll);
     }
