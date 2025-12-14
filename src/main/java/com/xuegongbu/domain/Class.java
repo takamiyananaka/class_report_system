@@ -50,6 +50,20 @@ public class Class implements Serializable {
     @ApiModelProperty("班级人数")
     private Integer count;
     /**
+    * 年级
+    */
+    @NotBlank(message="[年级]不能为空")
+    @Size(max= 50,message="编码长度不能超过50")
+    @ApiModelProperty("年级")
+    private String grade;
+    /**
+    * 专业
+    */
+    @NotBlank(message="[专业]不能为空")
+    @Size(max= 100,message="编码长度不能超过100")
+    @ApiModelProperty("专业")
+    private String major;
+    /**
     * 创建时间
     */
     @ApiModelProperty("创建时间")

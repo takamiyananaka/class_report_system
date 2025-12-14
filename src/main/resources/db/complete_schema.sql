@@ -60,10 +60,14 @@ CREATE TABLE IF NOT EXISTS class (
     class_name VARCHAR(20) NOT NULL COMMENT '班级名字',
     teacher_no VARCHAR(50) NOT NULL COMMENT '辅导员工号',
     count INT NOT NULL COMMENT '班级人数',
+    grade VARCHAR(50) NOT NULL COMMENT '年级',
+    major VARCHAR(100) NOT NULL COMMENT '专业',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_delete TINYINT DEFAULT 0 COMMENT '是否删除: 0-否, 1-是',
-    INDEX idx_teacher_no (teacher_no)
+    INDEX idx_teacher_no (teacher_no),
+    INDEX idx_grade (grade),
+    INDEX idx_major (major)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='班级表';
 
 -- ====================================
