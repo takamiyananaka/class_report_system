@@ -53,4 +53,76 @@ public class AttendanceController {
         Attendance attendance = attendanceService.queryCurrentAttendance(courseId);
         return Result.success(attendance);
     }
+
+    /**
+     * 根据ID查询考勤记录
+     */
+    @GetMapping("/get/{id}")
+    @ApiOperation(value = "根据ID查询考勤记录", notes = "根据考勤ID查询考勤详情")
+    public Result<Attendance> getAttendanceById(@PathVariable Long id) {
+        log.info("根据ID查询考勤记录，考勤ID：{}", id);
+        Attendance attendance = attendanceService.getById(id);
+        if (attendance == null) {
+            return Result.error("考勤记录不存在");
+        }
+        log.info("查询考勤记录完成");
+        return Result.success(attendance);
+    }
+
+    /**
+     * 创建考勤记录
+     */
+    @PostMapping("/add")
+    @ApiOperation(value = "创建考勤记录", notes = "创建新的考勤记录，ID自动生成")
+    public Result<Attendance> addAttendance(@RequestBody Attendance attendance) {
+        log.info("创建考勤记录，考勤信息：{}", attendance);
+        
+        // 验证必填字段
+        if (attendance.getCourseId() == null) {
+            return Result.error("课程ID不能为空");
+        }
+        
+        attendanceService.save(attendance);
+        log.info("创建考勤记录完成，考勤ID：{}", attendance.getId());
+        return Result.success(attendance);
+    }
+
+    /**
+     * 根据ID更新考勤记录
+     */
+    @PutMapping("/update/{id}")
+    @ApiOperation(value = "根据ID更新考勤记录", notes = "通过考勤ID更新考勤信息")
+    public Result<String> updateAttendanceById(@PathVariable Long id, @RequestBody Attendance attendance) {
+        log.info("根据ID更新考勤记录，考勤ID：{}，考勤信息：{}", id, attendance);
+        
+        Attendance existing = attendanceService.getById(id);
+        if (existing == null) {
+            return Result.error("考勤记录不存在");
+        }
+        
+        // 设置ID以便更新
+        attendance.setId(id);
+        
+        attendanceService.updateById(attendance);
+        log.info("更新考勤记录完成");
+        return Result.success("更新成功");
+    }
+
+    /**
+     * 根据ID删除考勤记录
+     */
+    @DeleteMapping("/delete/{id}")
+    @ApiOperation(value = "根据ID删除考勤记录", notes = "通过考勤ID删除考勤记录")
+    public Result<String> deleteAttendanceById(@PathVariable Long id) {
+        log.info("根据ID删除考勤记录，考勤ID：{}", id);
+        
+        Attendance existing = attendanceService.getById(id);
+        if (existing == null) {
+            return Result.error("考勤记录不存在");
+        }
+        
+        attendanceService.removeById(id);
+        log.info("删除考勤记录完成");
+        return Result.success("删除成功");
+    }
 }
