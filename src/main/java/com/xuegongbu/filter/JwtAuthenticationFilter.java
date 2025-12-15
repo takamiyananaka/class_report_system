@@ -44,7 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/favicon.ico",
             "/front/login",
             "/admin/login",
-            "/courseSchedule/downloadTemplate"
+            "/courseSchedule/downloadTemplate",
+            "/class/downloadTemplate"
     );
 
     @Override

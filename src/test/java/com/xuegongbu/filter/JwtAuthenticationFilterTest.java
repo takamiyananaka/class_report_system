@@ -120,4 +120,13 @@ public class JwtAuthenticationFilterTest {
         
         assertFalse(result, "Admin paths (except login) should be filtered");
     }
+
+    @Test
+    void testShouldNotFilter_ClassDownloadTemplate() throws Exception {
+        when(request.getRequestURI()).thenReturn("/class/downloadTemplate");
+        
+        boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+        
+        assertTrue(result, "Class download template path should not be filtered");
+    }
 }
