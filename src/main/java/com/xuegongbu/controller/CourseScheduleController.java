@@ -50,17 +50,14 @@ public class CourseScheduleController {
                 return Result.error("未登录或登录已过期，请重新登录");
             }
             
-            Long teacherNo = null;
+            String teacherNo = null;
             try {
                 Object principal = authentication.getPrincipal();
-                // principal现在是teacherNo (String)，需要转换为Long
+                // principal现在是teacherNo (String)
                 if (principal instanceof String) {
-                    teacherNo = Long.parseLong((String) principal);
-                } else if (principal instanceof Long) {
-                    // 兼容管理员登录（principal是userId）
-                    teacherNo = (Long) principal;
+                    teacherNo = (String) principal;
                 }
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 log.error("无法解析当前登录教师工号: {}", e.getMessage());
                 return Result.error("无法获取当前登录用户信息");
             }
@@ -92,14 +89,11 @@ public class CourseScheduleController {
             if (authentication != null && authentication.getPrincipal() != null) {
                 try {
                     Object principal = authentication.getPrincipal();
-                    Long currentTeacherNo = null;
+                    String currentTeacherNo = null;
                     
                     // principal现在是teacherNo (String)，需要转换为Long
                     if (principal instanceof String) {
-                        currentTeacherNo = Long.parseLong((String) principal);
-                    } else if (principal instanceof Long) {
-                        // 兼容管理员登录
-                        currentTeacherNo = (Long) principal;
+                        currentTeacherNo = (String) principal;
                     }
                     
                     if (currentTeacherNo != null) {
@@ -108,7 +102,7 @@ public class CourseScheduleController {
                     } else {
                         log.warn("无法解析当前登录教师工号，将查询所有课表");
                     }
-                } catch (NumberFormatException e) {
+                } catch (Exception e) {
                     log.warn("无法解析当前登录教师工号，将查询所有课表: {}", e.getMessage());
                 }
             }
@@ -151,17 +145,14 @@ public class CourseScheduleController {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherNo = null;
+        String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
             // principal现在是teacherNo (String)，需要转换为Long
             if (principal instanceof String) {
-                teacherNo = Long.parseLong((String) principal);
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录
-                teacherNo = (Long) principal;
+                teacherNo = (String) principal;
             }
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
@@ -227,17 +218,14 @@ public class CourseScheduleController {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherNo = null;
+        String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
             // principal现在是teacherNo (String)，需要转换为Long
             if (principal instanceof String) {
-                teacherNo = Long.parseLong((String) principal);
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录
-                teacherNo = (Long) principal;
+                teacherNo = (String) principal;
             }
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
@@ -283,17 +271,14 @@ public class CourseScheduleController {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherNo = null;
+        String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
             // principal现在是teacherNo (String)，需要转换为Long
             if (principal instanceof String) {
-                teacherNo = Long.parseLong((String) principal);
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录
-                teacherNo = (Long) principal;
+                teacherNo = (String) principal;
             }
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
@@ -335,17 +320,14 @@ public class CourseScheduleController {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherNo = null;
+        String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
             // principal现在是teacherNo (String)，需要转换为Long
             if (principal instanceof String) {
-                teacherNo = Long.parseLong((String) principal);
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录
-                teacherNo = (Long) principal;
+                teacherNo = (String) principal;
             }
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
@@ -375,7 +357,7 @@ public class CourseScheduleController {
      */
     @GetMapping("/get/{id}")
     @Operation(summary = "根据ID查询课表详情", description = "根据课表ID查询课表详情")
-    public Result<CourseSchedule> getCourseScheduleById(@Parameter(description = "课表ID") @PathVariable Long id) {
+    public Result<CourseSchedule> getCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id) {
         log.info("根据ID查询课表详情，课表ID：{}", id);
         
         CourseSchedule courseSchedule = courseScheduleService.getById(id);
@@ -392,7 +374,7 @@ public class CourseScheduleController {
      */
     @PutMapping("/update/{id}")
     @Operation(summary = "根据ID更新课表", description = "通过课表ID更新课表信息")
-    public Result<String> updateCourseScheduleById(@Parameter(description = "课表ID") @PathVariable Long id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
+    public Result<String> updateCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("根据ID更新课表，课表ID：{}，课表信息：{}", id, courseSchedule);
         
         CourseSchedule existing = courseScheduleService.getById(id);
@@ -413,7 +395,7 @@ public class CourseScheduleController {
      */
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "根据ID删除课表", description = "通过课表ID删除课表")
-    public Result<String> deleteCourseScheduleById(@Parameter(description = "课表ID") @PathVariable Long id) {
+    public Result<String> deleteCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id) {
         log.info("根据ID删除课表，课表ID：{}", id);
         
         CourseSchedule existing = courseScheduleService.getById(id);

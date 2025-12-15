@@ -24,7 +24,7 @@ public class AttendanceController {
     @GetMapping("/queryAttendance")
     @Operation(summary = "查询课程所有考勤记录", description = "查询课程所有考勤记录")
     public Result<List<Attendance>> queryAttendanceByCourseId(
-            @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) Long courseId) {
+            @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId) {
         log.info("查询课程考勤记录，课程ID：{}", courseId);
         List<Attendance> attendanceList = attendanceService.queryAllAttendanceByCourseId(courseId);
         log.info("查询课程考勤记录完成，结果：{}", attendanceList);
@@ -37,7 +37,7 @@ public class AttendanceController {
     @PostMapping("/manualAttendance")
     @Operation(summary = "手动考勤", description = "手动考勤")
     public Result<String> manualAttendance(
-            @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) Long courseId){
+            @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
         log.info("手动考勤，课程ID：{}", courseId);
         attendanceService.manualAttendance(courseId);
         log.info("手动考勤完成");
@@ -49,7 +49,7 @@ public class AttendanceController {
      */
     @GetMapping("/queryCurrentAttendance")
     @Operation(summary = "查询当前考勤记录", description = "查询当前考勤记录")
-    public Result<Attendance> queryCurrentAttendance(@Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) Long courseId){
+    public Result<Attendance> queryCurrentAttendance(@Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
         log.info("查询当前考勤记录，课程ID：{}", courseId);
         Attendance attendance = attendanceService.queryCurrentAttendance(courseId);
         return Result.success(attendance);
@@ -60,7 +60,7 @@ public class AttendanceController {
      */
     @GetMapping("/get/{id}")
     @Operation(summary = "根据ID查询考勤记录", description = "根据考勤ID查询考勤详情")
-    public Result<Attendance> getAttendanceById(@Parameter(description = "考勤ID") @PathVariable Long id) {
+    public Result<Attendance> getAttendanceById(@Parameter(description = "考勤ID") @PathVariable String id) {
         log.info("根据ID查询考勤记录，考勤ID：{}", id);
         Attendance attendance = attendanceService.getById(id);
         if (attendance == null) {
@@ -93,7 +93,7 @@ public class AttendanceController {
      */
     @PutMapping("/update/{id}")
     @Operation(summary = "根据ID更新考勤记录", description = "通过考勤ID更新考勤信息")
-    public Result<String> updateAttendanceById(@Parameter(description = "考勤ID") @PathVariable Long id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤信息") @RequestBody Attendance attendance) {
+    public Result<String> updateAttendanceById(@Parameter(description = "考勤ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤信息") @RequestBody Attendance attendance) {
         log.info("根据ID更新考勤记录，考勤ID：{}，考勤信息：{}", id, attendance);
         
         Attendance existing = attendanceService.getById(id);
@@ -114,7 +114,7 @@ public class AttendanceController {
      */
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "根据ID删除考勤记录", description = "通过考勤ID删除考勤记录")
-    public Result<String> deleteAttendanceById(@Parameter(description = "考勤ID") @PathVariable Long id) {
+    public Result<String> deleteAttendanceById(@Parameter(description = "考勤ID") @PathVariable String id) {
         log.info("根据ID删除考勤记录，考勤ID：{}", id);
         
         Attendance existing = attendanceService.getById(id);

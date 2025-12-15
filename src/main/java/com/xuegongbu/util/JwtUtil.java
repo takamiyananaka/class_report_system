@@ -37,7 +37,7 @@ public class JwtUtil {
     /**
      * 生成JWT token - 使用HS384算法
      */
-    public String generateToken(Long userId, String username, String teacherNo) {
+    public String generateToken(String userId, String username, String teacherNo) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
@@ -57,9 +57,9 @@ public class JwtUtil {
     /**
      * 从token中获取用户ID
      */
-    public Long getUserIdFromToken(String token) {
+    public String getUserIdFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return claims != null ? Long.parseLong(claims.getSubject()) : null;
+        return claims != null ? claims.getSubject() : null;
     }
 
     /**

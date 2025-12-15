@@ -10,8 +10,8 @@ import lombok.Data;
 @Schema(description = "课表查询请求参数")
 public class CourseScheduleQueryDTO {
 
-    @Schema(description = "教师工号", example = "1")
-    private Long teacherNo;
+    @Schema(description = "教师工号", example = "T001")
+    private String teacherNo;
 
     @Schema(description = "班级名称", example = "计算机2021级1班")
     private String className;

@@ -28,7 +28,7 @@ public class Course implements Serializable {
     @NotNull(message="[主键ID]不能为空")
     @Schema(description = "主键ID")
     @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
+    private String id;
     /**
     * 课程名称
     */
@@ -49,7 +49,7 @@ public class Course implements Serializable {
     */
     @NotNull(message="[教师工号]不能为空")
     @Schema(description = "教师工号")
-    private Long teacherNo;
+    private String teacherNo;
     /**
     * 教室名
     */

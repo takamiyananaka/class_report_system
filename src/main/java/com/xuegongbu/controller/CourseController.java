@@ -43,17 +43,14 @@ public class CourseController {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
-        Long teacherNo = null;
+        String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)，需要转换为Long
+            // principal现在是teacherNo (String)
             if (principal instanceof String) {
-                teacherNo = Long.parseLong((String) principal);
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录
-                teacherNo = (Long) principal;
+                teacherNo = (String) principal;
             }
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("无法获取当前登录用户信息");
         }
@@ -88,7 +85,7 @@ public class CourseController {
      */
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "删除课程", description = "教师删除课程")
-    public Result<String> deleteCourse(@Parameter(description = "课程ID") @PathVariable Long id) {
+    public Result<String> deleteCourse(@Parameter(description = "课程ID") @PathVariable String id) {
         log.info("删除课程，课程ID：{}", id);
         courseService.removeById(id);
         log.info("删除课程完成");
@@ -100,7 +97,7 @@ public class CourseController {
      */
     @GetMapping("/get/{id}")
     @Operation(summary = "查询课程详情", description = "根据课程ID查询课程详情")
-    public Result<Course> getCourse(@Parameter(description = "课程ID") @PathVariable Long id) {
+    public Result<Course> getCourse(@Parameter(description = "课程ID") @PathVariable String id) {
         log.info("查询课程详情，课程ID：{}", id);
         Course course = courseService.getById(id);
         log.info("查询课程详情完成");
@@ -112,7 +109,7 @@ public class CourseController {
      */
     @GetMapping("/list")
     @Operation(summary = "查询教师的所有课程", description = "查询当前登录教师的所有课程")
-    public Result<List<Course>> listCourses(@Parameter(description = "教师工号") @RequestParam(required = false) Long teacherNo) {
+    public Result<List<Course>> listCourses(@Parameter(description = "教师工号") @RequestParam(required = false) String teacherNo) {
         // 如果没有指定教师工号，使用当前登录教师的工号
         if (teacherNo == null) {
             org.springframework.security.core.Authentication authentication = 
@@ -120,13 +117,11 @@ public class CourseController {
             if (authentication != null && authentication.getPrincipal() != null) {
                 try {
                     Object principal = authentication.getPrincipal();
-                    // principal现在是teacherNo (String)，需要转换为Long
+                    // principal现在是teacherNo (String)
                     if (principal instanceof String) {
-                        teacherNo = Long.parseLong((String) principal);
-                    } else if (principal instanceof Long) {
-                        teacherNo = (Long) principal;
+                        teacherNo = (String) principal;
                     }
-                } catch (NumberFormatException e) {
+                } catch (Exception e) {
                     log.error("无法解析教师工号: {}", e.getMessage());
                     return Result.error("无法获取当前登录用户信息");
                 }

@@ -27,13 +27,13 @@ public class Attendance implements Serializable {
     @NotNull(message="[主键ID]不能为空")
     @Schema(description = "主键ID")
     @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
+    private String id;
     /**
     * 课程ID
     */
     @NotNull(message="[课程ID]不能为空")
     @Schema(description = "课程ID")
-    private Long courseId;
+    private String courseId;
     /**
     * 考勤时间
     */
