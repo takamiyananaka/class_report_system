@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -174,7 +175,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             List<String> validGrades = queryDTO.getGrades().stream()
                     .filter(grade -> grade != null && !grade.trim().isEmpty())
                     .map(String::trim)
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
             if (!validGrades.isEmpty()) {
                 queryWrapper.in(Class::getGrade, validGrades);
             }
@@ -186,7 +187,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             List<String> validMajors = queryDTO.getMajors().stream()
                     .filter(major -> major != null && !major.trim().isEmpty())
                     .map(String::trim)
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
             if (!validMajors.isEmpty()) {
                 queryWrapper.in(Class::getMajor, validMajors);
             }
