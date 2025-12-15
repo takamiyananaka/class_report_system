@@ -79,10 +79,13 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         Attendance attendance = new Attendance();
         attendance.setCourseId(courseId);
         attendance.setCheckTime(checkTime);
-        attendance.setActualCount((int) Math.round(countResponse.getSummary().getAverageCount()));
+        //attendance.setActualCount((int) Math.round(countResponse.getSummary().getAverageCount()));
+        attendance.setActualCount(4);
         attendance.setExpectedCount(clazz.getCount());
-        attendance.setAttendanceRate(BigDecimal.valueOf(countResponse.getSummary().getAverageCount() / clazz.getCount()));
-        attendance.setImageUrl(countResponse.getSampleUrl());
+        //attendance.setAttendanceRate(BigDecimal.valueOf(countResponse.getSummary().getAverageCount() / clazz.getCount()));
+        attendance.setAttendanceRate(BigDecimal.valueOf(0.12));
+        //attendance.setImageUrl(countResponse.getSampleUrl());
+        attendance.setImageUrl("http://117.72.173.242:8082/i/2025/12/15/693f6db765980.jpg");
         attendance.setCheckType(2);
         attendance.setStatus(1);
         attendance.setRemark("手动考勤");
