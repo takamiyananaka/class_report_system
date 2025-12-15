@@ -35,6 +35,8 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     private ClassMapper classMapper;
     @Autowired
     private CountUtil countUtil;
+    @Autowired
+    private AlertService alertService;
 
     /**
      * 查询课程的所有考勤记录
@@ -68,7 +70,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         String className = course.getClassName();
         Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
         //调用模型
-        CountResponse countResponse = countUtil.getCount(deviceUrls);
+        //CountResponse countResponse = countUtil.getCount(deviceUrls);
         //生成考勤记录
         //由当前时间按照"HH:MM"格式生成checkTime
         LocalDateTime checkTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
@@ -89,6 +91,9 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         attendance.setRemark("手动考勤");
 
         save(attendance);
+        
+        // 检查是否需要生成预警记录
+        alertService.checkAndGenerateAlert(attendance, course);
 
         return attendance;
     }

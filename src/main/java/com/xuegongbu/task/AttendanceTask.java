@@ -1,6 +1,7 @@
 package com.xuegongbu.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CountResponse;
@@ -26,17 +27,20 @@ public class AttendanceTask {
     private final DeviceService deviceService;
     private final ClassService classService;
     private final CountUtil countUtil;
+    private final AlertService alertService;
 
     public AttendanceTask(CourseScheduleService courseScheduleService, 
                           AttendanceService attendanceService,
                           DeviceService deviceService,
                           ClassService classService,
-                          CountUtil countUtil) {
+                          CountUtil countUtil,
+                          AlertService alertService) {
         this.courseScheduleService = courseScheduleService;
         this.attendanceService = attendanceService;
         this.deviceService = deviceService;
         this.classService = classService;
         this.countUtil = countUtil;
+        this.alertService = alertService;
     }
 
     /**
@@ -88,7 +92,8 @@ public class AttendanceTask {
         attendanceQuery.eq("course_id", course.getId())
                 .eq("check_time", checkTime.truncatedTo(ChronoUnit.MINUTES));
 
-        if (attendanceService.getOne(attendanceQuery) != null) {
+        Attendance existingAttendance = attendanceService.getOne(attendanceQuery);
+        if (existingAttendance != null) {
             log.info("课程 {} 在 {} 已有考勤记录，跳过", course.getId(), checkTime);
             return;
         }
@@ -105,5 +110,17 @@ public class AttendanceTask {
         log.info("课程 {} 自动考勤完成，实到 {} 人，应到 {} 人，出勤率 {}%", 
                 course.getCourseName(), attendance.getActualCount(), attendance.getExpectedCount(),
                 attendance.getAttendanceRate().multiply(BigDecimal.valueOf(100)).intValue());
+        
+        // 检查是否需要生成预警记录
+        checkAndGenerateAlert(attendance, course);
+    }
+    
+    /**
+     * 检查并生成预警记录
+     * @param attendance 考勤记录
+     * @param course 课程安排
+     */
+    private void checkAndGenerateAlert(Attendance attendance, CourseSchedule course) {
+        alertService.checkAndGenerateAlert(attendance, course);
     }
 }
