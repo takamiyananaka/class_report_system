@@ -78,7 +78,7 @@ public class ClassController {
             // 获取当前登录教师的工号
             String teacherNo = getTeacherNoFromAuthentication();
             if (teacherNo == null) {
-                return Result.error("未登录或登录已过期，请重新登录");
+                return Result.error("无法获取当前登录用户信息");
             }
             
             log.info("当前登录教师工号: {}", teacherNo);
@@ -115,7 +115,7 @@ public class ClassController {
         // 获取当前登录教师的工号
         String teacherNo = getTeacherNoFromAuthentication();
         if (teacherNo == null) {
-            return Result.error("未登录或登录已过期，请重新登录");
+            return Result.error("无法获取当前登录用户信息");
         }
         
         log.info("当前登录教师工号: {}", teacherNo);
