@@ -26,10 +26,14 @@ public class SecurityConfig {
 
     @Autowired
     private CorsProperties corsProperties;
+    
+    @Autowired
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
+                        // 允许访问Swagger文档
                         .requestMatchers(
                                 "/doc.html",
                                 "/v3/api-docs/**",
@@ -39,14 +43,19 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/favicon.ico"
                         ).permitAll()
+                        // 允许登录接口
                         .requestMatchers("/front/login").permitAll()
                         .requestMatchers("/admin/login").permitAll()
+                        // 允许下载模板
                         .requestMatchers("/courseSchedule/downloadTemplate").permitAll()
-                        .requestMatchers("/course/**", "/courseSchedule/**", "/teacher/**", "/admin/**").authenticated()
-                        .anyRequest().permitAll())
+                        .requestMatchers("/class/downloadTemplate").permitAll()
+                        // 所有其他请求都需要认证
+                        .anyRequest().authenticated())
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
