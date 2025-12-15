@@ -24,6 +24,22 @@ spring:
           min-idle: 1
           max-wait: 10s
           time-between-eviction-runs: 10s
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: 3233837659@qq.com
+    password: fksudbuwxbakcieg
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+            required: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            fallback: false
+    default-encoding: UTF-8
   profiles:
     active: dev
 
