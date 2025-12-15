@@ -8,8 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
 import java.time.LocalDateTime;
-
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -18,74 +17,87 @@ import lombok.Data;
 */
 @TableName(value = "alert")
 @Data
+@Schema(description = "预警记录表")
 public class Alert implements Serializable {
 
     /**
     * 主键ID
     */
     @NotNull(message="[主键ID]不能为空")
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
+    
     /**
     * 课程ID
     */
     @NotNull(message="[课程ID]不能为空")
-    @ApiModelProperty("课程ID")
+    @Schema(description = "课程ID")
     private Long courseId;
+    
     /**
     * 考勤记录ID
     */
-    @ApiModelProperty("考勤记录ID")
+    @Schema(description = "考勤记录ID")
     private Long attendanceId;
+    
     /**
     * 预警类型：1-人数不足，2-迟到过多，3-旷课严重
     */
-    @NotNull(message="[预警类型：1-人数不足，2-迟到过多，3-旷课严重]不能为空")
-    @ApiModelProperty("预警类型：1-人数不足，2-迟到过多，3-旷课严重")
+    @NotNull(message="[预警类型]不能为空")
+    @Schema(description = "预警类型：1-人数不足，2-迟到过多，3-旷课严重")
     private Integer alertType;
+    
     /**
     * 预警级别：1-低，2-中，3-高
     */
-    @ApiModelProperty("预警级别：1-低，2-中，3-高")
+    @Schema(description = "预警级别：1-低，2-中，3-高")
     private Integer alertLevel;
+    
     /**
     * 预到人数
     */
-    @ApiModelProperty("预到人数")
+    @Schema(description = "预到人数")
     private Integer expectedCount;
+    
     /**
     * 实到人数
     */
-    @ApiModelProperty("实到人数")
+    @Schema(description = "实到人数")
     private Integer actualCount;
+    
     /**
     * 预警信息
     */
     @Size(max= 500,message="编码长度不能超过500")
-    @ApiModelProperty("预警信息")
+    @Schema(description = "预警信息")
     @Size(max= 500,message="编码长度不能超过500")
     private String alertMessage;
+    
     /**
     * 通知状态：0-未发送，1-已发送，2-发送失败
     */
-    @ApiModelProperty("通知状态：0-未发送，1-已发送，2-发送失败")
+    @Schema(description = "通知状态：0-未发送，1-已发送，2-发送失败")
     private Integer notifyStatus;
+    
     /**
     * 通知时间
     */
-    @ApiModelProperty("通知时间")
+    @Schema(description = "通知时间")
     private LocalDateTime notifyTime;
+    
     /**
     * 创建时间
     */
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+    
     /**
     * 更新时间
     */
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
 }

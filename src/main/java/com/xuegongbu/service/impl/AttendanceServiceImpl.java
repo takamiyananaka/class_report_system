@@ -101,10 +101,6 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         if (course == null) {
             throw new BusinessException("无效的id");
         }
-        //检查是否在上课时间内
-        if (LocalTime.now().isBefore(course.getStartTime()) || LocalTime.now().isAfter(course.getEndTime())) {
-            throw new BusinessException("不在上课时间");
-        }
         //查询当前时刻上下总共100分钟内的考勤记录
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         LocalDateTime startTime = now.minusMinutes(50);

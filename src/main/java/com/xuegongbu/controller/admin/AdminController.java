@@ -8,8 +8,9 @@ import com.xuegongbu.dto.TeacherRequest;
 import com.xuegongbu.service.AdminService;
 import com.xuegongbu.service.TeacherService;
 import com.xuegongbu.vo.TeacherVO;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/admin")
-@Api(tags = "管理员管理")
+@Tag(name = "管理员管理", description = "管理员相关接口")
 public class AdminController {
 
     @Autowired
@@ -40,8 +41,8 @@ public class AdminController {
      * 管理员登录
      */
     @PostMapping("/login")
-    @ApiOperation(value = "管理员登录", notes = "管理员通过用户名和密码登录系统，返回JWT token")
-    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    @Operation(summary = "管理员登录", description = "管理员通过用户名和密码登录系统，返回JWT token")
+    public Result<LoginResponse> login(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "登录请求") @Valid @RequestBody LoginRequest loginRequest) {
         log.info("管理员登录请求: {}", loginRequest.getUsername());
         LoginResponse response = adminService.login(loginRequest);
         return Result.success(response);
@@ -51,7 +52,7 @@ public class AdminController {
      * 管理员登出
      */
     @PostMapping("/logout")
-    @ApiOperation(value = "管理员登出", notes = "管理员退出登录，清除认证上下文")
+    @Operation(summary = "管理员登出", description = "管理员退出登录，清除认证上下文")
     public Result<String> logout() {
         try {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {
@@ -76,7 +77,7 @@ public class AdminController {
      * 查询所有教师
      */
     @GetMapping("/teachers")
-    @ApiOperation(value = "查询所有教师", notes = "管理员查询所有教师列表")
+    @Operation(summary = "查询所有教师", description = "管理员查询所有教师列表")
     public Result<List<TeacherVO>> listTeachers() {
         log.info("管理员查询所有教师");
         List<Teacher> teachers = teacherService.list();
@@ -93,8 +94,8 @@ public class AdminController {
      * 根据ID查询教师
      */
     @GetMapping("/teachers/{id}")
-    @ApiOperation(value = "根据ID查询教师", notes = "管理员根据教师ID查询教师详情")
-    public Result<TeacherVO> getTeacher(@PathVariable Long id) {
+    @Operation(summary = "根据ID查询教师", description = "管理员根据教师ID查询教师详情")
+    public Result<TeacherVO> getTeacher(@Parameter(description = "教师ID") @PathVariable Long id) {
         log.info("管理员查询教师详情，ID：{}", id);
         Teacher teacher = teacherService.getById(id);
         if (teacher == null) {
@@ -109,8 +110,8 @@ public class AdminController {
      * 创建教师
      */
     @PostMapping("/teachers")
-    @ApiOperation(value = "创建教师", notes = "管理员创建新教师，密码必须至少6位字符")
-    public Result<String> createTeacher(@Valid @RequestBody TeacherRequest request) {
+    @Operation(summary = "创建教师", description = "管理员创建新教师，密码必须至少6位字符")
+    public Result<String> createTeacher(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
         log.info("管理员创建教师，用户名：{}", request.getUsername());
         
         // 检查用户名是否已存在
@@ -157,8 +158,8 @@ public class AdminController {
      * 更新教师
      */
     @PutMapping("/teachers/{id}")
-    @ApiOperation(value = "更新教师", notes = "管理员更新教师信息，如提供新密码则必须至少6位字符")
-    public Result<String> updateTeacher(@PathVariable Long id, @Valid @RequestBody TeacherRequest request) {
+    @Operation(summary = "更新教师", description = "管理员更新教师信息，如提供新密码则必须至少6位字符")
+    public Result<String> updateTeacher(@Parameter(description = "教师ID") @PathVariable Long id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
         log.info("管理员更新教师，ID：{}", id);
         
         Teacher teacher = teacherService.getById(id);
@@ -214,8 +215,8 @@ public class AdminController {
      * 删除教师
      */
     @DeleteMapping("/teachers/{id}")
-    @ApiOperation(value = "删除教师", notes = "管理员删除教师")
-    public Result<String> deleteTeacher(@PathVariable Long id) {
+    @Operation(summary = "删除教师", description = "管理员删除教师")
+    public Result<String> deleteTeacher(@Parameter(description = "教师ID") @PathVariable Long id) {
         log.info("管理员删除教师，ID：{}", id);
         
         Teacher teacher = teacherService.getById(id);

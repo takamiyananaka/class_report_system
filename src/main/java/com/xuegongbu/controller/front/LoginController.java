@@ -4,36 +4,36 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
 import com.xuegongbu.service.TeacherService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
 @RequestMapping(value = "/front")
-@Api(tags = "登录管理")
+@Tag(name = "登录管理", description = "登录相关接口")
 public class LoginController {
 
     @Autowired
     private TeacherService teacherService;
 
     @PostMapping("/login")
-    @ApiOperation(value = "教师登录", notes = "教师通过用户名和密码登录系统，返回JWT token")
-    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    @Operation(summary = "教师登录", description = "教师通过用户名和密码登录系统，返回JWT token")
+    public Result<LoginResponse> login(@RequestBody(description = "登录请求") @Valid @org.springframework.web.bind.annotation.RequestBody LoginRequest loginRequest) {
         log.info("教师登录请求: {}", loginRequest.getUsername());
         LoginResponse response = teacherService.login(loginRequest);
         return Result.success(response);
     }
 
     @PostMapping("/logout")
-    @ApiOperation(value = "教师登出", notes = "教师退出登录，清除认证上下文")
+    @Operation(summary = "教师登出", description = "教师退出登录，清除认证上下文")
     public Result<String> logout() {
         // 获取当前用户信息（只记录非敏感信息）
         try {

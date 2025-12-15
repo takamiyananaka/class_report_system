@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -18,76 +18,77 @@ import lombok.Data;
 */
 @TableName(value = "attendance")
 @Data
+@Schema(description = "考勤记录表")
 public class Attendance implements Serializable {
 
     /**
     * 主键ID
     */
     @NotNull(message="[主键ID]不能为空")
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
     * 课程ID
     */
     @NotNull(message="[课程ID]不能为空")
-    @ApiModelProperty("课程ID")
+    @Schema(description = "课程ID")
     private Long courseId;
     /**
     * 考勤时间
     */
     @NotNull(message="[考勤时间]不能为空")
-    @ApiModelProperty("考勤时间")
+    @Schema(description = "考勤时间")
     private LocalDateTime checkTime;
     /**
     * 实到人数
     */
-    @ApiModelProperty("实到人数")
+    @Schema(description = "实到人数")
     private Integer actualCount;
     /**
     * 预到人数
     */
-    @ApiModelProperty("预到人数")
+    @Schema(description = "预到人数")
     private Integer expectedCount;
     /**
     * 出勤率（%）
     */
-    @ApiModelProperty("出勤率（%）")
+    @Schema(description = "出勤率（%）")
     private BigDecimal attendanceRate;
     /**
     * 抓取的图片URL
     */
     @Size(max= 255,message="编码长度不能超过255")
-    @ApiModelProperty("抓取的图片URL")
+    @Schema(description = "抓取的图片URL")
     @Size(max= 255,message="编码长度不能超过255")
     private String imageUrl;
     /**
     * 考勤类型：1-自动，2-手动
     */
-    @ApiModelProperty("考勤类型：1-自动，2-手动")
+    @Schema(description = "考勤类型：1-自动，2-手动")
     private Integer checkType;
     /**
     * 状态：1-正常，2-异常
     */
-    @ApiModelProperty("状态：1-正常，2-异常")
+    @Schema(description = "状态：1-正常，2-异常")
     private Integer status;
     /**
     * 备注
     */
     @Size(max= 500,message="编码长度不能超过500")
-    @ApiModelProperty("备注")
+    @Schema(description = "备注")
     @Size(max= 500,message="编码长度不能超过500")
     private String remark;
     /**
     * 创建时间
     */
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     /**
     * 更新时间
     */
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 

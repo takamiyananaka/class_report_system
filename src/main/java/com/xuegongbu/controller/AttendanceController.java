@@ -3,8 +3,9 @@ package com.xuegongbu.controller;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.service.AttendanceService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/attendance")
-@Api(tags = "考勤管理")
+@Tag(name = "考勤管理", description = "考勤相关接口")
 public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService ;
@@ -21,9 +22,9 @@ public class AttendanceController {
      * 查询课程考所有勤记录
      */
     @GetMapping("/queryAttendance")
-    @ApiOperation(value = "查询课程所有考勤记录", notes = "查询课程所有考勤记录")
+    @Operation(summary = "查询课程所有考勤记录", description = "查询课程所有考勤记录")
     public Result<List<Attendance>> queryAttendanceByCourseId(
-            @RequestParam(value = "courseId", required = true) Long courseId) {
+            @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) Long courseId) {
         log.info("查询课程考勤记录，课程ID：{}", courseId);
         List<Attendance> attendanceList = attendanceService.queryAllAttendanceByCourseId(courseId);
         log.info("查询课程考勤记录完成，结果：{}", attendanceList);
@@ -34,9 +35,9 @@ public class AttendanceController {
      * 手动考勤
      */
     @PostMapping("/manualAttendance")
-    @ApiOperation(value = "手动考勤", notes = "手动考勤")
+    @Operation(summary = "手动考勤", description = "手动考勤")
     public Result<String> manualAttendance(
-            @RequestParam(value = "courseId", required = true) Long courseId){
+            @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) Long courseId){
         log.info("手动考勤，课程ID：{}", courseId);
         attendanceService.manualAttendance(courseId);
         log.info("手动考勤完成");
@@ -47,8 +48,8 @@ public class AttendanceController {
      * 查询当前考勤记录
      */
     @GetMapping("/queryCurrentAttendance")
-    @ApiOperation(value = "查询当前考勤记录", notes = "查询当前考勤记录")
-    public Result<Attendance> queryCurrentAttendance(@RequestParam(value = "courseId", required = true) Long courseId){
+    @Operation(summary = "查询当前考勤记录", description = "查询当前考勤记录")
+    public Result<Attendance> queryCurrentAttendance(@Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) Long courseId){
         log.info("查询当前考勤记录，课程ID：{}", courseId);
         Attendance attendance = attendanceService.queryCurrentAttendance(courseId);
         return Result.success(attendance);
@@ -58,8 +59,8 @@ public class AttendanceController {
      * 根据ID查询考勤记录
      */
     @GetMapping("/get/{id}")
-    @ApiOperation(value = "根据ID查询考勤记录", notes = "根据考勤ID查询考勤详情")
-    public Result<Attendance> getAttendanceById(@PathVariable Long id) {
+    @Operation(summary = "根据ID查询考勤记录", description = "根据考勤ID查询考勤详情")
+    public Result<Attendance> getAttendanceById(@Parameter(description = "考勤ID") @PathVariable Long id) {
         log.info("根据ID查询考勤记录，考勤ID：{}", id);
         Attendance attendance = attendanceService.getById(id);
         if (attendance == null) {
@@ -73,8 +74,8 @@ public class AttendanceController {
      * 创建考勤记录
      */
     @PostMapping("/add")
-    @ApiOperation(value = "创建考勤记录", notes = "创建新的考勤记录，ID自动生成")
-    public Result<Attendance> addAttendance(@RequestBody Attendance attendance) {
+    @Operation(summary = "创建考勤记录", description = "创建新的考勤记录，ID自动生成")
+    public Result<Attendance> addAttendance(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤信息") @RequestBody Attendance attendance) {
         log.info("创建考勤记录，考勤信息：{}", attendance);
         
         // 验证必填字段
@@ -91,8 +92,8 @@ public class AttendanceController {
      * 根据ID更新考勤记录
      */
     @PutMapping("/update/{id}")
-    @ApiOperation(value = "根据ID更新考勤记录", notes = "通过考勤ID更新考勤信息")
-    public Result<String> updateAttendanceById(@PathVariable Long id, @RequestBody Attendance attendance) {
+    @Operation(summary = "根据ID更新考勤记录", description = "通过考勤ID更新考勤信息")
+    public Result<String> updateAttendanceById(@Parameter(description = "考勤ID") @PathVariable Long id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤信息") @RequestBody Attendance attendance) {
         log.info("根据ID更新考勤记录，考勤ID：{}，考勤信息：{}", id, attendance);
         
         Attendance existing = attendanceService.getById(id);
@@ -112,8 +113,8 @@ public class AttendanceController {
      * 根据ID删除考勤记录
      */
     @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "根据ID删除考勤记录", notes = "通过考勤ID删除考勤记录")
-    public Result<String> deleteAttendanceById(@PathVariable Long id) {
+    @Operation(summary = "根据ID删除考勤记录", description = "通过考勤ID删除考勤记录")
+    public Result<String> deleteAttendanceById(@Parameter(description = "考勤ID") @PathVariable Long id) {
         log.info("根据ID删除考勤记录，考勤ID：{}", id);
         
         Attendance existing = attendanceService.getById(id);

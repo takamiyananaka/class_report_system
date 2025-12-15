@@ -5,11 +5,11 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.service.CourseScheduleService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -26,7 +26,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/courseSchedule")
-@Api(tags = "课表管理")
+@Tag(name = "课表管理", description = "课表相关接口")
 public class CourseScheduleController {
 
     @Autowired
@@ -36,7 +36,7 @@ public class CourseScheduleController {
      * Excel导入课表
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Excel导入课表", notes = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、班级名称、星期几(1-7)、开始时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、结束时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、教室、学期、学年")
+    @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、班级名称、星期几(1-7)、开始时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、结束时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、教室、学期、学年")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -84,7 +84,7 @@ public class CourseScheduleController {
      * 默认查询当前登录教师的课表，也可以通过参数指定教师ID或班级名称查询
      */
     @GetMapping("/query")
-    @ApiOperation(value = "分页查询课表", notes = "分页查询课表，默认查询当前登录教师的课表。可通过teacherNo、className等参数进行过滤查询")
+    @Operation(summary = "分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。可通过teacherNo、className等参数进行过滤查询")
     public Result<Page<CourseSchedule>> query(CourseScheduleQueryDTO queryDTO) {
         // 如果没有指定教师工号，则使用当前登录教师的工号
         if (queryDTO.getTeacherNo() == null) {
@@ -125,7 +125,7 @@ public class CourseScheduleController {
      * 下载课表导入模板
      */
     @GetMapping("/downloadTemplate")
-    @ApiOperation(value = "下载课表导入模板", notes = "下载Excel格式的课表导入模板文件")
+    @Operation(summary = "下载课表导入模板", description = "下载Excel格式的课表导入模板文件")
     public void downloadTemplate(jakarta.servlet.http.HttpServletResponse response) {
         try {
             log.info("下载课表导入模板");
@@ -141,8 +141,8 @@ public class CourseScheduleController {
      * 创建课表
      */
     @PostMapping("/add")
-    @ApiOperation(value = "创建课表", notes = "教师创建新课表，教师工号从登录状态获取，ID自动生成")
-    public Result<CourseSchedule> addCourseSchedule(@RequestBody CourseSchedule courseSchedule) {
+    @Operation(summary = "创建课表", description = "教师创建新课表，教师工号从登录状态获取，ID自动生成")
+    public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("创建课表，课表信息：{}", courseSchedule);
         
         // 获取当前登录教师的工号
@@ -209,8 +209,8 @@ public class CourseScheduleController {
      * 更新课表
      */
     @PutMapping("/update")
-    @ApiOperation(value = "更新课表", notes = "教师更新课表信息，通过课程名称和班级名称定位，只能更新自己的课表")
-    public Result<String> updateCourseSchedule(@RequestBody CourseSchedule courseSchedule) {
+    @Operation(summary = "更新课表", description = "教师更新课表信息，通过课程名称和班级名称定位，只能更新自己的课表")
+    public Result<String> updateCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("更新课表，课程名称：{}，班级名称：{}，课表信息：{}", 
                 courseSchedule.getCourseName(), courseSchedule.getClassName(), courseSchedule);
         
@@ -271,10 +271,10 @@ public class CourseScheduleController {
      * 删除课表
      */
     @DeleteMapping("/delete")
-    @ApiOperation(value = "删除课表", notes = "教师删除课表，通过课程名称和班级名称定位，只能删除自己的课表")
+    @Operation(summary = "删除课表", description = "教师删除课表，通过课程名称和班级名称定位，只能删除自己的课表")
     public Result<String> deleteCourseSchedule(
-            @RequestParam(value = "courseName", required = true) String courseName,
-            @RequestParam(value = "className", required = true) String className) {
+            @Parameter(description = "课程名称", required = true) @RequestParam(value = "courseName", required = true) String courseName,
+            @Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("删除课表，课程名称：{}，班级名称：{}", courseName, className);
         
         // 获取当前登录教师的工号
@@ -323,10 +323,10 @@ public class CourseScheduleController {
      * 查询课表详情
      */
     @GetMapping("/get")
-    @ApiOperation(value = "查询课表详情", notes = "根据课程名称和班级名称查询课表详情，只能查询自己的课表")
+    @Operation(summary = "查询课表详情", description = "根据课程名称和班级名称查询课表详情，只能查询自己的课表")
     public Result<CourseSchedule> getCourseSchedule(
-            @RequestParam(value = "courseName", required = true) String courseName,
-            @RequestParam(value = "className", required = true) String className) {
+            @Parameter(description = "课程名称", required = true) @RequestParam(value = "courseName", required = true) String courseName,
+            @Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("查询课表详情，课程名称：{}，班级名称：{}", courseName, className);
         
         // 获取当前登录教师的工号
@@ -374,8 +374,8 @@ public class CourseScheduleController {
      * 根据ID查询课表详情
      */
     @GetMapping("/get/{id}")
-    @ApiOperation(value = "根据ID查询课表详情", notes = "根据课表ID查询课表详情")
-    public Result<CourseSchedule> getCourseScheduleById(@PathVariable Long id) {
+    @Operation(summary = "根据ID查询课表详情", description = "根据课表ID查询课表详情")
+    public Result<CourseSchedule> getCourseScheduleById(@Parameter(description = "课表ID") @PathVariable Long id) {
         log.info("根据ID查询课表详情，课表ID：{}", id);
         
         CourseSchedule courseSchedule = courseScheduleService.getById(id);
@@ -391,8 +391,8 @@ public class CourseScheduleController {
      * 根据ID更新课表
      */
     @PutMapping("/update/{id}")
-    @ApiOperation(value = "根据ID更新课表", notes = "通过课表ID更新课表信息")
-    public Result<String> updateCourseScheduleById(@PathVariable Long id, @RequestBody CourseSchedule courseSchedule) {
+    @Operation(summary = "根据ID更新课表", description = "通过课表ID更新课表信息")
+    public Result<String> updateCourseScheduleById(@Parameter(description = "课表ID") @PathVariable Long id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("根据ID更新课表，课表ID：{}，课表信息：{}", id, courseSchedule);
         
         CourseSchedule existing = courseScheduleService.getById(id);
@@ -412,8 +412,8 @@ public class CourseScheduleController {
      * 根据ID删除课表
      */
     @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "根据ID删除课表", notes = "通过课表ID删除课表")
-    public Result<String> deleteCourseScheduleById(@PathVariable Long id) {
+    @Operation(summary = "根据ID删除课表", description = "通过课表ID删除课表")
+    public Result<String> deleteCourseScheduleById(@Parameter(description = "课表ID") @PathVariable Long id) {
         log.info("根据ID删除课表，课表ID：{}", id);
         
         CourseSchedule existing = courseScheduleService.getById(id);
