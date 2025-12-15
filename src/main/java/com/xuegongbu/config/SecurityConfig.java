@@ -52,8 +52,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                         // 允许下载模板
                         .requestMatchers("/courseSchedule/downloadTemplate").permitAll()
                         .requestMatchers("/class/downloadTemplate").permitAll()
-                        // 所有其他请求都需要认证
-                        .anyRequest().authenticated())
+                        // 所有其他请求都交给Sa-Token处理
+                        .anyRequest().permitAll())
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -123,7 +123,6 @@ public class SecurityConfig implements WebMvcConfigurer {
                             org.springframework.security.core.AuthenticationException authException) throws IOException {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            
             Result<String> result = Result.error("当前登录状态已过期，请重新登录");
             
             ObjectMapper objectMapper = new ObjectMapper();
