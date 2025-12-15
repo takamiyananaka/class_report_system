@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.Class;
-import com.xuegongbu.domain.Course;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CountResponse;
 import com.xuegongbu.mapper.AttendanceMapper;
@@ -18,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -56,7 +54,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     }
 
     @Override
-    public void manualAttendance(Long courseId) {
+    public Attendance manualAttendance(Long courseId) {
         //获取到课程信息
         CourseSchedule course = courseScheduleMapper.selectById(courseId);
         if (course == null) {
@@ -92,6 +90,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
         save(attendance);
 
+        return attendance;
     }
 
     @Override
@@ -101,14 +100,16 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         if (course == null) {
             throw new BusinessException("无效的id");
         }
-        //查询当前时刻上下总共100分钟内的考勤记录
+        //查询当前时刻上下总共100分钟内的考勤记录，并选择最近的一条
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         LocalDateTime startTime = now.minusMinutes(50);
         LocalDateTime endTime = now.plusMinutes(50);
         Attendance attendance = getOne(new QueryWrapper<Attendance>()
                 .eq("course_id", courseId)
                 .ge("check_time", startTime)
-                .le("check_time", endTime));
+                .le("check_time", endTime)
+                .orderByDesc("check_time")
+                .last("LIMIT 1"));
         if (attendance == null){
             throw new BusinessException("当前考勤记录生成中");
         }

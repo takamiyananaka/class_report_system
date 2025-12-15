@@ -8,7 +8,7 @@ import java.util.List;
 public interface AttendanceService extends IService<Attendance> {
     List<Attendance> queryAllAttendanceByCourseId(Long courseId);
 
-    void manualAttendance(Long courseId);
+    Attendance manualAttendance(Long courseId);
 
     Attendance queryCurrentAttendance(Long courseId);
 }
