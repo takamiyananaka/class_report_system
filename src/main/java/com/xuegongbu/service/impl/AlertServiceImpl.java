@@ -38,7 +38,7 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
         }
         
         // 提取课程ID列表
-        List<Long> courseIds = courses.stream()
+        List<String> courseIds = courses.stream()
                 .map(CourseSchedule::getId)
                 .toList();
         
