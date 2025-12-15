@@ -8,6 +8,7 @@ import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.mapper.AlertMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.AlertService;
+import com.xuegongbu.service.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
     
     @Autowired
     private CourseScheduleMapper courseScheduleMapper;
+    
+    @Autowired
+    private MailService mailService;
 
     @Override
     public List<Alert> listByTeacherId(Long teacherId) {
@@ -95,6 +99,10 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
                         attendanceRate.multiply(BigDecimal.valueOf(100)).doubleValue()));
                 
                 save(alert);
+                
+                // 直接发送邮件通知
+                mailService.sendAlertNotification(alert);
+                
                 log.info("为课程 {} 生成了{}预警记录，出勤率: {}%", course.getCourseName(), 
                         alert.getAlertLevel() == 1 ? "低级别" : (alert.getAlertLevel() == 2 ? "中级别" : "高级别"),
                         attendanceRate.multiply(BigDecimal.valueOf(100)).intValue());
