@@ -73,7 +73,9 @@ sa-token:
   is-log: false
   # jwt秘钥
   jwt-secret-key: class-report-system-jwt-secret-key-for-token-generation-2025
-
+  # 是否去除前缀
+  is-remove-bearer-prefix: true
+  
 logging:
   level:
     com.xuegongbu: debug

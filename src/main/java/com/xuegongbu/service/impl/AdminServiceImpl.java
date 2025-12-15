@@ -3,14 +3,13 @@ package com.xuegongbu.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.exception.BusinessException;
+import com.xuegongbu.config.PasswordEncoder;
 import com.xuegongbu.domain.Admin;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
 import com.xuegongbu.mapper.AdminMapper;
 import com.xuegongbu.service.AdminService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import cn.dev33.satoken.stp.StpUtil;
 
@@ -22,8 +21,7 @@ import java.util.Map;
 @Service
 public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements AdminService {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private static final PasswordEncoder passwordEncoder = new PasswordEncoder();
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
