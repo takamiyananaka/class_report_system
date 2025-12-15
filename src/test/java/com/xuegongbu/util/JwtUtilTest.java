@@ -29,13 +29,10 @@ class JwtUtilTest {
     private JwtUtil jwtUtil;
 
     private static final String TEST_SECRET = "class-report-system-jwt-secret-key-for-token-generation-2025-test-version-long-enough";
-    private static final Long TEST_EXPIRATION = 86400000L; // 24 hours
 
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(jwtUtil, "secret", TEST_SECRET);
-        ReflectionTestUtils.setField(jwtUtil, "expiration", TEST_EXPIRATION);
-        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     @Test
@@ -44,6 +41,7 @@ class JwtUtilTest {
         String userId = "123";
         String username = "testuser";
         String teacherNo = "T001";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         // When
         String token = jwtUtil.generateToken(userId, username, teacherNo);
@@ -62,6 +60,7 @@ class JwtUtilTest {
         String userId = "123";
         String username = "testuser";
         String teacherNo = "T001";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         String token = jwtUtil.generateToken(userId, username, teacherNo);
 
         // When
@@ -77,6 +76,7 @@ class JwtUtilTest {
         String userId = "123";
         String username = "testuser";
         String teacherNo = "T001";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         String token = jwtUtil.generateToken(userId, username, teacherNo);
 
         // When
@@ -92,6 +92,7 @@ class JwtUtilTest {
         String userId = "123";
         String username = "testuser";
         String teacherNo = "T001";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         String token = jwtUtil.generateToken(userId, username, teacherNo);
 
         // When
@@ -107,6 +108,7 @@ class JwtUtilTest {
         String userId = "123";
         String username = "testuser";
         String teacherNo = "T001";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         String token = jwtUtil.generateToken(userId, username, teacherNo);
         
         // Mock Redis to return true (token is active)
@@ -125,6 +127,7 @@ class JwtUtilTest {
         String userId = "123";
         String username = "testuser";
         String teacherNo = "T001";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         String token = jwtUtil.generateToken(userId, username, teacherNo);
         
         // Mock Redis to return false (token is not active - expired due to inactivity)
@@ -141,6 +144,7 @@ class JwtUtilTest {
     void testUpdateTokenActivity() {
         // Given
         String token = "test-token";
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         // When
         jwtUtil.updateTokenActivity(token);

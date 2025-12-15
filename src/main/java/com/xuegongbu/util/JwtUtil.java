@@ -35,6 +35,7 @@ public class JwtUtil {
     
     private static final String TOKEN_ACTIVITY_PREFIX = "token:activity:";
     private static final long ACTIVITY_TIMEOUT_HOURS = 24;
+    private static final long JWT_MAX_LIFETIME_DAYS = 7;
 
     /**
      * 生成密钥 - 使用HS384算法
@@ -50,8 +51,8 @@ public class JwtUtil {
      */
     public String generateToken(String userId, String username, String teacherNo) {
         Date now = new Date();
-        // Token本身设置7天过期，实际过期由Redis控制（24小时无活动）
-        Date expiryDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000L);
+        // Token本身设置较长过期时间，实际过期由Redis控制（24小时无活动）
+        Date expiryDate = new Date(now.getTime() + JWT_MAX_LIFETIME_DAYS * 24 * 60 * 60 * 1000L);
 
         String token = Jwts.builder()
                 .subject(userId)
