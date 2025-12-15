@@ -6,8 +6,9 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.TeacherQueryDTO;
 import com.xuegongbu.service.TeacherService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/teacher")
-@Api(tags = "教师管理")
+@Tag(name = "教师管理", description = "教师相关接口")
 public class TeacherController {
 
     @Autowired
@@ -29,7 +30,7 @@ public class TeacherController {
      * 多条件查询教师
      */
     @GetMapping("/query")
-    @ApiOperation(value = "多条件查询教师", notes = "支持按教师工号、部门、真实姓名（模糊）、电话号码查询。不提供任何条件则查询全部")
+    @Operation(summary = "多条件查询教师", description = "支持按教师工号、部门、真实姓名（模糊）、电话号码查询。不提供任何条件则查询全部")
     public Result<Page<Teacher>> query(TeacherQueryDTO queryDTO) {
         log.info("查询教师请求，参数：{}", queryDTO);
         
@@ -77,8 +78,8 @@ public class TeacherController {
      * 根据教师工号查询教师
      */
     @GetMapping("/getByTeacherNo/{teacherNo}")
-    @ApiOperation(value = "根据教师工号查询教师", notes = "根据教师工号查询教师详情")
-    public Result<Teacher> getByTeacherNo(@PathVariable String teacherNo) {
+    @Operation(summary = "根据教师工号查询教师", description = "根据教师工号查询教师详情")
+    public Result<Teacher> getByTeacherNo(@Parameter(description = "教师工号") @PathVariable String teacherNo) {
         log.info("查询教师详情，教师工号：{}", teacherNo);
         
         LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
@@ -100,8 +101,8 @@ public class TeacherController {
      * 创建教师
      */
     @PostMapping("/add")
-    @ApiOperation(value = "创建教师", notes = "创建新教师，ID自动生成")
-    public Result<Teacher> addTeacher(@RequestBody Teacher teacher) {
+    @Operation(summary = "创建教师", description = "创建新教师，ID自动生成")
+    public Result<Teacher> addTeacher(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @RequestBody Teacher teacher) {
         log.info("创建教师，教师信息：{}", teacher);
         
         // 验证必填字段
@@ -142,8 +143,8 @@ public class TeacherController {
      * 更新教师
      */
     @PutMapping("/update")
-    @ApiOperation(value = "更新教师", notes = "更新教师信息，通过教师工号定位")
-    public Result<String> updateTeacher(@RequestBody Teacher teacher) {
+    @Operation(summary = "更新教师", description = "更新教师信息，通过教师工号定位")
+    public Result<String> updateTeacher(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @RequestBody Teacher teacher) {
         log.info("更新教师，教师工号：{}，教师信息：{}", teacher.getTeacherNo(), teacher);
         
         if (teacher.getTeacherNo() == null || teacher.getTeacherNo().trim().isEmpty()) {
@@ -179,8 +180,8 @@ public class TeacherController {
      * 删除教师
      */
     @DeleteMapping("/delete/{teacherNo}")
-    @ApiOperation(value = "删除教师", notes = "通过教师工号删除教师（逻辑删除）")
-    public Result<String> deleteTeacher(@PathVariable String teacherNo) {
+    @Operation(summary = "删除教师", description = "通过教师工号删除教师（逻辑删除）")
+    public Result<String> deleteTeacher(@Parameter(description = "教师工号") @PathVariable String teacherNo) {
         log.info("删除教师，教师工号：{}", teacherNo);
         
         // 根据教师工号查询教师
