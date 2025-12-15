@@ -42,7 +42,7 @@ public class JwtUtil {
         Date expiryDate = new Date(now.getTime() + expiration);
 
         String token = Jwts.builder()
-                .subject(String.valueOf(userId))
+                .subject(userId)
                 .claim("username", username)
                 .claim("teacherNo", teacherNo)
                 .issuedAt(now)

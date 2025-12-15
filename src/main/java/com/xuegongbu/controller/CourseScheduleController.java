@@ -91,7 +91,7 @@ public class CourseScheduleController {
                     Object principal = authentication.getPrincipal();
                     String currentTeacherNo = null;
                     
-                    // principal现在是teacherNo (String)，需要转换为Long
+                    // principal现在是teacherNo (String)
                     if (principal instanceof String) {
                         currentTeacherNo = (String) principal;
                     }
@@ -148,7 +148,7 @@ public class CourseScheduleController {
         String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)，需要转换为Long
+            // principal现在是teacherNo (String)
             if (principal instanceof String) {
                 teacherNo = (String) principal;
             }
@@ -221,7 +221,7 @@ public class CourseScheduleController {
         String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)，需要转换为Long
+            // principal现在是teacherNo (String)
             if (principal instanceof String) {
                 teacherNo = (String) principal;
             }
@@ -274,7 +274,7 @@ public class CourseScheduleController {
         String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)，需要转换为Long
+            // principal现在是teacherNo (String)
             if (principal instanceof String) {
                 teacherNo = (String) principal;
             }
@@ -323,7 +323,7 @@ public class CourseScheduleController {
         String teacherNo = null;
         try {
             Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)，需要转换为Long
+            // principal现在是teacherNo (String)
             if (principal instanceof String) {
                 teacherNo = (String) principal;
             }
