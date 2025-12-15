@@ -15,12 +15,12 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import cn.dev33.satoken.stp.StpUtil;
 
 @Slf4j
 @RestController
@@ -41,7 +41,7 @@ public class AdminController {
      * 管理员登录
      */
     @PostMapping("/login")
-    @Operation(summary = "管理员登录", description = "管理员通过用户名和密码登录系统，返回JWT token")
+    @Operation(summary = "管理员登录", description = "管理员通过用户名和密码登录系统，返回Token")
     public Result<LoginResponse> login(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "登录请求") @Valid @RequestBody LoginRequest loginRequest) {
         log.info("管理员登录请求: {}", loginRequest.getUsername());
         LoginResponse response = adminService.login(loginRequest);
@@ -52,22 +52,18 @@ public class AdminController {
      * 管理员登出
      */
     @PostMapping("/logout")
-    @Operation(summary = "管理员登出", description = "管理员退出登录，清除认证上下文")
+    @Operation(summary = "管理员登出", description = "管理员退出登录")
     public Result<String> logout() {
         try {
-            if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-                if (principal instanceof Long) {
-                    log.info("管理员登出: 用户ID={}", principal);
-                } else {
-                    log.info("管理员登出: 用户类型={}", principal.getClass().getSimpleName());
-                }
+            if (StpUtil.isLogin()) {
+                Object loginId = StpUtil.getLoginId();
+                log.info("管理员登出: 用户ID={}", loginId);
             }
         } catch (Exception e) {
             log.debug("获取登出用户信息失败", e);
         }
         
-        SecurityContextHolder.clearContext();
+        StpUtil.logout();
         
         log.info("管理员登出成功");
         return Result.success("登出成功");

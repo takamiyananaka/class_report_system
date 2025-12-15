@@ -8,11 +8,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import cn.dev33.satoken.session.SaSession;
 
 @Slf4j
 @RestController
@@ -27,32 +28,42 @@ public class AlertController {
     * 根据老师id获取预警记录
     */
     @GetMapping("/listByTeacherId")
-    @Operation(summary = "根据老师id获取预d警记录", description = "根据老师id获取预警记录")
+    @Operation(summary = "根据老师id获取预警记录", description = "根据老师id获取预警记录")
     public Result<List<Alert>> listByTeacherId(){
         log.info("开始执行获取预警记录任务");
         
-        // 从安全上下文中获取当前用户信息
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        // 从Sa-Token中获取当前用户信息
+        if (!StpUtil.isLogin()) {
             return Result.error("用户未认证");
         }
-        
-        // 获取教师ID（从JWT token中解析出来的teacherNo）
-        Object principal = authentication.getPrincipal();
-        Long teacherId = null;
-        if (principal instanceof String) {
-            try {
-                teacherId = Long.valueOf((String) principal);
-            } catch (NumberFormatException e) {
-                return Result.error("无法解析教师ID");
+
+        // 优先从会话中获取完整的用户信息
+        String teacherNo = null;
+        try {
+            SaSession session = StpUtil.getSession();
+            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+            if (teacher != null) {
+                teacherNo = teacher.getTeacherNo();
+            } else {
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
+                }
             }
-        } else if (principal instanceof Long) {
-            teacherId = (Long) principal;
-        } else {
+        } catch (Exception e) {
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
             return Result.error("用户身份信息格式错误");
         }
         
-        List<Alert> alertList = alertService.listByTeacherId(teacherId);
+        if (teacherNo == null) {
+            return Result.error("无法获取教师工号");
+        }
+        
+        // 通过教师工号查询对应的教师ID
+        QueryWrapper<Alert> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teacher_no", teacherNo);
+        List<Alert> alertList = alertService.list(queryWrapper);
+        
         log.info("结束执行获取预警记录任务");
         return Result.success(alertList);
     }

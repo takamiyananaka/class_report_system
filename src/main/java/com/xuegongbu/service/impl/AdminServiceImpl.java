@@ -8,11 +8,11 @@ import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
 import com.xuegongbu.mapper.AdminMapper;
 import com.xuegongbu.service.AdminService;
-import com.xuegongbu.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import cn.dev33.satoken.stp.StpUtil;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -24,9 +24,6 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -53,8 +50,10 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         admin.setLastLoginTime(LocalDateTime.now());
         this.updateById(admin);
 
-        // 生成token (管理员没有teacherNo，传null)
-        String token = jwtUtil.generateToken(admin.getId(), admin.getUsername(), null);
+        // Sa-Token 登录认证，使用管理员ID作为登录标识，并标记角色为admin，并存储完整的用户信息
+        StpUtil.login(admin.getId(), "admin");
+        StpUtil.getSession().set("userInfo", admin);
+        String token = StpUtil.getTokenValue();
 
         // 构造用户信息（不包含密码）
         Map<String, Object> userInfo = new HashMap<>();

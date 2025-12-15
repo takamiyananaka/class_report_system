@@ -8,11 +8,11 @@ import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.TeacherService;
-import com.xuegongbu.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import cn.dev33.satoken.stp.StpUtil;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -25,9 +25,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     // BCrypt密码加密器 - 用于验证数据库中BCrypt加密的密码
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -54,8 +51,10 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         teacher.setLastLoginTime(LocalDateTime.now());
         this.updateById(teacher);
 
-        // 生成token
-        String token = jwtUtil.generateToken(teacher.getId(), teacher.getUsername(), teacher.getTeacherNo());
+        // Sa-Token 登录认证，使用教师工号作为登录标识，并存储完整的用户信息
+        StpUtil.login(teacher.getTeacherNo());
+        StpUtil.getSession().set("userInfo", teacher);
+        String token = StpUtil.getTokenValue();
 
         // 构造用户信息（不包含密码）
         Map<String, Object> userInfo = new HashMap<>();

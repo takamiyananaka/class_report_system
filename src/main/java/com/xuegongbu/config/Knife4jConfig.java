@@ -2,8 +2,8 @@ package com.xuegongbu.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger. v3.oas.models. info.Contact;
-import io. swagger.v3.oas. models.info.Info;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
  * Knife4j API 文档配置
  * 访问地址：http://localhost:8080/doc.html
  * 
- * JWT认证使用说明：
+ * Sa-Token认证使用说明：
  * 1. 先调用 /front/login 接口登录获取 Token
  * 2. 点击右上角 "Authorize" 按钮
  * 3. 在弹出的对话框中输入 Token（不需要加 "Bearer " 前缀）
@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 public class Knife4jConfig {
 
     /**
-     * 配置 OpenAPI 基本信息和JWT认证
+     * 配置 OpenAPI 基本信息和认证
      */
     @Bean
     public OpenAPI customOpenAPI() {
@@ -36,7 +36,7 @@ public class Knife4jConfig {
                         .title("学工部课程考勤系统 API")
                         .version("1.0.0")
                         .description("学工部课程考勤系统接口文档，提供教师管理、课程管理、考勤管理等功能\n\n" +
-                                "**JWT认证使用说明：**\n" +
+                                "**Sa-Token认证使用说明：**\n" +
                                 "1. 先调用 `/front/login` 或 `/admin/login` 接口登录获取 Token\n" +
                                 "2. 点击右上角 **Authorize** 🔓 按钮\n" +
                                 "3. 在弹出的对话框中输入 Token（不需要加 \"Bearer \" 前缀）\n" +
@@ -56,7 +56,7 @@ public class Knife4jConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("请输入JWT Token（不需要加 'Bearer ' 前缀）\n\n" +
+                                        .description("请输入Token（不需要加 'Bearer ' 前缀）\n\n" +
                                                 "获取方式：调用登录接口后复制返回的 token 字段")));
         // 注意：不再在这里添加全局 SecurityItem，改用 GlobalOpenApiCustomizer 精确控制
     }

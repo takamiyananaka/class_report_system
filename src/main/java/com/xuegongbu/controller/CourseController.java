@@ -9,14 +9,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.session.SaSession;
 
 @Slf4j
 @RestController
@@ -38,17 +38,23 @@ public class CourseController {
         log.info("创建课程，课程信息：{}", course);
         
         // 获取当前登录教师的工号
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
+        if (!StpUtil.isLogin()) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
         String teacherNo = null;
         try {
-            Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)
-            if (principal instanceof String) {
-                teacherNo = (String) principal;
+            // 优先从会话中获取完整的用户信息
+            SaSession session = StpUtil.getSession();
+            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+            if (teacher != null) {
+                teacherNo = teacher.getTeacherNo();
+            } else {
+                // 回退到原来的逻辑
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
+                }
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -112,14 +118,19 @@ public class CourseController {
     public Result<List<Course>> listCourses(@Parameter(description = "教师工号") @RequestParam(required = false) String teacherNo) {
         // 如果没有指定教师工号，使用当前登录教师的工号
         if (teacherNo == null) {
-            org.springframework.security.core.Authentication authentication = 
-                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() != null) {
+            if (StpUtil.isLogin()) {
                 try {
-                    Object principal = authentication.getPrincipal();
-                    // principal现在是teacherNo (String)
-                    if (principal instanceof String) {
-                        teacherNo = (String) principal;
+                    // 优先从会话中获取完整的用户信息
+                    SaSession session = StpUtil.getSession();
+                    com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+                    if (teacher != null) {
+                        teacherNo = teacher.getTeacherNo();
+                    } else {
+                        // 回退到原来的逻辑
+                        Object loginId = StpUtil.getLoginId();
+                        if (loginId instanceof String) {
+                            teacherNo = (String) loginId;
+                        }
                     }
                 } catch (Exception e) {
                     log.error("无法解析教师工号: {}", e.getMessage());

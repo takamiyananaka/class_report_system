@@ -15,12 +15,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.session.SaSession;
 
 /**
  * 班级管理控制器
@@ -42,19 +42,23 @@ public class ClassController {
      * @return 教师工号，如果获取失败返回null
      */
     private String getTeacherNoFromAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
-            return null;
-        }
-        
         try {
-            Object principal = authentication.getPrincipal();
-            // principal现在直接是teacherNo (String)
-            if (principal instanceof String) {
-                return (String) principal;
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录（principal是userId）
-                return String.valueOf(principal);
+            // 从Sa-Token中获取当前用户信息
+            if (!StpUtil.isLogin()) {
+                return null;
+            }
+
+            // 从会话中获取完整的用户信息
+            SaSession session = StpUtil.getSession();
+            Teacher teacher = (Teacher) session.get("userInfo");
+            if (teacher != null) {
+                return teacher.getTeacherNo();
+            }
+            
+            // 如果会话中没有用户信息
+            Object loginId = StpUtil.getLoginId();
+            if (loginId instanceof String) {
+                return (String) loginId;
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -78,7 +82,7 @@ public class ClassController {
             // 获取当前登录教师的工号
             String teacherNo = getTeacherNoFromAuthentication();
             if (teacherNo == null) {
-                return Result.error("无法获取当前登录用户信息");
+                return Result.error("无法获取当前登录用户信息或权限不足");
             }
             
             log.info("当前登录教师工号: {}", teacherNo);
@@ -115,7 +119,7 @@ public class ClassController {
         // 获取当前登录教师的工号
         String teacherNo = getTeacherNoFromAuthentication();
         if (teacherNo == null) {
-            return Result.error("无法获取当前登录用户信息");
+            return Result.error("无法获取当前登录用户信息或权限不足");
         }
         
         log.info("当前登录教师工号: {}", teacherNo);
@@ -151,6 +155,11 @@ public class ClassController {
     public Result<String> updateClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class classEntity) {
         log.info("更新班级，班级名称：{}，班级信息：{}", classEntity.getClassName(), classEntity);
         
+        // 检查权限
+        if (!StpUtil.isLogin() || StpUtil.hasRole("admin")) {
+            return Result.error("权限不足");
+        }
+        
         if (classEntity.getClassName() == null || classEntity.getClassName().trim().isEmpty()) {
             return Result.error("班级名称不能为空");
         }
@@ -180,6 +189,11 @@ public class ClassController {
     @Operation(summary = "删除班级", description = "通过班级名称删除班级（逻辑删除）")
     public Result<String> deleteClass(@Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("删除班级，班级名称：{}", className);
+        
+        // 检查权限
+        if (!StpUtil.isLogin() || StpUtil.hasRole("admin")) {
+            return Result.error("权限不足");
+        }
         
         // 根据班级名称查询班级
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Class> queryWrapper = 
@@ -241,6 +255,11 @@ public class ClassController {
     public Result<String> updateClassById(@Parameter(description = "班级ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class classEntity) {
         log.info("根据ID更新班级，班级ID：{}，班级信息：{}", id, classEntity);
         
+        // 检查权限
+        if (!StpUtil.isLogin() || StpUtil.hasRole("admin")) {
+            return Result.error("权限不足");
+        }
+        
         Class existing = classService.getById(id);
         if (existing == null) {
             return Result.error("班级不存在");
@@ -261,6 +280,11 @@ public class ClassController {
     @Operation(summary = "根据ID删除班级", description = "通过班级ID删除班级（逻辑删除）")
     public Result<String> deleteClassById(@Parameter(description = "班级ID") @PathVariable String id) {
         log.info("根据ID删除班级，班级ID：{}", id);
+        
+        // 检查权限
+        if (!StpUtil.isLogin() || StpUtil.hasRole("admin")) {
+            return Result.error("权限不足");
+        }
         
         Class existing = classService.getById(id);
         if (existing == null) {

@@ -13,12 +13,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.session.SaSession;
 
 /**
  * 课表管理控制器
@@ -45,17 +45,23 @@ public class CourseScheduleController {
             log.info("开始导入课表，文件名：{}", file.getOriginalFilename());
             
             // 获取当前登录教师的工号
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || authentication.getPrincipal() == null) {
+            if (!StpUtil.isLogin()) {
                 return Result.error("未登录或登录已过期，请重新登录");
             }
             
             String teacherNo = null;
             try {
-                Object principal = authentication.getPrincipal();
-                // principal现在是teacherNo (String)
-                if (principal instanceof String) {
-                    teacherNo = (String) principal;
+                // 优先从会话中获取完整的用户信息
+                SaSession session = StpUtil.getSession();
+                com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+                if (teacher != null) {
+                    teacherNo = teacher.getTeacherNo();
+                } else {
+                    // 回退到原来的逻辑
+                    Object loginId = StpUtil.getLoginId();
+                    if (loginId instanceof String) {
+                        teacherNo = (String) loginId;
+                    }
                 }
             } catch (Exception e) {
                 log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -85,15 +91,21 @@ public class CourseScheduleController {
     public Result<Page<CourseSchedule>> query(CourseScheduleQueryDTO queryDTO) {
         // 如果没有指定教师工号，则使用当前登录教师的工号
         if (queryDTO.getTeacherNo() == null) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() != null) {
+            if (StpUtil.isLogin()) {
                 try {
-                    Object principal = authentication.getPrincipal();
+                    // 优先从会话中获取完整的用户信息
+                    SaSession session = StpUtil.getSession();
+                    com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
                     String currentTeacherNo = null;
                     
-                    // principal现在是teacherNo (String)
-                    if (principal instanceof String) {
-                        currentTeacherNo = (String) principal;
+                    if (teacher != null) {
+                        currentTeacherNo = teacher.getTeacherNo();
+                    } else {
+                        // 回退到原来的逻辑
+                        Object loginId = StpUtil.getLoginId();
+                        if (loginId instanceof String) {
+                            currentTeacherNo = (String) loginId;
+                        }
                     }
                     
                     if (currentTeacherNo != null) {
@@ -140,17 +152,23 @@ public class CourseScheduleController {
         log.info("创建课表，课表信息：{}", courseSchedule);
         
         // 获取当前登录教师的工号
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
+        if (!StpUtil.isLogin()) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
         String teacherNo = null;
         try {
-            Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)
-            if (principal instanceof String) {
-                teacherNo = (String) principal;
+            // 优先从会话中获取完整的用户信息
+            SaSession session = StpUtil.getSession();
+            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+            if (teacher != null) {
+                teacherNo = teacher.getTeacherNo();
+            } else {
+                // 回退到原来的逻辑
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
+                }
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -213,17 +231,23 @@ public class CourseScheduleController {
         }
         
         // 获取当前登录教师的工号
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
+        if (!StpUtil.isLogin()) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
         String teacherNo = null;
         try {
-            Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)
-            if (principal instanceof String) {
-                teacherNo = (String) principal;
+            // 优先从会话中获取完整的用户信息
+            SaSession session = StpUtil.getSession();
+            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+            if (teacher != null) {
+                teacherNo = teacher.getTeacherNo();
+            } else {
+                // 回退到原来的逻辑
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
+                }
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -266,17 +290,23 @@ public class CourseScheduleController {
         log.info("删除课表，课程名称：{}，班级名称：{}", courseName, className);
         
         // 获取当前登录教师的工号
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
+        if (!StpUtil.isLogin()) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
         String teacherNo = null;
         try {
-            Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)
-            if (principal instanceof String) {
-                teacherNo = (String) principal;
+            // 优先从会话中获取完整的用户信息
+            SaSession session = StpUtil.getSession();
+            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+            if (teacher != null) {
+                teacherNo = teacher.getTeacherNo();
+            } else {
+                // 回退到原来的逻辑
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
+                }
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -315,17 +345,23 @@ public class CourseScheduleController {
         log.info("查询课表详情，课程名称：{}，班级名称：{}", courseName, className);
         
         // 获取当前登录教师的工号
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
+        if (!StpUtil.isLogin()) {
             return Result.error("未登录或登录已过期，请重新登录");
         }
         
         String teacherNo = null;
         try {
-            Object principal = authentication.getPrincipal();
-            // principal现在是teacherNo (String)
-            if (principal instanceof String) {
-                teacherNo = (String) principal;
+            // 优先从会话中获取完整的用户信息
+            SaSession session = StpUtil.getSession();
+            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
+            if (teacher != null) {
+                teacherNo = teacher.getTeacherNo();
+            } else {
+                // 回退到原来的逻辑
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
+                }
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
