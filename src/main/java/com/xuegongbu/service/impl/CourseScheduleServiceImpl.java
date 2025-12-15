@@ -216,8 +216,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
         
         // 教师工号条件
-        if (queryDTO.getTeacherNo() != null) {
-            queryWrapper.eq(CourseSchedule::getTeacherNo, queryDTO.getTeacherNo());
+        if (!isBlank(queryDTO.getTeacherNo())) {
+            queryWrapper.eq(CourseSchedule::getTeacherNo, queryDTO.getTeacherNo().trim());
         }
         
         // 班级名称条件（模糊查询）
