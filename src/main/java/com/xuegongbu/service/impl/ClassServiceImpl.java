@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -170,12 +171,26 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         
         // 年级条件（多选）
         if (queryDTO.getGrades() != null && !queryDTO.getGrades().isEmpty()) {
-            queryWrapper.in(Class::getGrade, queryDTO.getGrades());
+            // 过滤掉空白字符串
+            List<String> validGrades = queryDTO.getGrades().stream()
+                    .filter(grade -> grade != null && !grade.trim().isEmpty())
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+            if (!validGrades.isEmpty()) {
+                queryWrapper.in(Class::getGrade, validGrades);
+            }
         }
         
         // 专业条件（多选）
         if (queryDTO.getMajors() != null && !queryDTO.getMajors().isEmpty()) {
-            queryWrapper.in(Class::getMajor, queryDTO.getMajors());
+            // 过滤掉空白字符串
+            List<String> validMajors = queryDTO.getMajors().stream()
+                    .filter(major -> major != null && !major.trim().isEmpty())
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+            if (!validMajors.isEmpty()) {
+                queryWrapper.in(Class::getMajor, validMajors);
+            }
         }
         
         // 按创建时间倒序排序
