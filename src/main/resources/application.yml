@@ -73,8 +73,8 @@ sa-token:
   is-log: false
   # jwt秘钥
   jwt-secret-key: class-report-system-jwt-secret-key-for-token-generation-2025
-  # 是否去除前缀
-  is-remove-bearer-prefix: true
+  # 是否读取Bearer类型的token
+  is-read-bearer-token: true
   
 logging:
   level:
