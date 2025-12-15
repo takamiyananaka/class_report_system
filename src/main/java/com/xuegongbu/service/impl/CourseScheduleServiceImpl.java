@@ -25,7 +25,6 @@ import java.util.Map;
 @Slf4j
 @Service
 public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper, CourseSchedule> implements CourseScheduleService {
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> importFromExcel(MultipartFile file, Long teacherNo) {
@@ -273,7 +272,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setWeekday(1);
             example.setStartTime("08:00");
             example.setEndTime("09:40");
-            example.setClassroom("思学楼A101");
+            example.setClassroom("成都校区/思学楼/A101");
             example.setSemester("1");
             example.setSchoolYear("2024-2025");
             // 不再包含教师ID，将由系统根据当前登录教师自动填充
