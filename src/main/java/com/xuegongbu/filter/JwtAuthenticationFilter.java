@@ -84,6 +84,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String teacherNo = jwtUtil.getTeacherNoFromToken(token);
                 
                 if (userId != null && username != null) {
+                    // 更新token活动时间
+                    jwtUtil.updateTokenActivity(token);
+                    
                     // 使用teacherNo作为principal（如果是管理员则teacherNo为null，使用userId）
                     Object principal = teacherNo != null ? teacherNo : userId;
                     UsernamePasswordAuthenticationToken authentication =
