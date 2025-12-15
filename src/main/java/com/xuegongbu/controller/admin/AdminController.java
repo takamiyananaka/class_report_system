@@ -95,7 +95,7 @@ public class AdminController {
      */
     @GetMapping("/teachers/{id}")
     @Operation(summary = "根据ID查询教师", description = "管理员根据教师ID查询教师详情")
-    public Result<TeacherVO> getTeacher(@Parameter(description = "教师ID") @PathVariable Long id) {
+    public Result<TeacherVO> getTeacher(@Parameter(description = "教师ID") @PathVariable String id) {
         log.info("管理员查询教师详情，ID：{}", id);
         Teacher teacher = teacherService.getById(id);
         if (teacher == null) {
@@ -159,7 +159,7 @@ public class AdminController {
      */
     @PutMapping("/teachers/{id}")
     @Operation(summary = "更新教师", description = "管理员更新教师信息，如提供新密码则必须至少6位字符")
-    public Result<String> updateTeacher(@Parameter(description = "教师ID") @PathVariable Long id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
+    public Result<String> updateTeacher(@Parameter(description = "教师ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
         log.info("管理员更新教师，ID：{}", id);
         
         Teacher teacher = teacherService.getById(id);
@@ -216,7 +216,7 @@ public class AdminController {
      */
     @DeleteMapping("/teachers/{id}")
     @Operation(summary = "删除教师", description = "管理员删除教师")
-    public Result<String> deleteTeacher(@Parameter(description = "教师ID") @PathVariable Long id) {
+    public Result<String> deleteTeacher(@Parameter(description = "教师ID") @PathVariable String id) {
         log.info("管理员删除教师，ID：{}", id);
         
         Teacher teacher = teacherService.getById(id);

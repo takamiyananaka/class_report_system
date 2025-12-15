@@ -1,9 +1,11 @@
 -- ====================================
 -- 学工部课程考勤系统 - 完整数据库初始化脚本
--- 版本: v5.0
--- 说明: 使用雪花算法生成ID，教师工号为字符串类型
+-- 版本: v6.0
+-- 说明: 所有ID字段使用VARCHAR类型，支持字符串ID
+-- 更新说明: 本脚本可在已有数据库上运行，会自动修改表结构
 -- ====================================
 
+-- 创建数据库（如果不存在）
 CREATE DATABASE IF NOT EXISTS class_report DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE class_report;
@@ -12,7 +14,7 @@ USE class_report;
 -- 1. 管理员表
 -- ====================================
 CREATE TABLE IF NOT EXISTS admin (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password VARCHAR(255) NOT NULL COMMENT '密码（BCrypt加密）',
     real_name VARCHAR(50) COMMENT '真实姓名',
@@ -28,11 +30,14 @@ CREATE TABLE IF NOT EXISTS admin (
     INDEX idx_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
 
+-- 修改已存在的admin表的id字段类型
+ALTER TABLE admin MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
 -- ====================================
 -- 2. 教师表
 -- ====================================
 CREATE TABLE IF NOT EXISTS teacher (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password VARCHAR(255) NOT NULL COMMENT '密码（BCrypt加密）',
     real_name VARCHAR(50) NOT NULL COMMENT '真实姓名',
@@ -52,11 +57,14 @@ CREATE TABLE IF NOT EXISTS teacher (
     INDEX idx_teacher_no (teacher_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师表';
 
+-- 修改已存在的teacher表的id字段类型
+ALTER TABLE teacher MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
 -- ====================================
 -- 3. 班级表
 -- ====================================
 CREATE TABLE IF NOT EXISTS class (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     class_name VARCHAR(20) NOT NULL COMMENT '班级名字',
     teacher_no VARCHAR(50) NOT NULL COMMENT '辅导员工号',
     count INT NOT NULL COMMENT '班级人数',
@@ -70,13 +78,16 @@ CREATE TABLE IF NOT EXISTS class (
     INDEX idx_major (major)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='班级表';
 
+-- 修改已存在的class表的id字段类型
+ALTER TABLE class MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
 -- ====================================
 -- 4. 课表表
 -- ====================================
 CREATE TABLE IF NOT EXISTS course_schedule (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
-    teacher_no BIGINT NOT NULL COMMENT '教师工号',
+    teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号',
     class_name VARCHAR(100) NOT NULL COMMENT '班级名称',
     weekday TINYINT NOT NULL COMMENT '星期几（1-7）',
     start_time TIME NOT NULL COMMENT '开始时间',
@@ -91,14 +102,18 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     INDEX idx_weekday (weekday)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
 
+-- 修改已存在的course_schedule表的字段类型
+ALTER TABLE course_schedule MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+ALTER TABLE course_schedule MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
+
 -- ====================================
 -- 5. 课程表
 -- ====================================
 CREATE TABLE IF NOT EXISTS course (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
     course_code VARCHAR(50) COMMENT '课程编码',
-    teacher_no BIGINT NOT NULL COMMENT '教师工号',
+    teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号',
     classroom VARCHAR(50) NOT NULL COMMENT '教室号',
     course_time VARCHAR(100) NOT NULL COMMENT '上课时间（如：周一 1-2节）',
     course_date DATE NOT NULL COMMENT '上课日期',
@@ -118,12 +133,16 @@ CREATE TABLE IF NOT EXISTS course (
     INDEX idx_course_name (course_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程表';
 
+-- 修改已存在的course表的字段类型
+ALTER TABLE course MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+ALTER TABLE course MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
+
 -- ====================================
 -- 6. 考勤记录表
 -- ====================================
 CREATE TABLE IF NOT EXISTS attendance (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
-    course_id BIGINT NOT NULL COMMENT '课程ID',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
+    course_id VARCHAR(64) NOT NULL COMMENT '课程ID',
     check_time DATETIME NOT NULL COMMENT '考勤时间',
     actual_count INT COMMENT '实到人数',
     expected_count INT COMMENT '预到人数',
@@ -138,13 +157,17 @@ CREATE TABLE IF NOT EXISTS attendance (
     INDEX idx_check_time (check_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='考勤记录表';
 
+-- 修改已存在的attendance表的字段类型
+ALTER TABLE attendance MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+ALTER TABLE attendance MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
+
 -- ====================================
 -- 7. 预警记录表
 -- ====================================
 CREATE TABLE IF NOT EXISTS alert (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
-    course_id BIGINT NOT NULL COMMENT '课程ID',
-    attendance_id BIGINT COMMENT '考勤记录ID',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
+    course_id VARCHAR(64) NOT NULL COMMENT '课程ID',
+    attendance_id VARCHAR(64) COMMENT '考勤记录ID',
     alert_type INT NOT NULL COMMENT '预警类型：1-人数不足，2-迟到过多，3-旷课严重',
     alert_level INT COMMENT '预警级别：1-低，2-中，3-高',
     expected_count INT COMMENT '预到人数',
@@ -159,11 +182,16 @@ CREATE TABLE IF NOT EXISTS alert (
     INDEX idx_alert_type (alert_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='预警记录表';
 
+-- 修改已存在的alert表的字段类型
+ALTER TABLE alert MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+ALTER TABLE alert MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
+ALTER TABLE alert MODIFY COLUMN attendance_id VARCHAR(64) COMMENT '考勤记录ID';
+
 -- ====================================
 -- 8. 图片抓取记录表
 -- ====================================
 CREATE TABLE IF NOT EXISTS image_capture (
-    id BIGINT PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     source_url VARCHAR(500) NOT NULL COMMENT '来源URL',
     image_url VARCHAR(255) COMMENT '保存的图片URL',
     classroom VARCHAR(50) COMMENT '教室号',
@@ -176,25 +204,35 @@ CREATE TABLE IF NOT EXISTS image_capture (
     INDEX idx_capture_time (capture_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='图片抓取记录表';
 
+-- 修改已存在的image_capture表的id字段类型
+ALTER TABLE image_capture MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
 -- ====================================
 -- 初始化数据
 -- ====================================
 
 -- 插入默认管理员（用户名：admin，密码：admin123）
--- 注意：ID使用固定的雪花ID格式，确保在应用启动时不会冲突
+-- 注意：ID使用字符串格式
 INSERT INTO admin (id, username, password, real_name, phone, email) 
-VALUES (1000000000000000001, 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '系统管理员', '13800138000', 'admin@example.com');
+VALUES ('1000000000000000001', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '系统管理员', '13800138000', 'admin@example.com')
+ON DUPLICATE KEY UPDATE username = username;
 
 -- 插入测试教师（用户名：teacher001，密码：123456）
 INSERT INTO teacher (id, username, password, real_name, teacher_no, phone, email, department, identity)
-VALUES (1000000000000000002, 'teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1);
+VALUES ('1000000000000000002', 'teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1)
+ON DUPLICATE KEY UPDATE username = username;
 
 -- ====================================
 -- 说明
 -- ====================================
--- 1. 所有表的ID字段都使用BIGINT类型，支持雪花算法生成的长整型ID
+-- 1. 所有表的ID字段都使用VARCHAR(64)类型，支持字符串格式的ID（包括雪花算法生成的字符串ID）
 -- 2. 教师工号(teacher_no)使用VARCHAR类型，支持字符串格式
 -- 3. 班级表的teacher_no字段为VARCHAR类型，存储教师工号而非ID
--- 4. 移除了外键约束，使用应用层面的数据一致性控制
--- 5. 所有表都支持逻辑删除（除了image_capture表）
--- 6. 使用utf8mb4字符集，支持emoji和特殊字符
+-- 4. 课程表和课表表的teacher_no字段为VARCHAR类型
+-- 5. 考勤记录表的course_id字段为VARCHAR类型
+-- 6. 预警记录表的course_id和attendance_id字段为VARCHAR类型
+-- 7. 移除了外键约束，使用应用层面的数据一致性控制
+-- 8. 所有表都支持逻辑删除（除了image_capture表）
+-- 9. 使用utf8mb4字符集，支持emoji和特殊字符
+-- 10. 本脚本使用ALTER TABLE语句，可以在已有数据库上运行，会自动修改现有表结构
+-- 11. 使用ON DUPLICATE KEY UPDATE确保初始化数据可以重复执行

@@ -79,7 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.debug("JWT认证过滤器 - 处理Token，长度: {}, 请求路径: {}", token.length(), requestPath);
             
             if (jwtUtil.validateToken(token)) {
-                Long userId = jwtUtil.getUserIdFromToken(token);
+                String userId = jwtUtil.getUserIdFromToken(token);
                 String username = jwtUtil.getUsernameFromToken(token);
                 String teacherNo = jwtUtil.getTeacherNoFromToken(token);
                 

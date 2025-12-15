@@ -27,7 +27,7 @@ import java.util.Map;
 public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper, CourseSchedule> implements CourseScheduleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> importFromExcel(MultipartFile file, Long teacherNo) {
+    public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
         Map<String, Object> result = new HashMap<>();
         
         if (file == null || file.isEmpty()) {

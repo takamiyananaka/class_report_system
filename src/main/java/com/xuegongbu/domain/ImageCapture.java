@@ -26,7 +26,7 @@ public class ImageCapture implements Serializable {
     @NotNull(message="[主键ID]不能为空")
     @Schema(description = "主键ID")
     @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
+    private String id;
     /**
     * 来源URL
     */

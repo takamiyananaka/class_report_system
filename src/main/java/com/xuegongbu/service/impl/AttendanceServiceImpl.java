@@ -45,7 +45,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
      * @return
      */
     @Override
-    public List<Attendance> queryAllAttendanceByCourseId(Long courseId) {
+    public List<Attendance> queryAllAttendanceByCourseId(String courseId) {
         //获取到课程信息
         CourseSchedule course = courseScheduleMapper.selectById(courseId);
         if (course == null) {
@@ -56,7 +56,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     }
 
     @Override
-    public Attendance manualAttendance(Long courseId) {
+    public Attendance manualAttendance(String courseId) {
         //获取到课程信息
         CourseSchedule course = courseScheduleMapper.selectById(courseId);
         if (course == null) {
@@ -99,7 +99,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     }
 
     @Override
-    public Attendance queryCurrentAttendance(Long courseId) {
+    public Attendance queryCurrentAttendance(String courseId) {
         //获取到课程信息
         CourseSchedule course = courseScheduleMapper.selectById(courseId);
         if (course == null) {

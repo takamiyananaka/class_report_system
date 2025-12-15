@@ -18,7 +18,7 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @param teacherNo 教师工号（从当前登录用户获取）
      * @return 导入结果
      */
-    Map<String, Object> importFromExcel(MultipartFile file, Long teacherNo);
+    Map<String, Object> importFromExcel(MultipartFile file, String teacherNo);
     
     /**
      * 分页查询课表
