@@ -101,16 +101,40 @@ public class ClassController {
      * 创建班级
      */
     @PostMapping("/add")
-    @Operation(summary = "创建班级", description = "创建新班级，ID自动生成")
+    @Operation(summary = "创建班级", description = "创建新班级，ID自动生成。辅导员工号自动从当前登录用户获取。")
     public Result<Class> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class classEntity) {
         log.info("创建班级，班级信息：{}", classEntity);
+        
+        // 获取当前登录教师的工号
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return Result.error("未登录或登录已过期，请重新登录");
+        }
+        
+        String teacherNo = null;
+        try {
+            Object principal = authentication.getPrincipal();
+            // principal现在直接是teacherNo (String)
+            if (principal instanceof String) {
+                teacherNo = (String) principal;
+            } else if (principal instanceof Long) {
+                // 兼容管理员登录（principal是userId）
+                teacherNo = String.valueOf(principal);
+            }
+        } catch (Exception e) {
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        if (teacherNo == null) {
+            return Result.error("无法获取当前登录用户信息");
+        }
+        
+        log.info("当前登录教师工号: {}", teacherNo);
         
         // 验证必填字段
         if (classEntity.getClassName() == null || classEntity.getClassName().trim().isEmpty()) {
             return Result.error("班级名称不能为空");
-        }
-        if (classEntity.getTeacherNo() == null || classEntity.getTeacherNo().trim().isEmpty()) {
-            return Result.error("辅导员工号不能为空");
         }
         if (classEntity.getCount() == null || classEntity.getCount() <= 0) {
             return Result.error("班级人数必须大于0");
@@ -121,6 +145,9 @@ public class ClassController {
         if (classEntity.getMajor() == null || classEntity.getMajor().trim().isEmpty()) {
             return Result.error("专业不能为空");
         }
+        
+        // 自动设置辅导员工号从登录状态
+        classEntity.setTeacherNo(teacherNo);
         
         // ID会由MyBatis-Plus自动生成（雪花算法）
         classService.save(classEntity);
