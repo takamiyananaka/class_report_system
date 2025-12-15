@@ -38,6 +38,32 @@ public class ClassController {
     private TeacherService teacherService;
 
     /**
+     * 从当前登录用户获取教师工号
+     * @return 教师工号，如果获取失败返回null
+     */
+    private String getTeacherNoFromAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return null;
+        }
+        
+        try {
+            Object principal = authentication.getPrincipal();
+            // principal现在直接是teacherNo (String)
+            if (principal instanceof String) {
+                return (String) principal;
+            } else if (principal instanceof Long) {
+                // 兼容管理员登录（principal是userId）
+                return String.valueOf(principal);
+            }
+        } catch (Exception e) {
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
+        }
+        
+        return null;
+    }
+
+    /**
      * Excel导入班级
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -50,28 +76,9 @@ public class ClassController {
             log.info("开始导入班级，文件名：{}", file.getOriginalFilename());
             
             // 获取当前登录教师的工号
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || authentication.getPrincipal() == null) {
-                return Result.error("未登录或登录已过期，请重新登录");
-            }
-            
-            String teacherNo = null;
-            try {
-                Object principal = authentication.getPrincipal();
-                // principal现在直接是teacherNo (String)
-                if (principal instanceof String) {
-                    teacherNo = (String) principal;
-                } else if (principal instanceof Long) {
-                    // 兼容管理员登录（principal是userId）
-                    teacherNo = String.valueOf(principal);
-                }
-            } catch (Exception e) {
-                log.error("无法解析当前登录教师工号: {}", e.getMessage());
-                return Result.error("无法获取当前登录用户信息");
-            }
-            
+            String teacherNo = getTeacherNoFromAuthentication();
             if (teacherNo == null) {
-                return Result.error("无法获取当前登录用户信息");
+                return Result.error("未登录或登录已过期，请重新登录");
             }
             
             log.info("当前登录教师工号: {}", teacherNo);
@@ -106,28 +113,9 @@ public class ClassController {
         log.info("创建班级，班级信息：{}", classEntity);
         
         // 获取当前登录教师的工号
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
-            return Result.error("未登录或登录已过期，请重新登录");
-        }
-        
-        String teacherNo = null;
-        try {
-            Object principal = authentication.getPrincipal();
-            // principal现在直接是teacherNo (String)
-            if (principal instanceof String) {
-                teacherNo = (String) principal;
-            } else if (principal instanceof Long) {
-                // 兼容管理员登录（principal是userId）
-                teacherNo = String.valueOf(principal);
-            }
-        } catch (Exception e) {
-            log.error("无法解析当前登录教师工号: {}", e.getMessage());
-            return Result.error("无法获取当前登录用户信息");
-        }
-        
+        String teacherNo = getTeacherNoFromAuthentication();
         if (teacherNo == null) {
-            return Result.error("无法获取当前登录用户信息");
+            return Result.error("未登录或登录已过期，请重新登录");
         }
         
         log.info("当前登录教师工号: {}", teacherNo);
