@@ -115,6 +115,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         failCount++;
                         continue;
                     }
+                    if (isBlank(dto.getDuration())) {
+                        errorMessages.add(String.format("第%d行：持续时间不能为空", i + 2));
+                        failCount++;
+                        continue;
+                    }
                     
                     CourseSchedule courseSchedule = new CourseSchedule();
                     courseSchedule.setCourseName(dto.getCourseName().trim());
@@ -126,6 +131,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     courseSchedule.setClassroom(dto.getClassroom().trim());
                     courseSchedule.setSemester(dto.getSemester().trim());
                     courseSchedule.setSchoolYear(dto.getSchoolYear().trim());
+                    courseSchedule.setDuration(dto.getDuration().trim());
                     
                     courseScheduleList.add(courseSchedule);
                     successCount++;
@@ -275,6 +281,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setClassroom("成都校区/思学楼/A101");
             example.setSemester("1");
             example.setSchoolYear("2024-2025");
+            example.setDuration("1-17周");
             // 不再包含教师ID，将由系统根据当前登录教师自动填充
             templateData.add(example);
             
