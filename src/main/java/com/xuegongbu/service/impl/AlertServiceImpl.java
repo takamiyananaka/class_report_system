@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -30,7 +31,8 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
 
 
     /**
-     * 分页查询教师关联的预警记录（支持时间范围查询）
+     * 分页查询教师关联的预警记录（支持日期查询）
+     * @param teacherNo 教师工号
      * @param queryDTO 查询参数
      * @return
      */
@@ -43,7 +45,8 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
         
         // 根据教师ID查询其关联的课程安排
         QueryWrapper<CourseSchedule> courseQueryWrapper = new QueryWrapper<>();
-        courseQueryWrapper.eq("teacher_no",teacherNo);
+        courseQueryWrapper.eq("teacher_no", teacherNo);
+        
         // 提取课程ID列表
         List<CourseSchedule> courses = courseScheduleMapper.selectList(courseQueryWrapper);
         
@@ -61,15 +64,16 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
         QueryWrapper<Alert> alertQueryWrapper = new QueryWrapper<>();
         alertQueryWrapper.in("course_id", courseIds);
         
-        // 添加时间范围查询条件
-        if (queryDTO.getStartTime() != null) {
-            alertQueryWrapper.ge("create_time", queryDTO.getStartTime());
-        }
-        if (queryDTO.getEndTime() != null) {
-            alertQueryWrapper.le("create_time", queryDTO.getEndTime());
+        // 添加日期查询条件
+        if (queryDTO.getDate() != null) {
+            // 构造一天的开始和结束时间
+            LocalDateTime startOfDay = queryDTO.getDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            alertQueryWrapper.ge("create_time", startOfDay)
+                           .lt("create_time", endOfDay);
         }
         
-        alertQueryWrapper.orderByAsc("create_time");
+        alertQueryWrapper.orderByDesc("create_time");
         
         return page(page, alertQueryWrapper);
     }

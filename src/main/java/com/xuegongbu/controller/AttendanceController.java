@@ -20,10 +20,10 @@ public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService ;
     /**
-     * 查询课程考所有勤记录（分页，支持时间范围查询）
+     * 查询课程考所有勤记录（分页，支持按日期查询）
      */
     @PostMapping("/queryAttendance")
-    @Operation(summary = "查询课程考勤记录列表", description = "查询课程所有考勤记录（分页，支持时间范围查询）")
+    @Operation(summary = "查询课程考勤记录列表", description = "查询课程所有考勤记录（分页，支持按日期查询）")
     public Result<Page<Attendance>> queryAttendanceByCourseId(AttendanceQueryDTO queryDTO) {
         log.info("查询课程考勤记录，参数：{}", queryDTO);
         

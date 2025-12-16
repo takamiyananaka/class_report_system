@@ -40,26 +40,9 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     @Autowired
     private AlertService alertService;
 
-    /**
-     * 查询课程的所有考勤记录（已废弃）
-     *
-     * @param courseId
-     * @return
-     */
-    @Override
-    @Deprecated
-    public List<Attendance> queryAllAttendanceByCourseId(String courseId) {
-        //获取到课程信息
-        CourseSchedule course = courseScheduleMapper.selectById(courseId);
-        if (course == null) {
-            throw new BusinessException("无效的id");
-        }
-        //查询课程的所有考勤记录
-        return list(new QueryWrapper<Attendance>().eq("course_id", courseId));
-    }
 
     /**
-     * 分页查询课程的所有考勤记录（支持时间范围查询）
+     * 分页查询课程的所有考勤记录（支持日期查询）
      *
      * @param queryDTO 查询参数
      * @return
@@ -81,15 +64,16 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         QueryWrapper<Attendance> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("course_id", queryDTO.getCourseId());
         
-        // 添加时间范围查询条件
-        if (queryDTO.getStartTime() != null) {
-            queryWrapper.ge("check_time", queryDTO.getStartTime());
-        }
-        if (queryDTO.getEndTime() != null) {
-            queryWrapper.le("check_time", queryDTO.getEndTime());
+        // 添加日期查询条件
+        if (queryDTO.getDate() != null) {
+            // 构造一天的开始和结束时间
+            LocalDateTime startOfDay = queryDTO.getDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            queryWrapper.ge("check_time", startOfDay)
+                       .lt("check_time", endOfDay);
         }
         
-        queryWrapper.orderByAsc("check_time");
+        queryWrapper.orderByDesc("check_time");
         
         return page(page, queryWrapper);
     }
