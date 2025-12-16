@@ -29,7 +29,7 @@ public class AlertController {
     */
     @PostMapping("/getAlertList")
     @Operation(summary = "分页条件查询预警列表", description = "分页条件查询预警列表")
-    public Result<Page<Alert>> getAlertList(AlertQueryDTO queryDTO){
+    public Result<Page<Alert>> getAlertList(@RequestBody AlertQueryDTO queryDTO){
         log.info("开始执行获取预警记录任务");
         
         // 从Sa-Token中获取当前用户信息

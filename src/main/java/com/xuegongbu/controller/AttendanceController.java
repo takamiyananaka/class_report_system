@@ -24,7 +24,7 @@ public class AttendanceController {
      */
     @PostMapping("/queryAttendance")
     @Operation(summary = "查询课程考勤记录列表", description = "查询课程所有考勤记录（分页，支持按日期查询）")
-    public Result<Page<Attendance>> queryAttendanceByCourseId(AttendanceQueryDTO queryDTO) {
+    public Result<Page<Attendance>> queryAttendanceByCourseId(@RequestBody AttendanceQueryDTO queryDTO) {
         log.info("查询课程考勤记录，参数：{}", queryDTO);
         
         // 设置默认分页参数

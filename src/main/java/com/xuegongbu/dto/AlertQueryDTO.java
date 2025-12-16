@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Schema(description = "预警记录查询请求参数")
 public class AlertQueryDTO {
 
-    @Schema(description = "日期", example = "2023-01-01")
+    @Schema(description = "日期", example = "2025-01-01")
     private LocalDate date;
 
     @Schema(description = "页码（从1开始）", example = "1")

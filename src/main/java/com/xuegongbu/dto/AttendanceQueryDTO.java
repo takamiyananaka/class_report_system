@@ -15,7 +15,7 @@ public class AttendanceQueryDTO {
     @Schema(description = "课程ID", example = "123456789")
     private String courseId;
 
-    @Schema(description = "日期", example = "2023-01-01")
+    @Schema(description = "日期", example = "2025-01-01")
     private LocalDate date;
 
     @Schema(description = "页码（从1开始）", example = "1")
