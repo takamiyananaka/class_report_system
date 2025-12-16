@@ -72,7 +72,11 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         }
         String classroomName = course.getClassroom();
         String className = course.getClassName();
-        Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
+        //Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
+        Map<String, String> deviceUrls = deviceService.getDeviceUrl("成都校区/博学楼/博学楼A101");
+        if (deviceUrls == null){
+            throw new BusinessException("当前教室无可用的设备");
+        }
         //调用模型
         //CountResponse countResponse = countUtil.getCount(deviceUrls);
         //生成考勤记录
@@ -117,7 +121,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 .eq("course_id", courseId)
                 .ge("check_time", startTime)
                 .le("check_time", endTime)
-                .orderByDesc("check_time")
+                .orderByAsc("check_time")
                 .last("LIMIT 1"));
         if (attendance == null){
             throw new BusinessException("当前考勤记录生成中");
