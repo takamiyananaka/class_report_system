@@ -140,15 +140,14 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         if (course == null) {
             throw new BusinessException("无效的id");
         }
-        //查询当前时刻上下总共100分钟内的考勤记录，并选择最近的一条
+        //查询当前时刻之前45分钟内的最近一条考勤记录
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-        LocalDateTime startTime = now.minusMinutes(50);
-        LocalDateTime endTime = now.plusMinutes(50);
+        LocalDateTime startTime = now.minusMinutes(45);
         Attendance attendance = getOne(new QueryWrapper<Attendance>()
                 .eq("course_id", courseId)
                 .ge("check_time", startTime)
-                .le("check_time", endTime)
-                .orderByAsc("check_time")
+                .le("check_time", now)
+                .orderByDesc("check_time")
                 .last("LIMIT 1"));
         if (attendance == null){
             throw new BusinessException("当前考勤记录生成中");
