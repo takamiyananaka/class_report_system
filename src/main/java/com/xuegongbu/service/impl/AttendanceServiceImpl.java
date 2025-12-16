@@ -124,7 +124,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         attendance.setCheckType(2);
         attendance.setStatus(1);
         attendance.setRemark("手动考勤");
-
+        attendance.setIsDeleted(0);
         save(attendance);
         
         // 检查是否需要生成预警记录
