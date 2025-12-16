@@ -107,6 +107,9 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         LocalDateTime checkTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         //根据班级名字获取班级信息
         Class clazz = classMapper.selectOne(new QueryWrapper<Class>().eq("class_name",className));
+        if (clazz == null){
+            throw new BusinessException("无效的班级");
+        }
         Attendance attendance = new Attendance();
         attendance.setCourseId(courseId);
         attendance.setCheckTime(checkTime);
