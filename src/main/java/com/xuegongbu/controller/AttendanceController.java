@@ -34,7 +34,7 @@ public class AttendanceController {
     /**
      * 手动考勤
      */
-    @PostMapping("/manualAttendance")
+    @GetMapping("/manualAttendance")
     @Operation(summary = "手动考勤", description = "手动考勤")
     public Result<String> manualAttendance(
             @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
