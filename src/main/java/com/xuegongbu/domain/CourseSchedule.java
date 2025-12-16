@@ -99,7 +99,7 @@ public class CourseSchedule implements Serializable {
     * 持续时间（周）
     */
     @NotBlank(message="[持续时间]不能为空")
-    @Size(max= 50,message="持续时间长度不能超过50")
+    @Size(max = 50, message = "持续时间长度不能超过50")
     @Schema(description = "持续时间（周），格式：x-x（周），例如1-17周")
     private String duration;
 
