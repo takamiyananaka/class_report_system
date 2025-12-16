@@ -70,4 +70,48 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         return new LoginResponse(token, userInfo);
     }
 
+    @Override
+    public com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> queryPage(com.xuegongbu.dto.TeacherQueryDTO queryDTO) {
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
+        
+        // 构建查询条件
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 教师工号条件（精确查询）
+        if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().trim().isEmpty()) {
+            queryWrapper.eq(Teacher::getTeacherNo, queryDTO.getTeacherNo().trim());
+        }
+        
+        // 部门条件（精确查询）
+        if (queryDTO.getDepartment() != null && !queryDTO.getDepartment().trim().isEmpty()) {
+            queryWrapper.eq(Teacher::getDepartment, queryDTO.getDepartment().trim());
+        }
+        
+        // 真实姓名条件（模糊查询）
+        if (queryDTO.getRealName() != null && !queryDTO.getRealName().trim().isEmpty()) {
+            queryWrapper.like(Teacher::getRealName, queryDTO.getRealName().trim());
+        }
+        
+        // 电话号码条件（精确查询）
+        if (queryDTO.getPhone() != null && !queryDTO.getPhone().trim().isEmpty()) {
+            queryWrapper.eq(Teacher::getPhone, queryDTO.getPhone().trim());
+        }
+        
+        // 按创建时间倒序排序
+        queryWrapper.orderByDesc(Teacher::getCreateTime);
+        
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> result = this.page(page, queryWrapper);
+        
+        // 移除密码字段
+        result.getRecords().forEach(teacher -> teacher.setPassword(null));
+        
+        log.info("查询教师，条件：teacherNo={}, department={}, realName={}, phone={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getDepartment(), queryDTO.getRealName(), queryDTO.getPhone(), pageNum, pageSize);
+        
+        return result;
+    }
+
 }

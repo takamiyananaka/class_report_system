@@ -86,9 +86,9 @@ public class CourseScheduleController {
      * 分页查询课表
      * 默认查询当前登录教师的课表，也可以通过参数指定教师ID或班级名称查询
      */
-    @GetMapping("/query")
+    @PostMapping("/query")
     @Operation(summary = "分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。可通过teacherNo、className等参数进行过滤查询")
-    public Result<Page<CourseSchedule>> query(CourseScheduleQueryDTO queryDTO) {
+    public Result<Page<CourseSchedule>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
         // 如果没有指定教师工号，则使用当前登录教师的工号
         if (queryDTO.getTeacherNo() == null) {
             if (StpUtil.isLogin()) {
