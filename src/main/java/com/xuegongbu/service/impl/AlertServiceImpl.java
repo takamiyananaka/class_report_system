@@ -27,10 +27,10 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
     private MailService mailService;
 
     @Override
-    public List<Alert> listByTeacherId(Long teacherId) {
+    public List<Alert> listByTeacherId(String teacherNo) {
         // 根据教师ID查询其关联的课程安排
         QueryWrapper<CourseSchedule> courseQueryWrapper = new QueryWrapper<>();
-        courseQueryWrapper.eq("teacher_id", teacherId);
+        courseQueryWrapper.eq("teacher_no", teacherNo);
         List<CourseSchedule> courses = courseScheduleMapper.selectList(courseQueryWrapper);
         
         if (courses.isEmpty()) {
