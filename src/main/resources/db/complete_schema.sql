@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     classroom VARCHAR(100) NOT NULL COMMENT '教室',
     semester VARCHAR(50) NOT NULL COMMENT '学期',
     school_year VARCHAR(20) NOT NULL COMMENT '学年',
+    duration VARCHAR(50) NOT NULL COMMENT '持续时间（周），格式：x-x（周），例如1-17周',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_teacher_no (teacher_no),
@@ -105,6 +106,8 @@ CREATE TABLE IF NOT EXISTS course_schedule (
 -- 修改已存在的course_schedule表的字段类型
 ALTER TABLE course_schedule MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 ALTER TABLE course_schedule MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
+-- 添加持续时间字段（如果不存在）
+ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS duration VARCHAR(50) NOT NULL DEFAULT '' COMMENT '持续时间（周），格式：x-x（周），例如1-17周';
 
 -- ====================================
 -- 5. 课程表

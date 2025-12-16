@@ -58,4 +58,10 @@ public class CourseScheduleExcelDTO implements Serializable {
      */
     @ExcelProperty(index = 7, value = "学年")
     private String schoolYear;
+
+    /**
+     * 持续时间（周）
+     */
+    @ExcelProperty(index = 8, value = "持续时间（周）")
+    private String duration;
 }
