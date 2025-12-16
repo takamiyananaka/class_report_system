@@ -8,6 +8,7 @@ import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.AlertQueryDTO;
 import com.xuegongbu.mapper.AlertMapper;
+import com.xuegongbu.mapper.AttendanceMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.AlertService;
 import com.xuegongbu.service.MailService;
@@ -28,7 +29,8 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
     
     @Autowired
     private MailService mailService;
-
+    @Autowired
+    private AttendanceMapper attendanceMapper;
 
     /**
      * 分页查询教师关联的预警记录（支持日期查询）
@@ -90,6 +92,8 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
             
             // 根据出勤率生成不同级别的预警
             if (attendanceRate.compareTo(BigDecimal.valueOf(0.95)) < 0) {
+                attendance.setStatus(0);
+                attendanceMapper.updateById( attendance);
                 Alert alert = new Alert();
                 alert.setCourseId(course.getId());
                 alert.setAttendanceId(attendance.getId());
