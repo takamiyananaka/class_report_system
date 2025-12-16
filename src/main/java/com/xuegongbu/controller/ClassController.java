@@ -99,9 +99,9 @@ public class ClassController {
     /**
      * 分页查询班级
      */
-    @GetMapping("/query")
+    @PostMapping("/query")  //
     @Operation(summary = "分页查询班级", description = "分页查询班级，支持多条件查询。可通过className（模糊）、teacherNo等参数进行过滤查询。不提供任何条件则查询全部")
-    public Result<Page<Class>> query(ClassQueryDTO queryDTO) {
+    public Result<Page<Class>> query(@RequestBody ClassQueryDTO queryDTO) {  //
         log.info("查询班级请求，参数：{}", queryDTO);
         Page<Class> result = classService.queryPage(queryDTO);
         log.info("查询班级完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
