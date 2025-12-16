@@ -126,6 +126,7 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
                         attendance.getExpectedCount(),
                         attendanceRate.multiply(BigDecimal.valueOf(100)).doubleValue()));
                 alert.setReadStatus(0);
+                alert.setNotifyStatus(0);
                 save(alert);
                 
                 // 直接发送邮件通知
