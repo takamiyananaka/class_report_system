@@ -33,7 +33,7 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         Admin admin = this.getOne(queryWrapper);
 
         if (admin == null) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("用户名错误");
         }
 
         // 检查管理员状态
@@ -43,7 +43,7 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
 
         // 验证密码
         if (!passwordEncoder.matches(loginRequest.getPassword(), admin.getPassword())) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("密码错误");
         }
 
         // 更新最后登录时间

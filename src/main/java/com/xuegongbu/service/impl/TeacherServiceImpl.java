@@ -34,7 +34,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         Teacher teacher = this.getOne(queryWrapper);
 
         if (teacher == null) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("用户名错误");
         }
 
         // 检查教师状态
@@ -44,7 +44,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
         // 验证密码 - 使用BCrypt验证明文密码与数据库中的加密密码
         if (!passwordEncoder.matches(loginRequest.getPassword(), teacher.getPassword())) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("密码错误");
         }
 
         // 更新最后登录时间
