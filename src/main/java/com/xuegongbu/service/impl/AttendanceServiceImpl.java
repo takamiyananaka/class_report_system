@@ -63,7 +63,11 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             throw new BusinessException("无效的id");
         }
         //检查是否在上课时间内
-        if (LocalTime.now().isBefore(course.getStartTime()) || LocalTime.now().isAfter(course.getEndTime())) {
+        LocalDateTime now = LocalDateTime.now();
+        if (now.getDayOfWeek().getValue() != course.getWeekday()) {
+            throw new BusinessException("今天不是该课程的上课日");
+        }
+        if (now.toLocalTime().isBefore(course.getStartTime()) || now.toLocalTime().isAfter(course.getEndTime())) {
             throw new BusinessException("不在上课时间");
         }
         String classroomName = course.getClassroom();
