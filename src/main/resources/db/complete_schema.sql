@@ -217,7 +217,7 @@ ALTER TABLE image_capture MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字�
 -- 插入默认管理员（用户名：admin，密码：admin123）
 -- 注意：ID使用字符串格式
 INSERT INTO admin (id, username, password, real_name, phone, email) 
-VALUES ('1000000000000000001', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKg8kK.i', '系统管理员', '13800138000', 'admin@example.com')
+VALUES ('1000000000000000001', 'admin', '$2a$10$jBDsivzkzIdPZGj0Cv1aYOfNC3MBrpoVXgeSTAXOhy0Z55wRkKT4K', '系统管理员', '13800138000', 'admin@example.com')
 ON DUPLICATE KEY UPDATE username = username;
 
 -- 插入测试教师（用户名：teacher001，密码：123456）
