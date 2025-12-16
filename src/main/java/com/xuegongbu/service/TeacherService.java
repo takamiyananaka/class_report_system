@@ -14,4 +14,9 @@ public interface TeacherService extends IService<Teacher> {
      */
     LoginResponse login(LoginRequest loginRequest);
 
+    /**
+     * 分页查询教师
+     */
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> queryPage(com.xuegongbu.dto.TeacherQueryDTO queryDTO);
+
 }

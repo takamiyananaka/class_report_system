@@ -30,4 +30,38 @@ import java.util.Map;
 @Service
 public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements CourseService {
 
+    @Override
+    public com.baomidou.mybatisplus.extension.plugins.pagination.Page<Course> queryPage(com.xuegongbu.dto.CourseQueryDTO queryDTO) {
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Course> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
+        
+        // 构建查询条件
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Course> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        
+        // 教师工号条件
+        if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().trim().isEmpty()) {
+            queryWrapper.eq(Course::getTeacherNo, queryDTO.getTeacherNo().trim());
+        }
+        
+        // 班级名称条件（模糊查询）
+        if (queryDTO.getClassName() != null && !queryDTO.getClassName().trim().isEmpty()) {
+            queryWrapper.like(Course::getClassName, queryDTO.getClassName().trim());
+        }
+        
+        // 课程名称条件（模糊查询）
+        if (queryDTO.getCourseName() != null && !queryDTO.getCourseName().trim().isEmpty()) {
+            queryWrapper.like(Course::getCourseName, queryDTO.getCourseName().trim());
+        }
+        
+        // 按创建时间倒序排序
+        queryWrapper.orderByDesc(Course::getCreateTime);
+        
+        log.info("查询课程，条件：teacherNo={}, className={}, courseName={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), pageNum, pageSize);
+        
+        return this.page(page, queryWrapper);
+    }
+
 }

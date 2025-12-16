@@ -27,7 +27,17 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-
+    /**
+     * 分页查询课程
+     */
+    @PostMapping("/query")
+    @Operation(summary = "分页查询课程", description = "分页查询课程，支持多条件查询。可通过teacherNo、className、courseName等参数进行过滤查询。不提供任何条件则查询全部")
+    public Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<Course>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody com.xuegongbu.dto.CourseQueryDTO queryDTO) {
+        log.info("查询课程请求，参数：{}", queryDTO);
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Course> result = courseService.queryPage(queryDTO);
+        log.info("查询课程完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
+        return Result.success(result);
+    }
 
     /**
      * 创建课程
