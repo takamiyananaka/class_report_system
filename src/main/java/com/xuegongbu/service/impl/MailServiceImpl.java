@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.domain.Teacher;
+import com.xuegongbu.mapper.AlertMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.MailService;
@@ -18,6 +19,8 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -34,6 +37,8 @@ public class MailServiceImpl implements MailService {
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+    @Autowired
+    private AlertMapper alertMapper;
 
     @Override
     @Async
@@ -94,6 +99,10 @@ public class MailServiceImpl implements MailService {
             
             mailSender.send(mimeMessage);
             log.info("成功发送预警邮件通知，课程ID: {}, 预警级别: {}", alert.getCourseId(), alert.getAlertLevel());
+            //更新预警状态为已发送
+            alert.setNotifyStatus(1);
+            alert.setNotifyTime(LocalDateTime.now());
+            alertMapper.updateById(alert);
         } catch (Exception e) {
             log.error("发送预警邮件通知失败: {}", e.getMessage(), e);
             // 不抛出异常，避免影响主流程

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.session.SaSession;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/alert")
@@ -69,5 +71,34 @@ public class AlertController {
         
         Page<Alert> alertPage = alertService.getAlertList(queryDTO, teacherNo);
         return Result.success(alertPage);
+    }
+
+    /**
+    * 批量删除预警记录
+    */
+    @DeleteMapping("/deleteAlerts")
+    @Operation(summary = "批量删除预警记录", description = "批量删除预警记录")
+    public Result<String> deleteAlerts(@RequestBody List<String> ids){
+        log.info("开始执行批量删除预警记录任务");
+        Result<String> result = alertService.removeByIds(ids) ? Result.success("删除成功") : Result.error("删除失败");
+        log.info("批量删除预警记录任务完成");
+        return result;
+    }
+
+    /**
+    * 修改阅读状态
+    */
+    @PutMapping("/updateAlertReadStatus")
+    @Operation(summary = "修改阅读状态", description = "修改阅读状态")
+    public Result<String> updateAlertReadStatus(@RequestParam String  id){
+        log.info("开始执行修改阅读状态任务,id: {}", id);
+        Alert alert = alertService.getById(id);
+        if (alert == null) {
+            return Result.error("记录不存在");
+        }
+        alert.setReadStatus(1);
+        Result<String> result = alertService.updateById(alert) ? Result.success("修改成功") : Result.error("修改失败");
+        log.info("修改阅读状态任务完成");
+        return result;
     }
 }

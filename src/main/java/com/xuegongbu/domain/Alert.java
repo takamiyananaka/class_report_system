@@ -79,6 +79,12 @@ public class Alert implements Serializable {
     */
     @Schema(description = "通知状态：0-未发送，1-已发送，2-发送失败")
     private Integer notifyStatus;
+
+    /**
+    * 阅读状态：0-未读，1-已读
+    */
+    @Schema(description = "阅读状态：0-未读，1-已读")
+    private Integer readStatus;
     
     /**
     * 通知时间
@@ -99,5 +105,10 @@ public class Alert implements Serializable {
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    @Schema(description = "逻辑删除")
+    @TableLogic(value = "0", delval = "1")
+    private Integer isDeleted;
+
 
 }

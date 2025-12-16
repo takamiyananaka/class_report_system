@@ -17,6 +17,7 @@ import com.xuegongbu.util.CountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -48,7 +49,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
      * @return
      */
     @Override
-    public Page<Attendance> queryAllAttendanceByCourseId(AttendanceQueryDTO queryDTO) {
+    public Page<Attendance> queryAllAttendanceByCourseId( AttendanceQueryDTO queryDTO) {
         //获取到课程信息
         CourseSchedule course = courseScheduleMapper.selectById(queryDTO.getCourseId());
         if (course == null) {

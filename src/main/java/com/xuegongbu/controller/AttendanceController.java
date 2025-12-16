@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/attendance")
@@ -134,5 +136,18 @@ public class AttendanceController {
         attendanceService.removeById(id);
         log.info("删除考勤记录完成");
         return Result.success("删除成功");
+    }
+
+    /**
+     * 批量删除考勤记录
+     */
+    @DeleteMapping("/deleteBatch")
+    @Operation(summary = "批量删除考勤记录", description = "批量删除考勤记录")
+    public Result<String> deleteAttendanceBatch(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤ID列表") @RequestBody List<String> ids) {
+        log.info("批量删除考勤记录，考勤ID列表：{}", ids);
+
+        attendanceService.removeByIds(ids);
+        log.info("批量删除考勤记录完成");
+        return Result.success("批量删除成功");
     }
 }
