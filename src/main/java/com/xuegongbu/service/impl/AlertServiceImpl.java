@@ -1,10 +1,12 @@
 package com.xuegongbu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.AlertQueryDTO;
 import com.xuegongbu.mapper.AlertMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.AlertService;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -26,15 +29,30 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
     @Autowired
     private MailService mailService;
 
+
+    /**
+     * 分页查询教师关联的预警记录（支持日期查询）
+     * @param teacherNo 教师工号
+     * @param queryDTO 查询参数
+     * @return
+     */
     @Override
-    public List<Alert> listByTeacherId(String teacherNo) {
+    public Page<Alert> getAlertList(AlertQueryDTO queryDTO, String teacherNo) {
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        Page<Alert> page = new Page<>(pageNum, pageSize);
+        
         // 根据教师ID查询其关联的课程安排
         QueryWrapper<CourseSchedule> courseQueryWrapper = new QueryWrapper<>();
         courseQueryWrapper.eq("teacher_no", teacherNo);
+        
+        // 提取课程ID列表
         List<CourseSchedule> courses = courseScheduleMapper.selectList(courseQueryWrapper);
         
         if (courses.isEmpty()) {
-            return List.of(); // 返回空列表
+            // 如果没有课程，返回空分页结果
+            return page;
         }
         
         // 提取课程ID列表
@@ -44,10 +62,20 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
         
         // 根据课程ID列表查询预警记录
         QueryWrapper<Alert> alertQueryWrapper = new QueryWrapper<>();
-        alertQueryWrapper.in("course_id", courseIds)
-                .orderByDesc("create_time");
+        alertQueryWrapper.in("course_id", courseIds);
         
-        return list(alertQueryWrapper);
+        // 添加日期查询条件
+        if (queryDTO.getDate() != null) {
+            // 构造一天的开始和结束时间
+            LocalDateTime startOfDay = queryDTO.getDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            alertQueryWrapper.ge("create_time", startOfDay)
+                           .lt("create_time", endOfDay);
+        }
+        
+        alertQueryWrapper.orderByDesc("create_time");
+        
+        return page(page, alertQueryWrapper);
     }
     
     /**

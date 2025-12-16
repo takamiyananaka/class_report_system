@@ -1,11 +1,13 @@
 package com.xuegongbu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.CountResponse;
 import com.xuegongbu.mapper.AttendanceMapper;
 import com.xuegongbu.mapper.ClassMapper;
@@ -38,21 +40,42 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     @Autowired
     private AlertService alertService;
 
+
     /**
-     * 查询课程的所有考勤记录
+     * 分页查询课程的所有考勤记录（支持日期查询）
      *
-     * @param courseId
+     * @param queryDTO 查询参数
      * @return
      */
     @Override
-    public List<Attendance> queryAllAttendanceByCourseId(String courseId) {
+    public Page<Attendance> queryAllAttendanceByCourseId(AttendanceQueryDTO queryDTO) {
         //获取到课程信息
-        CourseSchedule course = courseScheduleMapper.selectById(courseId);
+        CourseSchedule course = courseScheduleMapper.selectById(queryDTO.getCourseId());
         if (course == null) {
-            throw new BusinessException("无效的id");
+            throw new BusinessException("无效的课程ID");
         }
+        
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        Page<Attendance> page = new Page<>(pageNum, pageSize);
+        
         //查询课程的所有考勤记录
-        return list(new QueryWrapper<Attendance>().eq("course_id", courseId));
+        QueryWrapper<Attendance> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("course_id", queryDTO.getCourseId());
+        
+        // 添加日期查询条件
+        if (queryDTO.getDate() != null) {
+            // 构造一天的开始和结束时间
+            LocalDateTime startOfDay = queryDTO.getDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            queryWrapper.ge("check_time", startOfDay)
+                       .lt("check_time", endOfDay);
+        }
+        
+        queryWrapper.orderByDesc("check_time");
+        
+        return page(page, queryWrapper);
     }
 
     @Override
@@ -72,7 +95,11 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         }
         String classroomName = course.getClassroom();
         String className = course.getClassName();
-        Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
+        //Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
+        Map<String, String> deviceUrls = deviceService.getDeviceUrl("成都校区/博学楼/博学楼A101");
+        if (deviceUrls == null){
+            throw new BusinessException("当前教室无可用的设备");
+        }
         //调用模型
         //CountResponse countResponse = countUtil.getCount(deviceUrls);
         //生成考勤记录
@@ -117,7 +144,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 .eq("course_id", courseId)
                 .ge("check_time", startTime)
                 .le("check_time", endTime)
-                .orderByDesc("check_time")
+                .orderByAsc("check_time")
                 .last("LIMIT 1"));
         if (attendance == null){
             throw new BusinessException("当前考勤记录生成中");

@@ -1,14 +1,17 @@
 package com.xuegongbu.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.AlertQueryDTO;
 
 import java.util.List;
 
 public interface AlertService extends IService<Alert> {
-    List<Alert> listByTeacherId(String teacherNo);
+
+    Page<Alert> getAlertList(AlertQueryDTO queryDTO, String teacherNo);
     
     /**
      * 检查考勤记录并生成相应的预警

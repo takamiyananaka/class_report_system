@@ -1,7 +1,9 @@
 package com.xuegongbu.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Alert;
+import com.xuegongbu.dto.AlertQueryDTO;
 import com.xuegongbu.service.AlertService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import cn.dev33.satoken.stp.StpUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import cn.dev33.satoken.session.SaSession;
 
 @Slf4j
@@ -25,11 +25,11 @@ public class AlertController {
     private AlertService alertService;
 
     /**
-    * 根据老师工号获取预警记录
+    * 根据老师工号获取预警记录（分页，支持时间范围查询）
     */
-    @GetMapping("/listByTeacherNo")
-    @Operation(summary = "根据老师id获取预警记录", description = "根据老师id获取预警记录")
-    public Result<List<Alert>> listByTeacherNo(){
+    @PostMapping("/getAlertList")
+    @Operation(summary = "分页条件查询预警列表", description = "分页条件查询预警列表")
+    public Result<Page<Alert>> getAlertList(@RequestBody AlertQueryDTO queryDTO){
         log.info("开始执行获取预警记录任务");
         
         // 从Sa-Token中获取当前用户信息
@@ -59,7 +59,15 @@ public class AlertController {
             return Result.error("无法获取教师工号");
         }
         
-      List< Alert> alertList = alertService.listByTeacherId(teacherNo);
-        return Result.success(alertList);
+        // 设置默认分页参数
+        if (queryDTO.getPageNum() == null || queryDTO.getPageNum() <= 0) {
+            queryDTO.setPageNum(1);
+        }
+        if (queryDTO.getPageSize() == null || queryDTO.getPageSize() <= 0) {
+            queryDTO.setPageSize(10);
+        }
+        
+        Page<Alert> alertPage = alertService.getAlertList(queryDTO, teacherNo);
+        return Result.success(alertPage);
     }
 }
