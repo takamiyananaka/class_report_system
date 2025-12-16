@@ -1,7 +1,9 @@
 package com.xuegongbu.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
+import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.service.AttendanceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/attendance")
@@ -19,16 +20,24 @@ public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService ;
     /**
-     * 查询课程考所有勤记录
+     * 查询课程考所有勤记录（分页，支持时间范围查询）
      */
-    @GetMapping("/queryAttendance")
-    @Operation(summary = "查询课程所有考勤记录", description = "查询课程所有考勤记录")
-    public Result<List<Attendance>> queryAttendanceByCourseId(
-            @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId) {
-        log.info("查询课程考勤记录，课程ID：{}", courseId);
-        List<Attendance> attendanceList = attendanceService.queryAllAttendanceByCourseId(courseId);
-        log.info("查询课程考勤记录完成，结果：{}", attendanceList);
-        return Result.success(attendanceList);
+    @PostMapping("/queryAttendance")
+    @Operation(summary = "查询课程考勤记录列表", description = "查询课程所有考勤记录（分页，支持时间范围查询）")
+    public Result<Page<Attendance>> queryAttendanceByCourseId(AttendanceQueryDTO queryDTO) {
+        log.info("查询课程考勤记录，参数：{}", queryDTO);
+        
+        // 设置默认分页参数
+        if (queryDTO.getPageNum() == null || queryDTO.getPageNum() <= 0) {
+            queryDTO.setPageNum(1);
+        }
+        if (queryDTO.getPageSize() == null || queryDTO.getPageSize() <= 0) {
+            queryDTO.setPageSize(10);
+        }
+        
+        Page<Attendance> attendancePage = attendanceService.queryAllAttendanceByCourseId(queryDTO);
+        log.info("查询课程考勤记录完成，共{}条记录", attendancePage.getTotal());
+        return Result.success(attendancePage);
     }
 
     /**

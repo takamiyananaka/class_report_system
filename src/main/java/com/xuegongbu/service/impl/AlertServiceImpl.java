@@ -1,10 +1,12 @@
 package com.xuegongbu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.AlertQueryDTO;
 import com.xuegongbu.mapper.AlertMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.AlertService;
@@ -26,15 +28,28 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
     @Autowired
     private MailService mailService;
 
+
+    /**
+     * 分页查询教师关联的预警记录（支持时间范围查询）
+     * @param queryDTO 查询参数
+     * @return
+     */
     @Override
-    public List<Alert> listByTeacherId(String teacherNo) {
+    public Page<Alert> getAlertList(AlertQueryDTO queryDTO, String teacherNo) {
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        Page<Alert> page = new Page<>(pageNum, pageSize);
+        
         // 根据教师ID查询其关联的课程安排
         QueryWrapper<CourseSchedule> courseQueryWrapper = new QueryWrapper<>();
-        courseQueryWrapper.eq("teacher_no", teacherNo);
+        courseQueryWrapper.eq("teacher_no",teacherNo);
+        // 提取课程ID列表
         List<CourseSchedule> courses = courseScheduleMapper.selectList(courseQueryWrapper);
         
         if (courses.isEmpty()) {
-            return List.of(); // 返回空列表
+            // 如果没有课程，返回空分页结果
+            return page;
         }
         
         // 提取课程ID列表
@@ -44,10 +59,19 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
         
         // 根据课程ID列表查询预警记录
         QueryWrapper<Alert> alertQueryWrapper = new QueryWrapper<>();
-        alertQueryWrapper.in("course_id", courseIds)
-                .orderByDesc("create_time");
+        alertQueryWrapper.in("course_id", courseIds);
         
-        return list(alertQueryWrapper);
+        // 添加时间范围查询条件
+        if (queryDTO.getStartTime() != null) {
+            alertQueryWrapper.ge("create_time", queryDTO.getStartTime());
+        }
+        if (queryDTO.getEndTime() != null) {
+            alertQueryWrapper.le("create_time", queryDTO.getEndTime());
+        }
+        
+        alertQueryWrapper.orderByAsc("create_time");
+        
+        return page(page, alertQueryWrapper);
     }
     
     /**

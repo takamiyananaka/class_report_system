@@ -1,11 +1,13 @@
 package com.xuegongbu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.CountResponse;
 import com.xuegongbu.mapper.AttendanceMapper;
 import com.xuegongbu.mapper.ClassMapper;
@@ -39,12 +41,13 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     private AlertService alertService;
 
     /**
-     * 查询课程的所有考勤记录
+     * 查询课程的所有考勤记录（已废弃）
      *
      * @param courseId
      * @return
      */
     @Override
+    @Deprecated
     public List<Attendance> queryAllAttendanceByCourseId(String courseId) {
         //获取到课程信息
         CourseSchedule course = courseScheduleMapper.selectById(courseId);
@@ -53,6 +56,42 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         }
         //查询课程的所有考勤记录
         return list(new QueryWrapper<Attendance>().eq("course_id", courseId));
+    }
+
+    /**
+     * 分页查询课程的所有考勤记录（支持时间范围查询）
+     *
+     * @param queryDTO 查询参数
+     * @return
+     */
+    @Override
+    public Page<Attendance> queryAllAttendanceByCourseId(AttendanceQueryDTO queryDTO) {
+        //获取到课程信息
+        CourseSchedule course = courseScheduleMapper.selectById(queryDTO.getCourseId());
+        if (course == null) {
+            throw new BusinessException("无效的课程ID");
+        }
+        
+        // 设置分页参数
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        Page<Attendance> page = new Page<>(pageNum, pageSize);
+        
+        //查询课程的所有考勤记录
+        QueryWrapper<Attendance> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("course_id", queryDTO.getCourseId());
+        
+        // 添加时间范围查询条件
+        if (queryDTO.getStartTime() != null) {
+            queryWrapper.ge("check_time", queryDTO.getStartTime());
+        }
+        if (queryDTO.getEndTime() != null) {
+            queryWrapper.le("check_time", queryDTO.getEndTime());
+        }
+        
+        queryWrapper.orderByAsc("check_time");
+        
+        return page(page, queryWrapper);
     }
 
     @Override

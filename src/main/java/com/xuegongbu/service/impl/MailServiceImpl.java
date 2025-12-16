@@ -1,5 +1,6 @@
 package com.xuegongbu.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.domain.Teacher;
@@ -48,7 +49,9 @@ public class MailServiceImpl implements MailService {
             // 获取教师信息
             Teacher teacher = null;
             if (course != null) {
-                teacher = teacherMapper.selectById(course.getTeacherNo());
+                LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(Teacher::getTeacherNo, course.getTeacherNo());
+                teacher = teacherMapper.selectOne(queryWrapper);
             }
             
             // 设置邮件内容
