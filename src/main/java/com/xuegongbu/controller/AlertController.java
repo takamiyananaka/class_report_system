@@ -25,11 +25,11 @@ public class AlertController {
     private AlertService alertService;
 
     /**
-    * 根据老师id获取预警记录
+    * 根据老师工号获取预警记录
     */
-    @GetMapping("/listByTeacherId")
+    @GetMapping("/listByTeacherNo")
     @Operation(summary = "根据老师id获取预警记录", description = "根据老师id获取预警记录")
-    public Result<List<Alert>> listByTeacherId(){
+    public Result<List<Alert>> listByTeacherNo(){
         log.info("开始执行获取预警记录任务");
         
         // 从Sa-Token中获取当前用户信息
@@ -59,12 +59,7 @@ public class AlertController {
             return Result.error("无法获取教师工号");
         }
         
-        // 通过教师工号查询对应的教师ID
-        QueryWrapper<Alert> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("teacher_no", teacherNo);
-        List<Alert> alertList = alertService.list(queryWrapper);
-        
-        log.info("结束执行获取预警记录任务");
+      List< Alert> alertList = alertService.listByTeacherId(teacherNo);
         return Result.success(alertList);
     }
 }

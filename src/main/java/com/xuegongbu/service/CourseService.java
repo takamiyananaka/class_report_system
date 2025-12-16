@@ -13,6 +13,9 @@ import java.util.List;
 
 public interface CourseService extends IService<Course> {
 
-
+    /**
+     * 分页查询课程
+     */
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<Course> queryPage(com.xuegongbu.dto.CourseQueryDTO queryDTO);
 
 }

@@ -29,47 +29,11 @@ public class TeacherController {
     /**
      * 多条件查询教师
      */
-    @GetMapping("/query")
+    @PostMapping("/query")
     @Operation(summary = "多条件查询教师", description = "支持按教师工号、部门、真实姓名（模糊）、电话号码查询。不提供任何条件则查询全部")
-    public Result<Page<Teacher>> query(TeacherQueryDTO queryDTO) {
+    public Result<Page<Teacher>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody TeacherQueryDTO queryDTO) {
         log.info("查询教师请求，参数：{}", queryDTO);
-        
-        // 设置分页参数
-        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
-        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
-        Page<Teacher> page = new Page<>(pageNum, pageSize);
-        
-        // 构建查询条件
-        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
-        
-        // 教师工号条件（精确查询）
-        if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().trim().isEmpty()) {
-            queryWrapper.eq(Teacher::getTeacherNo, queryDTO.getTeacherNo().trim());
-        }
-        
-        // 部门条件（精确查询）
-        if (queryDTO.getDepartment() != null && !queryDTO.getDepartment().trim().isEmpty()) {
-            queryWrapper.eq(Teacher::getDepartment, queryDTO.getDepartment().trim());
-        }
-        
-        // 真实姓名条件（模糊查询）
-        if (queryDTO.getRealName() != null && !queryDTO.getRealName().trim().isEmpty()) {
-            queryWrapper.like(Teacher::getRealName, queryDTO.getRealName().trim());
-        }
-        
-        // 电话号码条件（精确查询）
-        if (queryDTO.getPhone() != null && !queryDTO.getPhone().trim().isEmpty()) {
-            queryWrapper.eq(Teacher::getPhone, queryDTO.getPhone().trim());
-        }
-        
-        // 按创建时间倒序排序
-        queryWrapper.orderByDesc(Teacher::getCreateTime);
-        
-        Page<Teacher> result = teacherService.page(page, queryWrapper);
-        
-        // 移除密码字段
-        result.getRecords().forEach(teacher -> teacher.setPassword(null));
-        
+        Page<Teacher> result = teacherService.queryPage(queryDTO);
         log.info("查询教师完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
         return Result.success(result);
     }
