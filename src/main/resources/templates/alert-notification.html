@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程考勤预警通知</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            font-weight: normal;
+        }
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .info-group {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #333;
+            min-width: 80px;
+            padding-right: 10px;
+        }
+        .info-value {
+            color: #555;
+            flex: 1;
+        }
+        .highlight {
+            background-color: #fff9e6;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 25px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .alert-info {
+            display: flex;
+            align-items: center;
+        }
+        .alert-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .alert-low { 
+            color: #28a745; 
+        }
+        .alert-medium { 
+            color: #fd7e14; 
+        }
+        .alert-high { 
+            color: #dc3545; 
+            font-weight: bold; 
+        }
+        .rate-box {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+        .rate-low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .rate-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .rate-high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+        .footer a {
+            color: #6c757d;
+            text-decoration: none;
+        }
+        .separator {
+            height: 1px;
+            background-color: #eee;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>课程考勤预警通知</h1>
+            <p>请及时关注并采取相应措施</p>
+        </div>
+        <div class="content">
+            <div class="info-group">
+                <span class="info-label">课程名称:</span>
+                <span class="info-value">{{courseName}}</span>
+            </div>
+            <div class="info-group">
+                <span class="info-label">授课教师:</span>
+                <span class="info-value">{{teacherName}}</span>
+            </div>
+            <div class="info-group">
+                <span class="info-label">上课时间:</span>
+                <span class="info-value">{{courseTime}}</span>
+            </div>
+            <div class="info-group">
+                <span class="info-label">上课教室:</span>
+                <span class="info-value">{{classroom}}</span>
+            </div>
+            
+            <div class="separator"></div>
+            
+            <div class="info-group">
+                <span class="info-label">应到人数:</span>
+                <span class="info-value">{{expectedCount}}</span>
+            </div>
+            <div class="info-group">
+                <span class="info-label">实到人数:</span>
+                <span class="info-value">{{actualCount}}</span>
+            </div>
+            <div class="info-group">
+                <span class="info-label">出勤率:</span>
+                <span class="info-value">
+                    <span class="rate-box {{rateClass}}">{{attendanceRate}}</span>
+                </span>
+            </div>
+            
+            <div class="highlight">
+                <div class="alert-info">
+                    <span class="alert-icon">⚠️</span>
+                    <div>
+                        <strong>预警级别:</strong> 
+                        <span class="{{alertLevelClass}}">{{alertLevel}}</span>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <strong>预警信息:</strong> {{alertMessage}}
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <span class="info-label">生成时间:</span>
+                <span class="info-value">{{createTime}}</span>
+            </div>
+        </div>
+        <div class="footer">
+            <p>此邮件由学工部课程考勤系统自动发送，请勿回复</p>
+            <p>© 2025 学工部课程考勤系统</p>
+        </div>
+    </div>
+</body>
+</html>
