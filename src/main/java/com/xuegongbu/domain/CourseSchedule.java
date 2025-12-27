@@ -64,12 +64,19 @@ public class CourseSchedule implements Serializable {
     private String className;
     
     /**
+    * 星期几（1-7）
+    */
+    @NotNull(message="[星期几]不能为空")
+    @Schema(description = "星期几（1-7）")
+    private Integer weekday;
+    
+    /**
     * 周次范围（格式：x-x周，例如：3-16周）
     */
     @NotBlank(message="[周次范围]不能为空")
     @Size(max= 50,message="周次范围长度不能超过50")
     @Schema(description = "周次范围（格式：x-x周，例如：3-16周）")
-    private String weekday;
+    private String weekRange;
     
     /**
     * 开始节次（1-12）

@@ -83,7 +83,12 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getWeekday())) {
+                    if (dto.getWeekday() == null || dto.getWeekday() < 1 || dto.getWeekday() > 7) {
+                        errorMessages.add(String.format("第%d行：星期几必须是1-7之间的数字", i + 2));
+                        failCount++;
+                        continue;
+                    }
+                    if (isBlank(dto.getWeekRange())) {
                         errorMessages.add(String.format("第%d行：周次范围不能为空", i + 2));
                         failCount++;
                         continue;
@@ -115,7 +120,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     courseSchedule.setOrderNo(isBlank(dto.getOrderNo()) ? null : dto.getOrderNo().trim());
                     courseSchedule.setTeacherNo(teacherNo); // 使用当前登录教师的工号
                     courseSchedule.setClassName(dto.getClassName().trim());
-                    courseSchedule.setWeekday(dto.getWeekday().trim());
+                    courseSchedule.setWeekday(dto.getWeekday());
+                    courseSchedule.setWeekRange(dto.getWeekRange().trim());
                     courseSchedule.setStartPeriod(dto.getStartPeriod());
                     courseSchedule.setEndPeriod(dto.getEndPeriod());
                     courseSchedule.setClassroom(dto.getClassroom().trim());
@@ -216,7 +222,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setCourseNo("MATH101");
             example.setOrderNo("01");
             example.setClassName("25计算机类-1班");
-            example.setWeekday("3-16周");
+            example.setWeekday(1); // 星期一
+            example.setWeekRange("3-16周"); // 周次范围
             example.setStartPeriod(1);
             example.setEndPeriod(2);
             example.setClassroom("成都校区/思学楼/A101");

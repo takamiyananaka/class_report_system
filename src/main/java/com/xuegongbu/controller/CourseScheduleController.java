@@ -36,7 +36,7 @@ public class CourseScheduleController {
      * Excel导入课表
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、课程号、课序号、班级名称、周次范围(格式：x-x周)、开始节次(1-12)、结束节次(1-12)、教室")
+    @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、课程号、课序号、班级名称、星期几(1-7)、周次范围(格式：x-x周)、开始节次(1-12)、结束节次(1-12)、教室")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -189,7 +189,10 @@ public class CourseScheduleController {
         if (courseSchedule.getClassName() == null || courseSchedule.getClassName().trim().isEmpty()) {
             return Result.error("班级名称不能为空");
         }
-        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday().trim().isEmpty()) {
+        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday() < 1 || courseSchedule.getWeekday() > 7) {
+            return Result.error("星期几必须是1-7之间的数字");
+        }
+        if (courseSchedule.getWeekRange() == null || courseSchedule.getWeekRange().trim().isEmpty()) {
             return Result.error("周次范围不能为空");
         }
         if (courseSchedule.getStartPeriod() == null || courseSchedule.getStartPeriod() < 1 || courseSchedule.getStartPeriod() > 12) {

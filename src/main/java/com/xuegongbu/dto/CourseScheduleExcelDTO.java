@@ -36,26 +36,32 @@ public class CourseScheduleExcelDTO implements Serializable {
     private String className;
 
     /**
+     * 星期几（1-7）
+     */
+    @ExcelProperty(index = 4, value = "星期几")
+    private Integer weekday;
+
+    /**
      * 周次范围（格式：x-x周，例如：3-16周）
      */
-    @ExcelProperty(index = 4, value = "周次范围")
-    private String weekday;
+    @ExcelProperty(index = 5, value = "周次范围")
+    private String weekRange;
 
     /**
      * 开始节次（1-12）
      */
-    @ExcelProperty(index = 5, value = "开始节次")
+    @ExcelProperty(index = 6, value = "开始节次")
     private Integer startPeriod;
 
     /**
      * 结束节次（1-12）
      */
-    @ExcelProperty(index = 6, value = "结束节次")
+    @ExcelProperty(index = 7, value = "结束节次")
     private Integer endPeriod;
 
     /**
      * 教室
      */
-    @ExcelProperty(index = 7, value = "教室")
+    @ExcelProperty(index = 8, value = "教室")
     private String classroom;
 }

@@ -117,7 +117,8 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     order_no VARCHAR(50) COMMENT '课序号',
     teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号',
     class_name VARCHAR(100) NOT NULL COMMENT '班级名称',
-    weekday VARCHAR(50) NOT NULL COMMENT '周次范围（格式：x-x周，例如：3-16周）',
+    weekday TINYINT NOT NULL COMMENT '星期几（1-7）',
+    week_range VARCHAR(50) NOT NULL COMMENT '周次范围（格式：x-x周，例如：3-16周）',
     start_period TINYINT NOT NULL COMMENT '开始节次（1-12）',
     end_period TINYINT NOT NULL COMMENT '结束节次（1-12）',
     classroom VARCHAR(100) NOT NULL COMMENT '教室',
@@ -125,6 +126,8 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_teacher_no (teacher_no),
     INDEX idx_class_name (class_name),
+    INDEX idx_weekday (weekday),
+    CHECK (weekday >= 1 AND weekday <= 7),
     CHECK (start_period >= 1 AND start_period <= 12),
     CHECK (end_period >= 1 AND end_period <= 12),
     CHECK (end_period >= start_period)
@@ -138,9 +141,8 @@ ALTER TABLE course_schedule MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMEN
 ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS course_no VARCHAR(50) COMMENT '课程号';
 ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS order_no VARCHAR(50) COMMENT '课序号';
 
--- 修改weekday字段类型（从TINYINT改为VARCHAR）
--- 注意：如果表中已有数据，请先备份数据
-ALTER TABLE course_schedule MODIFY COLUMN weekday VARCHAR(50) NOT NULL COMMENT '周次范围（格式：x-x周，例如：3-16周）';
+-- 添加新的周次范围字段
+ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS week_range VARCHAR(50) COMMENT '周次范围（格式：x-x周，例如：3-16周）';
 
 -- 添加新的节次字段
 -- 注意：如果表中已有start_time和end_time数据，需要先进行数据迁移
