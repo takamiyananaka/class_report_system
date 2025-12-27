@@ -296,7 +296,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加course_id字段（如果不存在）
+-- 添加course_id字段（如果不存在，先添加为允许NULL，稍后更新）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -305,13 +305,13 @@ WHERE TABLE_SCHEMA = DATABASE()
   AND COLUMN_NAME = 'course_id';
 
 SET @sql = IF(@col_exists = 0, 
-    'ALTER TABLE course ADD COLUMN course_id VARCHAR(64) NOT NULL COMMENT ''课程ID'' AFTER id',
+    'ALTER TABLE course ADD COLUMN course_id VARCHAR(64) NULL COMMENT ''课程ID'' AFTER id',
     'SELECT ''Column course_id already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加class_id字段（如果不存在）
+-- 添加class_id字段（如果不存在，先添加为允许NULL，稍后更新）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -320,11 +320,16 @@ WHERE TABLE_SCHEMA = DATABASE()
   AND COLUMN_NAME = 'class_id';
 
 SET @sql = IF(@col_exists = 0, 
-    'ALTER TABLE course ADD COLUMN class_id VARCHAR(64) NOT NULL COMMENT ''班级ID'' AFTER course_id',
+    'ALTER TABLE course ADD COLUMN class_id VARCHAR(64) NULL COMMENT ''班级ID'' AFTER course_id',
     'SELECT ''Column class_id already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- 注意：如果表中有数据，需要手动填充course_id和class_id的值
+-- 然后再修改为NOT NULL
+-- ALTER TABLE course MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
+-- ALTER TABLE course MODIFY COLUMN class_id VARCHAR(64) NOT NULL COMMENT '班级ID';
 
 -- 添加索引
 SET @idx_exists = 0;
