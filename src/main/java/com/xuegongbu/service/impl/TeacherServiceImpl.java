@@ -100,6 +100,11 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             queryWrapper.eq(Teacher::getPhone, queryDTO.getPhone().trim());
         }
         
+        // 学院号条件（精确查询）
+        if (queryDTO.getCollegeNo() != null && !queryDTO.getCollegeNo().trim().isEmpty()) {
+            queryWrapper.eq(Teacher::getCollegeNo, queryDTO.getCollegeNo().trim());
+        }
+        
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(Teacher::getCreateTime);
         
@@ -108,8 +113,8 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         // 移除密码字段
         result.getRecords().forEach(teacher -> teacher.setPassword(null));
         
-        log.info("查询教师，条件：teacherNo={}, department={}, realName={}, phone={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getDepartment(), queryDTO.getRealName(), queryDTO.getPhone(), pageNum, pageSize);
+        log.info("查询教师，条件：teacherNo={}, department={}, realName={}, phone={}, collegeNo={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getDepartment(), queryDTO.getRealName(), queryDTO.getPhone(), queryDTO.getCollegeNo(), pageNum, pageSize);
         
         return result;
     }

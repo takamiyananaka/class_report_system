@@ -34,7 +34,28 @@ CREATE TABLE IF NOT EXISTS admin (
 ALTER TABLE admin MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 
 -- ====================================
--- 2. 教师表
+-- 2. 学院表
+-- ====================================
+CREATE TABLE IF NOT EXISTS college (
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
+    name VARCHAR(100) NOT NULL UNIQUE COMMENT '学院名',
+    username VARCHAR(50) NOT NULL UNIQUE COMMENT '学院账号',
+    password VARCHAR(255) NOT NULL COMMENT '学院密码（BCrypt加密）',
+    college_no VARCHAR(50) NOT NULL UNIQUE COMMENT '学院号',
+    login_time DATETIME COMMENT '最后登录时间',
+    login_ip VARCHAR(50) COMMENT '最后登录IP',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
+    INDEX idx_username (username),
+    INDEX idx_college_no (college_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学院表';
+
+-- 修改已存在的college表的id字段类型
+ALTER TABLE college MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
+-- ====================================
+-- 3. 教师表
 -- ====================================
 CREATE TABLE IF NOT EXISTS teacher (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
@@ -45,6 +66,7 @@ CREATE TABLE IF NOT EXISTS teacher (
     phone VARCHAR(20) COMMENT '手机号',
     email VARCHAR(100) COMMENT '邮箱',
     department VARCHAR(255) COMMENT '所属部门（辅导员身份时格式为：专业名+年级，多个值用分号分隔）',
+    college_no VARCHAR(50) COMMENT '学院号',
     identity TINYINT DEFAULT 2 COMMENT '身份：1-只是教师，2-教师且是辅导员',
     status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
     last_login_time DATETIME COMMENT '最后登录时间',
@@ -54,14 +76,18 @@ CREATE TABLE IF NOT EXISTS teacher (
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
     INDEX idx_username (username),
-    INDEX idx_teacher_no (teacher_no)
+    INDEX idx_teacher_no (teacher_no),
+    INDEX idx_college_no (college_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师表';
 
 -- 修改已存在的teacher表的id字段类型
 ALTER TABLE teacher MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+-- 添加college_no字段（如果不存在）
+ALTER TABLE teacher ADD COLUMN IF NOT EXISTS college_no VARCHAR(50) COMMENT '学院号';
+ALTER TABLE teacher ADD INDEX IF NOT EXISTS idx_college_no (college_no);
 
 -- ====================================
--- 3. 班级表
+-- 4. 班级表
 -- ====================================
 CREATE TABLE IF NOT EXISTS class (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
@@ -82,35 +108,61 @@ CREATE TABLE IF NOT EXISTS class (
 ALTER TABLE class MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 
 -- ====================================
--- 4. 课表表
+-- 5. 课表表
 -- ====================================
 CREATE TABLE IF NOT EXISTS course_schedule (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
+    course_no VARCHAR(50) COMMENT '课程号',
+    order_no VARCHAR(50) COMMENT '课序号',
     teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号',
     class_name VARCHAR(100) NOT NULL COMMENT '班级名称',
     weekday TINYINT NOT NULL COMMENT '星期几（1-7）',
-    start_time TIME NOT NULL COMMENT '开始时间',
-    end_time TIME NOT NULL COMMENT '结束时间',
+    week_range VARCHAR(50) NOT NULL COMMENT '周次范围（格式：x-x周，例如：3-16周）',
+    start_period TINYINT NOT NULL COMMENT '开始节次（1-12）',
+    end_period TINYINT NOT NULL COMMENT '结束节次（1-12）',
     classroom VARCHAR(100) NOT NULL COMMENT '教室',
-    semester VARCHAR(50) NOT NULL COMMENT '学期',
-    school_year VARCHAR(20) NOT NULL COMMENT '学年',
-    duration VARCHAR(50) NOT NULL COMMENT '持续时间（周），格式：x-x（周），例如1-17周',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_teacher_no (teacher_no),
     INDEX idx_class_name (class_name),
-    INDEX idx_weekday (weekday)
+    INDEX idx_weekday (weekday),
+    CHECK (weekday >= 1 AND weekday <= 7),
+    CHECK (start_period >= 1 AND start_period <= 12),
+    CHECK (end_period >= 1 AND end_period <= 12),
+    CHECK (end_period >= start_period)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
 
--- 修改已存在的course_schedule表的字段类型
+-- 修改已存在的course_schedule表的字段类型和字段
 ALTER TABLE course_schedule MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 ALTER TABLE course_schedule MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
--- 添加持续时间字段（如果不存在）
-ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS duration VARCHAR(50) NOT NULL DEFAULT '' COMMENT '持续时间（周），格式：x-x（周），例如1-17周';
+
+-- 添加新字段（如果不存在）
+ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS course_no VARCHAR(50) COMMENT '课程号';
+ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS order_no VARCHAR(50) COMMENT '课序号';
+
+-- 添加新的周次范围字段
+ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS week_range VARCHAR(50) COMMENT '周次范围（格式：x-x周，例如：3-16周）';
+
+-- 添加新的节次字段
+-- 注意：如果表中已有start_time和end_time数据，需要先进行数据迁移
+ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS start_period TINYINT COMMENT '开始节次（1-12）';
+ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS end_period TINYINT COMMENT '结束节次（1-12）';
+
+-- 警告：以下DROP COLUMN操作会导致数据丢失！
+-- 在执行之前，请确保：
+-- 1. 已经备份了所有相关数据
+-- 2. 已经完成了从旧字段到新字段的数据迁移
+-- 3. 已经测试验证了数据迁移的正确性
+-- 取消注释以下语句来删除旧字段：
+-- ALTER TABLE course_schedule DROP COLUMN IF EXISTS start_time;
+-- ALTER TABLE course_schedule DROP COLUMN IF EXISTS end_time;
+-- ALTER TABLE course_schedule DROP COLUMN IF EXISTS semester;
+-- ALTER TABLE course_schedule DROP COLUMN IF EXISTS school_year;
+-- ALTER TABLE course_schedule DROP COLUMN IF EXISTS duration;
 
 -- ====================================
--- 5. 课程表
+-- 6. 课程表
 -- ====================================
 CREATE TABLE IF NOT EXISTS course (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
@@ -141,7 +193,26 @@ ALTER TABLE course MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类
 ALTER TABLE course MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
 
 -- ====================================
--- 6. 考勤记录表
+-- 7. 课程班级关联表
+-- ====================================
+CREATE TABLE IF NOT EXISTS course_class (
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
+    course_id VARCHAR(64) NOT NULL COMMENT '课程ID',
+    class_id VARCHAR(64) NOT NULL COMMENT '班级ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_delete TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
+    INDEX idx_course_id (course_id),
+    INDEX idx_class_id (class_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程班级关联表';
+
+-- 修改已存在的course_class表的id字段类型
+ALTER TABLE course_class MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+ALTER TABLE course_class MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
+ALTER TABLE course_class MODIFY COLUMN class_id VARCHAR(64) NOT NULL COMMENT '班级ID';
+
+-- ====================================
+-- 8. 考勤记录表
 -- ====================================
 CREATE TABLE IF NOT EXISTS attendance (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
@@ -191,7 +262,7 @@ ALTER TABLE alert MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID
 ALTER TABLE alert MODIFY COLUMN attendance_id VARCHAR(64) COMMENT '考勤记录ID';
 
 -- ====================================
--- 8. 图片抓取记录表
+-- 10. 图片抓取记录表
 -- ====================================
 CREATE TABLE IF NOT EXISTS image_capture (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',

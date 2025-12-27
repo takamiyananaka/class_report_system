@@ -103,8 +103,8 @@ public class MailServiceImpl implements MailService {
             
             // 处理上课时间
             if (course != null) {
-                String courseTime = "星期" + course.getWeekday() + " " + 
-                                  course.getStartTime() + "-" + course.getEndTime();
+                String courseTime = "星期" + course.getWeekday() + " " + course.getWeekRange() + " 第" + 
+                                  course.getStartPeriod() + "-" + course.getEndPeriod() + "节";
                 content = content.replace("{{courseTime}}", courseTime);
                 content = content.replace("{{classroom}}", course.getClassroom());
             } else {
@@ -186,7 +186,8 @@ public class MailServiceImpl implements MailService {
         
         if (course != null) {
             content.append("<p>上课时间: 星期").append(course.getWeekday()).append(" ")
-                   .append(course.getStartTime()).append("-").append(course.getEndTime()).append("</p>");
+                   .append(course.getWeekRange()).append(" 第")
+                   .append(course.getStartPeriod()).append("-").append(course.getEndPeriod()).append("节</p>");
             content.append("<p>教室: ").append(course.getClassroom()).append("</p>");
         }
         
