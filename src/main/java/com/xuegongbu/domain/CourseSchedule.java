@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
-import java.time.LocalTime;
 import java.time.LocalDateTime;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -36,6 +35,20 @@ public class CourseSchedule implements Serializable {
     private String courseName;
 
     /**
+    * 课程号
+    */
+    @Size(max= 50,message="编码长度不能超过50")
+    @Schema(description = "课程号")
+    private String courseNo;
+
+    /**
+    * 课序号
+    */
+    @Size(max= 50,message="编码长度不能超过50")
+    @Schema(description = "课序号")
+    private String orderNo;
+
+    /**
     * 教师工号
     */
     @NotNull(message="[教师工号]不能为空")
@@ -51,25 +64,26 @@ public class CourseSchedule implements Serializable {
     private String className;
     
     /**
-    * 星期几（1-7）
+    * 周次范围（格式：x-x周，例如：3-16周）
     */
-    @NotNull(message="[星期几]不能为空")
-    @Schema(description = "星期几（1-7）")
-    private Integer weekday;
+    @NotBlank(message="[周次范围]不能为空")
+    @Size(max= 50,message="周次范围长度不能超过50")
+    @Schema(description = "周次范围（格式：x-x周，例如：3-16周）")
+    private String weekday;
     
     /**
-    * 开始时间
+    * 开始节次（1-12）
     */
-    @NotNull(message="[开始时间]不能为空")
-    @Schema(description = "开始时间")
-    private LocalTime startTime;
+    @NotNull(message="[开始节次]不能为空")
+    @Schema(description = "开始节次（1-12）")
+    private Integer startPeriod;
     
     /**
-    * 结束时间
+    * 结束节次（1-12）
     */
-    @NotNull(message="[结束时间]不能为空")
-    @Schema(description = "结束时间")
-    private LocalTime endTime;
+    @NotNull(message="[结束节次]不能为空")
+    @Schema(description = "结束节次（1-12）")
+    private Integer endPeriod;
     
     /**
     * 教室
@@ -78,30 +92,6 @@ public class CourseSchedule implements Serializable {
     @Size(max= 100,message="编码长度不能超过100")
     @Schema(description = "教室")
     private String classroom;
-    
-    /**
-    * 学期
-    */
-    @NotBlank(message="[学期]不能为空")
-    @Size(max= 50,message="编码长度不能超过50")
-    @Schema(description = "学期")
-    private String semester;
-
-    /**
-    * 学年
-    */
-    @NotBlank(message="[学年]不能为空")
-    @Size(max= 20,message="编码长度不能超过20")
-    @Schema(description = "学年")
-    private String schoolYear;
-
-    /**
-    * 持续时间（周）
-    */
-    @NotBlank(message="[持续时间]不能为空")
-    @Size(max = 50, message = "持续时间长度不能超过50")
-    @Schema(description = "持续时间（周），格式：x-x（周），例如1-17周")
-    private String duration;
 
     /**
     * 创建时间

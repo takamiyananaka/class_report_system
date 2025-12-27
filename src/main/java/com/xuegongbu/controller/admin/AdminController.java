@@ -1,12 +1,16 @@
 package com.xuegongbu.controller.admin;
 
 import com.xuegongbu.common.Result;
+import com.xuegongbu.domain.College;
 import com.xuegongbu.domain.Teacher;
+import com.xuegongbu.dto.CollegeRequest;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
 import com.xuegongbu.dto.TeacherRequest;
 import com.xuegongbu.service.AdminService;
+import com.xuegongbu.service.CollegeService;
 import com.xuegongbu.service.TeacherService;
+import com.xuegongbu.vo.CollegeVO;
 import com.xuegongbu.vo.TeacherVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +37,9 @@ public class AdminController {
 
     @Autowired
     private TeacherService teacherService;
+
+    @Autowired
+    private CollegeService collegeService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -222,6 +229,150 @@ public class AdminController {
         
         teacherService.removeById(id);
         log.info("管理员删除教师成功");
+        return Result.success("删除成功");
+    }
+
+    /**
+     * 查询所有学院
+     */
+    @GetMapping("/colleges")
+    @Operation(summary = "查询所有学院", description = "管理员查询所有学院列表")
+    public Result<List<CollegeVO>> listColleges() {
+        log.info("管理员查询所有学院");
+        List<College> colleges = collegeService.list();
+        List<CollegeVO> collegeVOList = colleges.stream().map(college -> {
+            CollegeVO vo = new CollegeVO();
+            BeanUtils.copyProperties(college, vo);
+            return vo;
+        }).collect(Collectors.toList());
+        log.info("查询到{}个学院", collegeVOList.size());
+        return Result.success(collegeVOList);
+    }
+
+    /**
+     * 根据ID查询学院
+     */
+    @GetMapping("/colleges/{id}")
+    @Operation(summary = "根据ID查询学院", description = "管理员根据学院ID查询学院详情")
+    public Result<CollegeVO> getCollege(@Parameter(description = "学院ID") @PathVariable String id) {
+        log.info("管理员查询学院详情，ID：{}", id);
+        College college = collegeService.getById(id);
+        if (college == null) {
+            return Result.error("学院不存在");
+        }
+        CollegeVO vo = new CollegeVO();
+        BeanUtils.copyProperties(college, vo);
+        return Result.success(vo);
+    }
+
+    /**
+     * 创建学院
+     */
+    @PostMapping("/colleges")
+    @Operation(summary = "创建学院", description = "管理员创建新学院，密码必须至少6位字符")
+    public Result<String> createCollege(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "学院信息") @Valid @RequestBody CollegeRequest request) {
+        log.info("管理员创建学院，学院名：{}", request.getName());
+        
+        // 检查学院号是否已存在
+        College existingCollegeNo = collegeService.lambdaQuery()
+                .eq(College::getCollegeNo, request.getCollegeNo())
+                .one();
+        if (existingCollegeNo != null) {
+            return Result.error("学院号已存在");
+        }
+        
+        // 检查用户名是否已存在
+        College existingCollege = collegeService.lambdaQuery()
+                .eq(College::getUsername, request.getUsername())
+                .one();
+        if (existingCollege != null) {
+            return Result.error("用户名已存在");
+        }
+        
+        // 验证密码
+        if (request.getPassword() == null || request.getPassword().isEmpty()) {
+            return Result.error("密码不能为空，请设置初始密码");
+        }
+        if (request.getPassword().length() < 6) {
+            return Result.error("密码长度不能少于6位");
+        }
+        
+        College college = new College();
+        BeanUtils.copyProperties(request, college);
+        
+        // 密码加密
+        college.setPassword(passwordEncoder.encode(request.getPassword()));
+        
+        collegeService.save(college);
+        log.info("管理员创建学院成功，ID：{}", college.getId());
+        return Result.success("创建成功");
+    }
+
+    /**
+     * 更新学院
+     */
+    @PutMapping("/colleges/{id}")
+    @Operation(summary = "更新学院", description = "管理员更新学院信息，如提供新密码则必须至少6位字符")
+    public Result<String> updateCollege(@Parameter(description = "学院ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "学院信息") @Valid @RequestBody CollegeRequest request) {
+        log.info("管理员更新学院，ID：{}", id);
+        
+        College college = collegeService.getById(id);
+        if (college == null) {
+            return Result.error("学院不存在");
+        }
+        
+        // 检查学院号是否被其他学院使用
+        College existingCollegeNo = collegeService.lambdaQuery()
+                .eq(College::getCollegeNo, request.getCollegeNo())
+                .ne(College::getId, id)
+                .one();
+        if (existingCollegeNo != null) {
+            return Result.error("学院号已被其他学院使用");
+        }
+        
+        // 检查用户名是否被其他学院使用
+        College existingCollege = collegeService.lambdaQuery()
+                .eq(College::getUsername, request.getUsername())
+                .ne(College::getId, id)
+                .one();
+        if (existingCollege != null) {
+            return Result.error("用户名已被其他学院使用");
+        }
+        
+        // 更新字段
+        college.setName(request.getName());
+        college.setUsername(request.getUsername());
+        college.setCollegeNo(request.getCollegeNo());
+        
+        // 如果提供了新密码，则更新密码
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            // 验证密码长度
+            if (request.getPassword().length() < 6) {
+                return Result.error("密码长度不能少于6位");
+            }
+            college.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        
+        collegeService.updateById(college);
+        log.info("管理员更新学院成功");
+        return Result.success("更新成功");
+    }
+
+    /**
+     * 删除学院
+     */
+    @DeleteMapping("/colleges/{id}")
+    @Operation(summary = "删除学院", description = "管理员删除学院")
+    public Result<String> deleteCollege(@Parameter(description = "学院ID") @PathVariable String id) {
+        log.info("管理员删除学院，ID：{}", id);
+        
+        College college = collegeService.getById(id);
+        if (college == null) {
+            return Result.error("学院不存在");
+        }
+        
+        collegeService.removeById(id);
+        log.info("管理员删除学院成功");
         return Result.success("删除成功");
     }
 }

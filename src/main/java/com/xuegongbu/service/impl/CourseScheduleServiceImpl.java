@@ -15,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -85,18 +83,23 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         failCount++;
                         continue;
                     }
-                    if (dto.getWeekday() == null || dto.getWeekday() < 1 || dto.getWeekday() > 7) {
-                        errorMessages.add(String.format("第%d行：星期几必须是1-7之间的数字", i + 2));
+                    if (isBlank(dto.getWeekday())) {
+                        errorMessages.add(String.format("第%d行：周次范围不能为空", i + 2));
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getStartTime())) {
-                        errorMessages.add(String.format("第%d行：开始时间不能为空", i + 2));
+                    if (dto.getStartPeriod() == null || dto.getStartPeriod() < 1 || dto.getStartPeriod() > 12) {
+                        errorMessages.add(String.format("第%d行：开始节次必须是1-12之间的数字", i + 2));
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getEndTime())) {
-                        errorMessages.add(String.format("第%d行：结束时间不能为空", i + 2));
+                    if (dto.getEndPeriod() == null || dto.getEndPeriod() < 1 || dto.getEndPeriod() > 12) {
+                        errorMessages.add(String.format("第%d行：结束节次必须是1-12之间的数字", i + 2));
+                        failCount++;
+                        continue;
+                    }
+                    if (dto.getEndPeriod() < dto.getStartPeriod()) {
+                        errorMessages.add(String.format("第%d行：结束节次必须大于或等于开始节次", i + 2));
                         failCount++;
                         continue;
                     }
@@ -105,33 +108,17 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getSemester())) {
-                        errorMessages.add(String.format("第%d行：学期不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (isBlank(dto.getSchoolYear())) {
-                        errorMessages.add(String.format("第%d行：学年不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (isBlank(dto.getDuration())) {
-                        errorMessages.add(String.format("第%d行：持续时间不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
                     
                     CourseSchedule courseSchedule = new CourseSchedule();
                     courseSchedule.setCourseName(dto.getCourseName().trim());
+                    courseSchedule.setCourseNo(isBlank(dto.getCourseNo()) ? null : dto.getCourseNo().trim());
+                    courseSchedule.setOrderNo(isBlank(dto.getOrderNo()) ? null : dto.getOrderNo().trim());
                     courseSchedule.setTeacherNo(teacherNo); // 使用当前登录教师的工号
                     courseSchedule.setClassName(dto.getClassName().trim());
-                    courseSchedule.setWeekday(dto.getWeekday());
-                    courseSchedule.setStartTime(parseTime(dto.getStartTime()));
-                    courseSchedule.setEndTime(parseTime(dto.getEndTime()));
+                    courseSchedule.setWeekday(dto.getWeekday().trim());
+                    courseSchedule.setStartPeriod(dto.getStartPeriod());
+                    courseSchedule.setEndPeriod(dto.getEndPeriod());
                     courseSchedule.setClassroom(dto.getClassroom().trim());
-                    courseSchedule.setSemester(dto.getSemester().trim());
-                    courseSchedule.setSchoolYear(dto.getSchoolYear().trim());
-                    courseSchedule.setDuration(dto.getDuration().trim());
                     
                     courseScheduleList.add(courseSchedule);
                     successCount++;
@@ -173,38 +160,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     }
     
     /**
-     * 解析时间字符串为LocalTime
-     * 支持格式：HH:mm:ss, HH:mm, H:mm, H:mm:ss
-     */
-    private LocalTime parseTime(String timeStr) {
-        if (timeStr == null) {
-            throw new IllegalArgumentException("时间不能为空");
-        }
-        
-        timeStr = timeStr.trim();
-        
-        // 定义支持的时间格式，按最严格到最宽松的顺序
-        DateTimeFormatter[] formatters = {
-            DateTimeFormatter.ofPattern("HH:mm:ss"),
-            DateTimeFormatter.ofPattern("H:mm:ss"),
-            DateTimeFormatter.ofPattern("HH:mm"),
-            DateTimeFormatter.ofPattern("H:mm")
-        };
-        
-        // 尝试使用每个格式解析
-        for (DateTimeFormatter formatter : formatters) {
-            try {
-                return LocalTime.parse(timeStr, formatter);
-            } catch (Exception e) {
-                // 继续尝试下一个格式
-            }
-        }
-        
-        // 所有格式都失败
-        throw new IllegalArgumentException("时间格式不正确: " + timeStr + "，支持的格式为 HH:mm、HH:mm:ss、H:mm 或 H:mm:ss");
-    }
-    
-    /**
      * 检查字符串是否为空
      */
     private boolean isBlank(String str) {
@@ -236,27 +191,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             queryWrapper.like(CourseSchedule::getCourseName, queryDTO.getCourseName().trim());
         }
         
-        // 星期几条件
-        if (queryDTO.getWeekday() != null) {
-            queryWrapper.eq(CourseSchedule::getWeekday, queryDTO.getWeekday());
-        }
-        
-        // 学期条件
-        if (!isBlank(queryDTO.getSemester())) {
-            queryWrapper.eq(CourseSchedule::getSemester, queryDTO.getSemester().trim());
-        }
-        
-        // 学年条件
-        if (!isBlank(queryDTO.getSchoolYear())) {
-            queryWrapper.eq(CourseSchedule::getSchoolYear, queryDTO.getSchoolYear().trim());
-        }
-        
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
         
-        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, weekday={}, semester={}, schoolYear={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), 
-                queryDTO.getWeekday(), queryDTO.getSemester(), queryDTO.getSchoolYear(), pageNum, pageSize);
+        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), pageNum, pageSize);
         
         return this.page(page, queryWrapper);
     }
@@ -274,14 +213,13 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             List<CourseScheduleExcelDTO> templateData = new ArrayList<>();
             CourseScheduleExcelDTO example = new CourseScheduleExcelDTO();
             example.setCourseName("高等数学");
+            example.setCourseNo("MATH101");
+            example.setOrderNo("01");
             example.setClassName("25计算机类-1班");
-            example.setWeekday(1);
-            example.setStartTime("08:00");
-            example.setEndTime("09:40");
+            example.setWeekday("3-16周");
+            example.setStartPeriod(1);
+            example.setEndPeriod(2);
             example.setClassroom("成都校区/思学楼/A101");
-            example.setSemester("1");
-            example.setSchoolYear("2024-2025");
-            example.setDuration("1-17周");
             // 不再包含教师ID，将由系统根据当前登录教师自动填充
             templateData.add(example);
             
