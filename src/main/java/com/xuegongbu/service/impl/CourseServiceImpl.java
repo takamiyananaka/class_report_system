@@ -45,10 +45,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             queryWrapper.eq(Course::getTeacherNo, queryDTO.getTeacherNo().trim());
         }
         
-        // 班级名称条件（模糊查询）
-        if (queryDTO.getClassName() != null && !queryDTO.getClassName().trim().isEmpty()) {
-            queryWrapper.like(Course::getClassName, queryDTO.getClassName().trim());
-        }
+        // Note: className query removed as it's now in course_class junction table
+        // TODO: If className query is needed, implement custom SQL with JOIN
         
         // 课程名称条件（模糊查询）
         if (queryDTO.getCourseName() != null && !queryDTO.getCourseName().trim().isEmpty()) {
@@ -58,8 +56,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(Course::getCreateTime);
         
-        log.info("查询课程，条件：teacherNo={}, className={}, courseName={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), pageNum, pageSize);
+        log.info("查询课程，条件：teacherNo={}, courseName={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getCourseName(), pageNum, pageSize);
         
         return this.page(page, queryWrapper);
     }

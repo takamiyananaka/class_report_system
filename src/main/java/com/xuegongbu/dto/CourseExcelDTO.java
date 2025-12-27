@@ -24,10 +24,10 @@ public class CourseExcelDTO implements Serializable {
     private String courseCode;
 
     /**
-     * 班级名称
+     * 班级ID（多个班级用逗号分隔）
      */
-    @ExcelProperty(index = 2, value = "班级名称")
-    private String className;
+    @ExcelProperty(index = 2, value = "班级ID")
+    private String classIds;
 
     /**
      * 教室

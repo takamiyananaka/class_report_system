@@ -82,9 +82,35 @@ CREATE TABLE IF NOT EXISTS teacher (
 
 -- 修改已存在的teacher表的id字段类型
 ALTER TABLE teacher MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
--- 添加college_no字段（如果不存在）
-ALTER TABLE teacher ADD COLUMN IF NOT EXISTS college_no VARCHAR(50) COMMENT '学院号';
-ALTER TABLE teacher ADD INDEX IF NOT EXISTS idx_college_no (college_no);
+-- 添加college_no字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND COLUMN_NAME = 'college_no';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE teacher ADD COLUMN college_no VARCHAR(50) COMMENT ''学院号''',
+    'SELECT ''Column college_no already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND INDEX_NAME = 'idx_college_no';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE teacher ADD INDEX idx_college_no (college_no)',
+    'SELECT ''Index idx_college_no already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 4. 班级表
@@ -137,29 +163,80 @@ CREATE TABLE IF NOT EXISTS course_schedule (
 ALTER TABLE course_schedule MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 ALTER TABLE course_schedule MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
 
--- 添加新字段（如果不存在）
-ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS course_no VARCHAR(50) COMMENT '课程号';
-ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS order_no VARCHAR(50) COMMENT '课序号';
+-- 添加course_no字段
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'course_no';
 
--- 添加新的周次范围字段
-ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS week_range VARCHAR(50) COMMENT '周次范围（格式：x-x周，例如：3-16周）';
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN course_no VARCHAR(50) COMMENT ''课程号''',
+    'SELECT ''Column course_no already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
--- 添加新的节次字段
--- 注意：如果表中已有start_time和end_time数据，需要先进行数据迁移
-ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS start_period TINYINT COMMENT '开始节次（1-12）';
-ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS end_period TINYINT COMMENT '结束节次（1-12）';
+-- 添加order_no字段
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'order_no';
 
--- 警告：以下DROP COLUMN操作会导致数据丢失！
--- 在执行之前，请确保：
--- 1. 已经备份了所有相关数据
--- 2. 已经完成了从旧字段到新字段的数据迁移
--- 3. 已经测试验证了数据迁移的正确性
--- 取消注释以下语句来删除旧字段：
--- ALTER TABLE course_schedule DROP COLUMN IF EXISTS start_time;
--- ALTER TABLE course_schedule DROP COLUMN IF EXISTS end_time;
--- ALTER TABLE course_schedule DROP COLUMN IF EXISTS semester;
--- ALTER TABLE course_schedule DROP COLUMN IF EXISTS school_year;
--- ALTER TABLE course_schedule DROP COLUMN IF EXISTS duration;
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN order_no VARCHAR(50) COMMENT ''课序号''',
+    'SELECT ''Column order_no already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加week_range字段
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'week_range';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN week_range VARCHAR(50) COMMENT ''周次范围（格式：x-x周，例如：3-16周）''',
+    'SELECT ''Column week_range already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加start_period字段
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'start_period';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN start_period TINYINT COMMENT ''开始节次（1-12）''',
+    'SELECT ''Column start_period already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加end_period字段
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'end_period';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN end_period TINYINT COMMENT ''结束节次（1-12）''',
+    'SELECT ''Column end_period already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 6. 课程表
@@ -176,7 +253,6 @@ CREATE TABLE IF NOT EXISTS course (
     end_time TIME COMMENT '结束时间',
     week_day INT COMMENT '星期几：1-周一，7-周日',
     expected_count INT COMMENT '预到人数',
-    class_name VARCHAR(100) COMMENT '上课的班级名字',
     semester VARCHAR(20) COMMENT '学期（如：2024-2025-1）',
     status INT DEFAULT 2 COMMENT '状态：0-已结束，1-进行中，2-未开始',
     remark VARCHAR(500) COMMENT '备注',
@@ -191,6 +267,21 @@ CREATE TABLE IF NOT EXISTS course (
 -- 修改已存在的course表的字段类型
 ALTER TABLE course MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 ALTER TABLE course MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
+
+-- 删除class_name字段（改用course_class关联表实现多对多关系）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course' 
+  AND COLUMN_NAME = 'class_name';
+
+SET @sql = IF(@col_exists > 0, 
+    'ALTER TABLE course DROP COLUMN class_name',
+    'SELECT ''Column class_name already dropped'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 7. 课程班级关联表

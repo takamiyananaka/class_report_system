@@ -129,11 +129,5 @@ public class Course implements Serializable {
     @Schema(description = "是否删除：0-否，1-是")
     @TableLogic
     private Integer isDeleted;
-    /**
-     * 上课的班级名字
-     */
-    @Schema(description = "上课的班级名字")
-    private String className;
-
 
 }
