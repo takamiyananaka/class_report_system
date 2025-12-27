@@ -45,8 +45,16 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             queryWrapper.eq(Course::getTeacherNo, queryDTO.getTeacherNo().trim());
         }
         
-        // Note: className query removed as it's now in course_class junction table
-        // TODO: If className query is needed, implement custom SQL with JOIN
+        // 班级名称查询条件已移除
+        // 原因：课程与班级现在是多对多关系，通过course_class关联表实现
+        // 如需按班级查询课程，需要实现自定义SQL with JOIN:
+        // SELECT DISTINCT c.* FROM course c 
+        // INNER JOIN course_class cc ON c.id = cc.course_id 
+        // INNER JOIN class cl ON cc.class_id = cl.id 
+        // WHERE cl.class_name LIKE ?
+        if (queryDTO.getClassName() != null && !queryDTO.getClassName().trim().isEmpty()) {
+            log.warn("className查询参数已废弃，课程-班级关系现通过course_class表实现，此参数将被忽略");
+        }
         
         // 课程名称条件（模糊查询）
         if (queryDTO.getCourseName() != null && !queryDTO.getCourseName().trim().isEmpty()) {

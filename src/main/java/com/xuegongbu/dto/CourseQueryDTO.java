@@ -13,7 +13,8 @@ public class CourseQueryDTO {
     @Schema(description = "教师工号", example = "T001")
     private String teacherNo;
 
-    @Schema(description = "班级名称", example = "25计算机类-1班")
+    @Deprecated
+    @Schema(description = "班级名称（已废弃，课程-班级关系现通过course_class表实现）", example = "25计算机类-1班")
     private String className;
 
     @Schema(description = "课程名称", example = "高等数学")
