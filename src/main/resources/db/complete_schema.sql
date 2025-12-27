@@ -239,55 +239,10 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- ====================================
--- 6. 课程表
+-- 6. 课程班级关联表（course表作为关联表）
 -- ====================================
 CREATE TABLE IF NOT EXISTS course (
-    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
-    course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
-    course_code VARCHAR(50) COMMENT '课程编码',
-    teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号',
-    classroom VARCHAR(50) NOT NULL COMMENT '教室号',
-    course_time VARCHAR(100) NOT NULL COMMENT '上课时间（如：周一 1-2节）',
-    course_date DATE NOT NULL COMMENT '上课日期',
-    start_time TIME COMMENT '开始时间',
-    end_time TIME COMMENT '结束时间',
-    week_day INT COMMENT '星期几：1-周一，7-周日',
-    expected_count INT COMMENT '预到人数',
-    semester VARCHAR(20) COMMENT '学期（如：2024-2025-1）',
-    status INT DEFAULT 2 COMMENT '状态：0-已结束，1-进行中，2-未开始',
-    remark VARCHAR(500) COMMENT '备注',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    is_deleted INT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
-    INDEX idx_teacher_no (teacher_no),
-    INDEX idx_course_date (course_date),
-    INDEX idx_course_name (course_name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程表';
-
--- 修改已存在的course表的字段类型
-ALTER TABLE course MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
-ALTER TABLE course MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
-
--- 删除class_name字段（改用course_class关联表实现多对多关系）
-SET @col_exists = 0;
-SELECT COUNT(*) INTO @col_exists 
-FROM INFORMATION_SCHEMA.COLUMNS 
-WHERE TABLE_SCHEMA = DATABASE() 
-  AND TABLE_NAME = 'course' 
-  AND COLUMN_NAME = 'class_name';
-
-SET @sql = IF(@col_exists > 0, 
-    'ALTER TABLE course DROP COLUMN class_name',
-    'SELECT ''Column class_name already dropped'' AS msg');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ====================================
--- 7. 课程班级关联表
--- ====================================
-CREATE TABLE IF NOT EXISTS course_class (
-    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（雪花算法生成）',
     course_id VARCHAR(64) NOT NULL COMMENT '课程ID',
     class_id VARCHAR(64) NOT NULL COMMENT '班级ID',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -297,10 +252,113 @@ CREATE TABLE IF NOT EXISTS course_class (
     INDEX idx_class_id (class_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程班级关联表';
 
--- 修改已存在的course_class表的id字段类型
-ALTER TABLE course_class MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
-ALTER TABLE course_class MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
-ALTER TABLE course_class MODIFY COLUMN class_id VARCHAR(64) NOT NULL COMMENT '班级ID';
+-- 修改已存在的course表结构（将其改造为关联表）
+ALTER TABLE course MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（雪花算法生成）';
+
+-- 删除冗余字段，只保留关联表必需字段
+SET @col_list = '';
+SELECT GROUP_CONCAT(COLUMN_NAME) INTO @col_list
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course'
+  AND COLUMN_NAME NOT IN ('id', 'course_id', 'class_id', 'create_time', 'update_time', 'is_delete');
+
+-- 删除不需要的字段
+SET @drop_cols = '';
+SELECT GROUP_CONCAT(
+    CONCAT('DROP COLUMN ', COLUMN_NAME)
+    SEPARATOR ', '
+) INTO @drop_cols
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course'
+  AND COLUMN_NAME NOT IN ('id', 'course_id', 'class_id', 'create_time', 'update_time', 'is_delete', 'is_deleted');
+
+SET @sql = IF(@drop_cols IS NOT NULL AND @drop_cols != '', 
+    CONCAT('ALTER TABLE course ', @drop_cols),
+    'SELECT ''No columns to drop'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 确保is_deleted字段名称为is_delete
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course' 
+  AND COLUMN_NAME = 'is_deleted';
+
+SET @sql = IF(@col_exists > 0, 
+    'ALTER TABLE course CHANGE COLUMN is_deleted is_delete TINYINT DEFAULT 0 COMMENT ''是否删除：0-否，1-是''',
+    'SELECT ''Column is_deleted not found'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加course_id字段（如果不存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course' 
+  AND COLUMN_NAME = 'course_id';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course ADD COLUMN course_id VARCHAR(64) NOT NULL COMMENT ''课程ID'' AFTER id',
+    'SELECT ''Column course_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加class_id字段（如果不存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course' 
+  AND COLUMN_NAME = 'class_id';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course ADD COLUMN class_id VARCHAR(64) NOT NULL COMMENT ''班级ID'' AFTER course_id',
+    'SELECT ''Column class_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course' 
+  AND INDEX_NAME = 'idx_course_id';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE course ADD INDEX idx_course_id (course_id)',
+    'SELECT ''Index idx_course_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course' 
+  AND INDEX_NAME = 'idx_class_id';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE course ADD INDEX idx_class_id (class_id)',
+    'SELECT ''Index idx_class_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ====================================
+-- 删除course_class表（不再需要）
+-- ====================================
+DROP TABLE IF EXISTS course_class;
 
 -- ====================================
 -- 8. 考勤记录表

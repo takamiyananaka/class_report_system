@@ -4,21 +4,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * 课程查询请求DTO
+ * 课程班级关联查询请求DTO
  */
 @Data
-@Schema(description = "课程查询请求参数")
+@Schema(description = "课程班级关联查询请求参数")
 public class CourseQueryDTO {
 
-    @Schema(description = "教师工号", example = "T001")
-    private String teacherNo;
+    @Schema(description = "课程ID", example = "1234567890")
+    private String courseId;
 
-    @Deprecated
-    @Schema(description = "班级名称（已废弃，课程-班级关系现通过course_class表实现）", example = "25计算机类-1班")
-    private String className;
-
-    @Schema(description = "课程名称", example = "高等数学")
-    private String courseName;
+    @Schema(description = "班级ID", example = "9876543210")
+    private String classId;
 
     @Schema(description = "页码（从1开始）", example = "1")
     private Integer pageNum = 1;

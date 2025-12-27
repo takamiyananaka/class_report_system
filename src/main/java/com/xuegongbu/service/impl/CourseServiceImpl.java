@@ -1,30 +1,11 @@
 package com.xuegongbu.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.xuegongbu.common.exception.BusinessException;
-import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.Course;
 import com.xuegongbu.mapper.CourseMapper;
 import com.xuegongbu.service.CourseService;
-import com.xuegongbu.service.DeviceService;
-import com.xuegongbu.util.CountUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -40,32 +21,21 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         // 构建查询条件
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Course> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         
-        // 教师工号条件
-        if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().trim().isEmpty()) {
-            queryWrapper.eq(Course::getTeacherNo, queryDTO.getTeacherNo().trim());
+        // 课程ID条件
+        if (queryDTO.getCourseId() != null && !queryDTO.getCourseId().trim().isEmpty()) {
+            queryWrapper.eq(Course::getCourseId, queryDTO.getCourseId().trim());
         }
         
-        // 班级名称查询条件已移除
-        // 原因：课程与班级现在是多对多关系，通过course_class关联表实现
-        // 如需按班级查询课程，需要实现自定义SQL with JOIN:
-        // SELECT DISTINCT c.* FROM course c 
-        // INNER JOIN course_class cc ON c.id = cc.course_id 
-        // INNER JOIN class cl ON cc.class_id = cl.id 
-        // WHERE cl.class_name LIKE ?
-        if (queryDTO.getClassName() != null && !queryDTO.getClassName().trim().isEmpty()) {
-            log.warn("className查询参数已废弃，课程-班级关系现通过course_class表实现，此参数将被忽略");
-        }
-        
-        // 课程名称条件（模糊查询）
-        if (queryDTO.getCourseName() != null && !queryDTO.getCourseName().trim().isEmpty()) {
-            queryWrapper.like(Course::getCourseName, queryDTO.getCourseName().trim());
+        // 班级ID条件
+        if (queryDTO.getClassId() != null && !queryDTO.getClassId().trim().isEmpty()) {
+            queryWrapper.eq(Course::getClassId, queryDTO.getClassId().trim());
         }
         
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(Course::getCreateTime);
         
-        log.info("查询课程，条件：teacherNo={}, courseName={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getCourseName(), pageNum, pageSize);
+        log.info("查询课程班级关联，条件：courseId={}, classId={}, pageNum={}, pageSize={}", 
+                queryDTO.getCourseId(), queryDTO.getClassId(), pageNum, pageSize);
         
         return this.page(page, queryWrapper);
     }
