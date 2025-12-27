@@ -41,9 +41,8 @@ public class CollegeServiceImpl extends ServiceImpl<CollegeMapper, College> impl
             throw new BusinessException("密码错误");
         }
 
-        // 更新最后登录时间和IP
+        // 更新最后登录时间
         college.setLoginTime(LocalDateTime.now());
-        // TODO: 从请求中获取IP地址
         this.updateById(college);
 
         // Sa-Token 登录认证，使用学院ID作为登录标识，并标记角色为college，并存储完整的用户信息
