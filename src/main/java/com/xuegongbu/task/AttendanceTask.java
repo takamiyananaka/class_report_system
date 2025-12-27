@@ -4,20 +4,20 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
-import com.xuegongbu.dto.CountResponse;
 import com.xuegongbu.service.*;
+import com.xuegongbu.util.ClassTimeUtil;
 import com.xuegongbu.util.CountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
 
 @Slf4j
 @Component
@@ -28,6 +28,11 @@ public class AttendanceTask {
     private final ClassService classService;
     private final CountUtil countUtil;
     private final AlertService alertService;
+    private final ThreadPoolTaskScheduler taskScheduler;
+
+    // 存储每天的定时任务
+    private volatile ScheduledFuture<?> dailyAttendanceTask;
+    private volatile ScheduledFuture<?> dailyScheduleTask;
 
     public AttendanceTask(CourseScheduleService courseScheduleService, 
                           AttendanceService attendanceService,
@@ -41,42 +46,131 @@ public class AttendanceTask {
         this.classService = classService;
         this.countUtil = countUtil;
         this.alertService = alertService;
+        
+        // 创建任务调度器
+        this.taskScheduler = new ThreadPoolTaskScheduler();
+        this.taskScheduler.setPoolSize(5);
+        this.taskScheduler.setThreadNamePrefix("AttendanceTask-");
+        this.taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
+        this.taskScheduler.setAwaitTerminationSeconds(30);
+        this.taskScheduler.initialize();
     }
 
     /**
-     * 自动考勤任务
-     * 从每天8:05开始，每30分钟执行一次，检查当前是否有正在进行的课程，如果有则执行自动考勤
+     * 每天凌晨1点执行，重置当天的考勤定时任务
      */
-    @Scheduled(cron = "0 5/30 8-23 * * ?")
-    public void autoAttendance() {
-        log.info("开始执行自动考勤任务");
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void resetDailyAttendanceTasks() {
+        log.info("开始重置当天的考勤定时任务");
 
-        // 获取当前时间信息
-        LocalDateTime now = LocalDateTime.now();
-        DayOfWeek dayOfWeek = now.getDayOfWeek();
-        LocalTime currentTime = now.toLocalTime();
-
-        // 查询当前正在进行的课程（根据星期几和时间范围）
-        QueryWrapper<CourseSchedule> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("weekday", dayOfWeek.getValue())
-                .le("start_time", currentTime)
-                .ge("end_time", currentTime);
-
-        List<CourseSchedule> ongoingCourses = courseScheduleService.list(queryWrapper);
-
-        log.info("找到 {} 个正在进行的课程", ongoingCourses.size());
-
-        // 为每个正在进行的课程执行自动考勤
-        for (CourseSchedule course : ongoingCourses) {
-            try {
-                performAutoAttendance(course, now);
-            } catch (Exception e) {
-                log.error("为课程 {} 执行自动考勤时发生错误: {}", course.getId(), e.getMessage(), e);
-            }
+        // 取消之前的任务
+        if (dailyAttendanceTask != null && !dailyAttendanceTask.isCancelled()) {
+            dailyAttendanceTask.cancel(false);
         }
 
-        log.info("自动考勤任务执行完成");
+        if (dailyScheduleTask != null && !dailyScheduleTask.isCancelled()) {
+            dailyScheduleTask.cancel(false);
+        }
+
+        // 为今天设置所有课程节次的考勤任务
+        setupAttendanceTasksForToday();
     }
+
+    /**
+     * 设置今天的考勤任务
+     */
+    private void setupAttendanceTasksForToday() {
+        log.info("设置今天的考勤任务");
+        
+        try {
+            // 获取今天的日期
+            LocalDate today = LocalDate.now();
+            
+            // 遍历所有课程节数，为每节课的第5分钟设置定时任务
+            Integer[] allClassNumbers = ClassTimeUtil.getAllClassNumbers();
+            for (Integer classNumber : allClassNumbers) {
+                // 获取该节课的开始时间
+                LocalTime classStartTime = ClassTimeUtil.getStartTimeAsLocalTime(classNumber);
+                // 计算第5分钟的时间点
+                LocalTime fifthMinuteTime = classStartTime.plusMinutes(5);
+                
+                // 创建今天的完整时间
+                LocalDateTime taskTime = LocalDateTime.of(today, fifthMinuteTime);
+                
+                // 检查是否已经过了今天的时间，如果是，则设置为明天的相同时间
+                if (taskTime.isBefore(LocalDateTime.now())) {
+                    taskTime = taskTime.plusDays(1);
+                }
+                
+                // 创建定时任务
+                Date scheduledTime = Date.from(taskTime.atZone(ZoneId.systemDefault()).toInstant());
+                
+                // 检查任务时间是否在今天范围内（8:00-21:25）
+                if (isWithinOperationalHours(fifthMinuteTime)) {
+                    ScheduledFuture<?> task = taskScheduler.schedule(() -> {
+                        try {
+                            executeAutoAttendanceForClassPeriod(classNumber);
+                        } catch (Exception e) {
+                            log.error("执行第 {} 节课的考勤任务时发生错误", classNumber, e);
+                        }
+                    }, scheduledTime);
+                    
+                    log.info("已设置第 {} 节课的考勤任务，执行时间: {}", classNumber, taskTime);
+                } else {
+                    log.debug("第 {} 节课的考勤时间 {} 超出运营时间范围，跳过", classNumber, taskTime);
+                }
+            }
+        } catch (Exception e) {
+            log.error("设置考勤任务时发生错误", e);
+        }
+    }
+
+    /**
+     * 检查时间是否在运营时间内（8:00-21:25）
+     */
+    private boolean isWithinOperationalHours(LocalTime time) {
+        return !time.isBefore(LocalTime.of(8, 0)) && !time.isAfter(LocalTime.of(21, 25));
+    }
+
+    /**
+     * 为特定课程节次执行自动考勤
+     * @param classPeriod 课程节数
+     */
+    private void executeAutoAttendanceForClassPeriod(int classPeriod) {
+        log.info("开始执行第 {} 节课的自动考勤任务", classPeriod);
+
+        try {
+            // 获取当前时间信息
+            LocalDateTime now = LocalDateTime.now();
+            DayOfWeek dayOfWeek = now.getDayOfWeek();
+
+            log.info("当前时间 {} 是第 {} 节课的第5分钟，开始查询课程", now.toLocalTime(), classPeriod);
+
+            // 查询当前正在进行的课程（根据星期几和当前课程节次的时间范围）
+            QueryWrapper<CourseSchedule> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("weekday", dayOfWeek.getValue())
+                    .eq("start_time", ClassTimeUtil.getStartTimeAsLocalTime(classPeriod))
+                    .eq("end_time", ClassTimeUtil.getEndTimeAsLocalTime(classPeriod));
+
+            List<CourseSchedule> ongoingCourses = courseScheduleService.list(queryWrapper);
+
+            log.info("找到 {} 个第 {} 节课的课程", ongoingCourses.size(), classPeriod);
+
+            // 为每个正在进行的课程执行自动考勤
+            for (CourseSchedule course : ongoingCourses) {
+                try {
+                    performAutoAttendance(course, now);
+                } catch (Exception e) {
+                    log.error("为课程 {} 执行自动考勤时发生错误: {}", course.getId(), e.getMessage(), e);
+                }
+            }
+
+            log.info("第 {} 节课的自动考勤任务执行完成", classPeriod);
+        } catch (Exception e) {
+            log.error("执行第 {} 节课的考勤任务时发生错误", classPeriod, e);
+        }
+    }
+
 
     /**
      * 为特定课程执行自动考勤
