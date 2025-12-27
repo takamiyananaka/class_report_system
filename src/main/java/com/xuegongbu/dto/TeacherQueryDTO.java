@@ -23,6 +23,9 @@ public class TeacherQueryDTO {
     @Schema(description = "电话号码", example = "13900139000")
     private String phone;
 
+    @Schema(description = "学院号", example = "C001")
+    private String collegeNo;
+
     @Schema(description = "页码（从1开始）", example = "1")
     private Integer pageNum = 1;
 

@@ -36,7 +36,7 @@ public class CourseScheduleController {
      * Excel导入课表
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、班级名称、星期几(1-7)、开始时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、结束时间(支持HH:mm、HH:mm:ss、H:mm、H:mm:ss格式)、教室、学期、学年、持续时间（周）")
+    @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、课程号、课序号、班级名称、星期几(1-7)、周次范围(格式：x-x周)、开始节次(1-12)、结束节次(1-12)、教室")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -192,23 +192,20 @@ public class CourseScheduleController {
         if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday() < 1 || courseSchedule.getWeekday() > 7) {
             return Result.error("星期几必须是1-7之间的数字");
         }
-        if (courseSchedule.getStartTime() == null) {
-            return Result.error("开始时间不能为空");
+        if (courseSchedule.getWeekRange() == null || courseSchedule.getWeekRange().trim().isEmpty()) {
+            return Result.error("周次范围不能为空");
         }
-        if (courseSchedule.getEndTime() == null) {
-            return Result.error("结束时间不能为空");
+        if (courseSchedule.getStartPeriod() == null || courseSchedule.getStartPeriod() < 1 || courseSchedule.getStartPeriod() > 12) {
+            return Result.error("开始节次必须是1-12之间的数字");
+        }
+        if (courseSchedule.getEndPeriod() == null || courseSchedule.getEndPeriod() < 1 || courseSchedule.getEndPeriod() > 12) {
+            return Result.error("结束节次必须是1-12之间的数字");
+        }
+        if (courseSchedule.getEndPeriod() < courseSchedule.getStartPeriod()) {
+            return Result.error("结束节次必须大于或等于开始节次");
         }
         if (courseSchedule.getClassroom() == null || courseSchedule.getClassroom().trim().isEmpty()) {
             return Result.error("教室不能为空");
-        }
-        if (courseSchedule.getSemester() == null || courseSchedule.getSemester().trim().isEmpty()) {
-            return Result.error("学期不能为空");
-        }
-        if (courseSchedule.getSchoolYear() == null || courseSchedule.getSchoolYear().trim().isEmpty()) {
-            return Result.error("学年不能为空");
-        }
-        if (courseSchedule.getDuration() == null || courseSchedule.getDuration().trim().isEmpty()) {
-            return Result.error("持续时间不能为空");
         }
         
         // ID会由MyBatis-Plus自动生成（雪花算法）

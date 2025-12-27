@@ -81,6 +81,12 @@ public class Teacher implements Serializable {
     @Size(max= 255,message="编码长度不能超过255")
     private String department;
     /**
+    * 学院号
+    */
+    @Size(max= 50,message="编码长度不能超过50")
+    @Schema(description = "学院号")
+    private String collegeNo;
+    /**
     * 状态：0-禁用，1-启用
     */
     @Schema(description = "状态：0-禁用，1-启用")
