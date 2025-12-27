@@ -139,15 +139,20 @@ ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS course_no VARCHAR(50) COMME
 ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS order_no VARCHAR(50) COMMENT '课序号';
 
 -- 修改weekday字段类型（从TINYINT改为VARCHAR）
+-- 注意：如果表中已有数据，请先备份数据
 ALTER TABLE course_schedule MODIFY COLUMN weekday VARCHAR(50) NOT NULL COMMENT '周次范围（格式：x-x周，例如：3-16周）';
 
--- 修改start_time和end_time字段为start_period和end_period
--- 注意：这需要手动迁移数据，这里仅展示结构变更
--- 如果start_time和end_time存在，需要先备份数据，然后删除旧字段，添加新字段
+-- 添加新的节次字段
+-- 注意：如果表中已有start_time和end_time数据，需要先进行数据迁移
 ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS start_period TINYINT COMMENT '开始节次（1-12）';
 ALTER TABLE course_schedule ADD COLUMN IF NOT EXISTS end_period TINYINT COMMENT '结束节次（1-12）';
 
--- 删除旧字段（请谨慎操作，确保数据已迁移）
+-- 警告：以下DROP COLUMN操作会导致数据丢失！
+-- 在执行之前，请确保：
+-- 1. 已经备份了所有相关数据
+-- 2. 已经完成了从旧字段到新字段的数据迁移
+-- 3. 已经测试验证了数据迁移的正确性
+-- 取消注释以下语句来删除旧字段：
 -- ALTER TABLE course_schedule DROP COLUMN IF EXISTS start_time;
 -- ALTER TABLE course_schedule DROP COLUMN IF EXISTS end_time;
 -- ALTER TABLE course_schedule DROP COLUMN IF EXISTS semester;

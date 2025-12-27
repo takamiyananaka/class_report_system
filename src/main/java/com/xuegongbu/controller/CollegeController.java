@@ -294,10 +294,12 @@ public class CollegeController {
         String collegeNo = getCurrentCollegeNo();
         log.info("学院{}查询教师请求，参数：{}", collegeNo, queryDTO);
         
-        // 强制添加college_no过滤条件
-        queryDTO.setCollegeNo(collegeNo);
+        // 创建新的查询DTO，添加college_no过滤条件，避免修改输入参数
+        TeacherQueryDTO internalQueryDTO = new TeacherQueryDTO();
+        BeanUtils.copyProperties(queryDTO, internalQueryDTO);
+        internalQueryDTO.setCollegeNo(collegeNo);
         
-        Page<Teacher> result = teacherService.queryPage(queryDTO);
+        Page<Teacher> result = teacherService.queryPage(internalQueryDTO);
         log.info("学院{}查询教师完成，共{}条记录，当前第{}页", collegeNo, result.getTotal(), result.getCurrent());
         return Result.success(result);
     }
