@@ -269,7 +269,12 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         //获取教师关联班级
         QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
         classQueryWrapper.eq("teacher_no",queryDTO.getTeacherNo());
+
         List<Class> classList = classService.list(classQueryWrapper);
+        if(classList.isEmpty()){
+            page.setTotal(0);
+            return page;
+        }
         List<String> classIds = classList.stream()
                 .map(Class::getId)
                 .collect(Collectors.toList());
@@ -280,6 +285,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                 .map(Course::getCourseId)
                 .collect(Collectors.toList());
         if(courseIds.isEmpty()){
+            page.setTotal(0);
             return page;
         }
         queryWrapper.in(CourseSchedule::getId, courseIds);
