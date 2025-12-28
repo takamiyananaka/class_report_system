@@ -39,7 +39,7 @@ public class Knife4jConfig {
                                 "**Sa-Token认证使用说明：**\n" +
                                 "1. 先调用 认证 接口登录获取 Token\n" +
                                 "2. 点击右上角 **Authorize** 🔓 按钮\n" +
-                                "3. 在弹出的对话框中输入 Token（不需要加 \"Bearer \" 前缀）\n" +
+                                "3. 在弹出的对话框中输入 Token（需要加 \"Bearer \" 前缀）\n" +
                                 "4. 点击 **Authorize** 确认\n" +
                                 "5. 之后所有需要认证的接口都会自动带上 Authorization Header\n\n" +
                                 "**提示：** 登录成功后，所有接口的 🔒 图标表示需要认证")

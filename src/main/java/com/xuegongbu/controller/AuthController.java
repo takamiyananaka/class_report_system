@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
@@ -70,7 +67,7 @@ public class AuthController {
     /**
      * 获取当前用户角色
      */
-    @PostMapping("/getRole")
+    @GetMapping("/getRole")
     @Operation(summary = "获取当前用户角色", description = "获取当前用户角色")
     public Result<String> getRole() {
         log.info("获取当前用户角色");
@@ -84,15 +81,11 @@ public class AuthController {
     /**
      * 获取当前用户信息
      */
-    @PostMapping("/getUserInfo")
+    @GetMapping("/getUserInfo")
     @Operation(summary = "获取当前用户信息", description = "获取当前用户信息")
-    public Result<Map<String, Object>> getUserInfo() {
+    public Result<Object> getUserInfo() {
         log.info("获取当前用户信息");
         Object UserInfo = StpUtil.getSession().get("userInfo");
-        Map<String, Object> userInfo = (Map<String, Object>) UserInfo;
-        if(userInfo == null){
-            return Result.error("用户无信息");
-        }
-        return Result.success(userInfo);
+        return Result.success(UserInfo);
     }
 }
