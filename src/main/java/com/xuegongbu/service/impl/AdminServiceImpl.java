@@ -53,7 +53,6 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         // Sa-Token 登录认证，使用管理员ID作为登录标识，并标记角色为admin，并存储完整的用户信息
         StpUtil.login(admin.getId());
         StpUtil.getSession().set("role", "admin");
-        StpUtil.getSession().set("userInfo", admin);
         String token = StpUtil.getTokenValue();
 
         // 构造用户信息（不包含密码）
@@ -64,7 +63,7 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         userInfo.put("phone", admin.getPhone());
         userInfo.put("email", admin.getEmail());
         userInfo.put("role", "admin");
-
+        StpUtil.getSession().set("userInfo", userInfo);
         log.info("管理员登录成功: {}", admin.getUsername());
         return new LoginResponse(token, userInfo);
     }
