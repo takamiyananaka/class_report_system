@@ -35,6 +35,15 @@ public class Alert implements Serializable {
     @Schema(description = "课程ID")
     private String courseId;
     
+
+    /**
+    * 班级ID
+    */
+    @NotBlank(message="[班级ID]不能为空")
+    @Size(max= 100,message="编码长度不能超过100")
+    @Schema(description = "班级ID")
+    private String classId;
+    
     /**
     * 考勤记录ID
     */

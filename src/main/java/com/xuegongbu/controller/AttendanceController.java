@@ -4,14 +4,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.dto.AttendanceQueryDTO;
-import com.xuegongbu.service.AttendanceService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.xuegongbu.service.AttendanceService;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.session.SaSession;
+import com.xuegongbu.domain.Teacher;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -66,7 +71,7 @@ public class AttendanceController {
         return Result.success(attendance);
     }
 
-    /**
+     /**
      * 根据ID查询考勤记录
      */
     @GetMapping("/get/{id}")
@@ -149,5 +154,65 @@ public class AttendanceController {
         attendanceService.removeByIds(ids);
         log.info("批量删除考勤记录完成");
         return Result.success("批量删除成功");
+    }
+
+    /**
+     * 按老师查询最近一周的考勤率（考勤率数组，七天）
+     */
+    @GetMapping("/queryAttendanceRateByTeacher")
+    @Operation(summary = "按老师查询其所有班级的最近一周的总平均考勤率", description = "按老师查询最近一周的考勤率")
+    public Result<List<Double>> queryAttendanceRateByTeacher() {
+
+        log.info("按老师查询其所有班级的最近一周的平均考勤率");
+        String teacherNo = getTeacherNoFromSession() ;
+        List<Double> attendanceRateList = attendanceService.queryAttendanceRateByTeacher(teacherNo);
+        log.info("按老师查询其所有班级的最近一周的平均考勤率完成");
+        return Result.success(attendanceRateList);
+    }
+
+    /**
+     * 按班级查询最近一周的考勤率（考勤率数组，七天）
+     */
+    @GetMapping("/queryAttendanceRateByClass/{id}")
+    @Operation(summary = "按班级查询最近一周的考勤率", description = "按班级查询最近一周的考勤率")
+    public Result<List<Double>> queryAttendanceRateByClass(@Parameter(description = "班级id") @PathVariable String id) {
+        log.info("按班级查询最近一周的考勤率");
+        List<Double> attendanceRateList = attendanceService.queryAttendanceRateByClass(id);
+        log.info("按班级查询最近一周的考勤率完成");
+        return Result.success(attendanceRateList);
+    }
+
+    /**
+     * 获取老师工号
+     */
+    private String getTeacherNoFromSession() {
+        if (!StpUtil.isLogin()) {
+            throw new RuntimeException("用户未登录");
+        }
+
+        String teacherNo = null;
+        try {
+            // 优先从会话中获取完整的用户信息
+            SaSession session = StpUtil.getSession();
+            Teacher teacher = (Teacher) session.get("userInfo");
+            if (teacher != null) {
+                teacherNo = teacher.getTeacherNo();
+            } else {
+                // 回退到使用登录ID作为教师工号（如果登录ID就是教师工号）
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
+                }
+            }
+        } catch (Exception e) {
+            log.error("无法解析当前登录教师工号: {}", e.getMessage());
+            throw new RuntimeException("无法获取当前登录用户信息");
+        }
+
+        if (teacherNo == null) {
+            throw new RuntimeException("无法获取当前登录用户信息");
+        }
+
+        return teacherNo;
     }
 }
