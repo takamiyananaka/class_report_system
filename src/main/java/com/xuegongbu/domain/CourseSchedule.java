@@ -25,14 +25,7 @@ public class CourseSchedule implements Serializable {
     @Schema(description = "主键ID")
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-    
-    /**
-    * 课程名称
-    */
-    @NotBlank(message="[课程名称]不能为空")
-    @Size(max= 100,message="编码长度不能超过100")
-    @Schema(description = "课程名称")
-    private String courseName;
+
 
     /**
     * 课程号
@@ -49,26 +42,26 @@ public class CourseSchedule implements Serializable {
     private String orderNo;
 
     /**
-    * 教师工号
+    * 课程名称
     */
-    @NotNull(message="[教师工号]不能为空")
-    @Schema(description = "教师工号")
-    private String teacherNo;
+    @NotBlank(message="[课程名称]不能为空")
+    @Size(max= 100,message="编码长度不能超过100")
+    @Schema(description = "课程名称")
+    private String courseName;
 
     /**
-    * 班级名称
-    */
-    @NotBlank(message="[班级名称]不能为空")
-    @Size(max= 100,message="编码长度不能超过100")
-    @Schema(description = "班级名称")
-    private String className;
+     * 星期几（汉字：星期一至星期日）
+     */
+    @NotBlank(message="[星期几]不能为空")
+    @Size(max= 10,message="编码长度不能超过10")
+    @Schema(description = "星期几（汉字：星期一至星期日）")
+    private String weekday;
     
     /**
-    * 星期几（1-7）
+    * 预到人数
     */
-    @NotNull(message="[星期几]不能为空")
-    @Schema(description = "星期几（1-7）")
-    private Integer weekday;
+    @Schema(description = "预到人数")
+    private Integer expectedCount;
     
     /**
     * 周次范围（格式：x-x周，例如：3-16周）

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -91,6 +92,16 @@ public class Teacher implements Serializable {
     */
     @Schema(description = "状态：0-禁用，1-启用")
     private Integer status;
+    /**
+    * 考勤预警阈值
+    */
+    @Schema(description = "考勤预警阈值（如0.90表示90%）")
+    private BigDecimal attendanceThreshold;
+    /**
+    * 是否开启邮件通知：0-否，1-是
+    */
+    @Schema(description = "是否开启邮件通知：0-否，1-是")
+    private Integer enableEmailNotification;
     /**
     * 最后登录时间
     */
