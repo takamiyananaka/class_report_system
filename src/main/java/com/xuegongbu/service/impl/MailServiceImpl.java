@@ -2,14 +2,14 @@ package com.xuegongbu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xuegongbu.domain.Alert;
+import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.AlertMapper;
+import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.MailService;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,9 +22,13 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -37,6 +41,9 @@ public class MailServiceImpl implements MailService {
     private CourseScheduleMapper courseScheduleMapper;
     
     @Autowired
+    private ClassMapper classMapper;
+    
+    @Autowired
     private TeacherMapper teacherMapper;
 
     @Value("${spring.mail.username}")
@@ -47,7 +54,7 @@ public class MailServiceImpl implements MailService {
     @Override
     @Async
     @Retryable(value = {MessagingException.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000, multiplier = 2))
-    public void sendAlertNotification(Alert alert) {
+    public void sendAlertNotification(Alert alert,Teacher  teacher) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -55,14 +62,9 @@ public class MailServiceImpl implements MailService {
             // 获取课程信息
             CourseSchedule course = courseScheduleMapper.selectById(alert.getCourseId());
             
-            // 获取教师信息
-            Teacher teacher = null;
-            if (course != null) {
-                LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(Teacher::getTeacherNo, course.getTeacherNo());
-                teacher = teacherMapper.selectOne(queryWrapper);
-            }
-            
+            // 获取班级信息
+            Class alertClass = classMapper.selectById(alert.getClassId());
+
             // 设置邮件内容
             helper.setFrom(fromEmail);
             // 暂时使用固定邮箱
@@ -70,11 +72,12 @@ public class MailServiceImpl implements MailService {
             helper.setSubject("课程考勤预警通知 - " + (course != null ? course.getCourseName() : "未知课程"));
             
             // 使用新模板生成邮件内容
-            String content = generateEmailContent(alert, course, teacher);
+            String content = generateEmailContent(alert, course, alertClass, teacher);
             helper.setText(content, true);
             
             mailSender.send(mimeMessage);
-            log.info("成功发送预警邮件通知，课程ID: {}, 预警级别: {}", alert.getCourseId(), alert.getAlertLevel());
+            log.info("成功发送预警邮件通知，课程ID: {}, 班级ID: {}, 预警级别: {}", 
+                    alert.getCourseId(), alert.getClassId(), alert.getAlertLevel());
             //更新预警状态为已发送
             alert.setNotifyStatus(1);
             alert.setNotifyTime(LocalDateTime.now());
@@ -88,7 +91,7 @@ public class MailServiceImpl implements MailService {
     /**
      * 使用精美模板生成邮件内容
      */
-    private String generateEmailContent(Alert alert, CourseSchedule course, Teacher teacher) {
+    private String generateEmailContent(Alert alert, CourseSchedule course, Class alertClass, Teacher teacher) {
         try {
             // 读取模板文件
             ClassPathResource resource = new ClassPathResource("templates/alert-notification.html");
@@ -97,6 +100,7 @@ public class MailServiceImpl implements MailService {
             // 替换模板中的占位符
             String content = template
                 .replace("{{courseName}}", course != null ? course.getCourseName() : "未知课程")
+                .replace("{{className}}", alertClass != null ? alertClass.getClassName() : "未知班级")
                 .replace("{{teacherName}}", teacher != null ? teacher.getRealName() : "未知教师")
                 .replace("{{expectedCount}}", alert.getExpectedCount() != null ? alert.getExpectedCount().toString() : "N/A")
                 .replace("{{actualCount}}", alert.getActualCount() != null ? alert.getActualCount().toString() : "N/A");
@@ -170,18 +174,19 @@ public class MailServiceImpl implements MailService {
         } catch (Exception e) {
             log.error("生成邮件内容失败，使用默认模板: {}", e.getMessage(), e);
             // 出现异常时回退到原来的简单模板
-            return generateFallbackContent(alert, course, teacher);
+            return generateFallbackContent(alert, course, alertClass, teacher);
         }
     }
     
     /**
      * 回退到原来的简单模板
      */
-    private String generateFallbackContent(Alert alert, CourseSchedule course, Teacher teacher) {
+    private String generateFallbackContent(Alert alert, CourseSchedule course, Class alertClass, Teacher teacher) {
         StringBuilder content = new StringBuilder();
         content.append("<html><body>");
         content.append("<h2>课程考勤预警通知</h2>");
         content.append("<p>课程名称: ").append(course != null ? course.getCourseName() : "未知课程").append("</p>");
+        content.append("<p>班级名称: ").append(alertClass != null ? alertClass.getClassName() : "未知班级").append("</p>");
         content.append("<p>授课教师: ").append(teacher != null ? teacher.getRealName() : "未知教师").append("</p>");
         
         if (course != null) {
