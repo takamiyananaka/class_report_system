@@ -2,11 +2,14 @@ package com.xuegongbu.service.impl;
 
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.Course;
@@ -24,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +38,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     
     @Autowired
     private CourseService courseService;
+    @Autowired
+    private ClassMapper classMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
@@ -256,14 +263,60 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
         int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
         Page<CourseSchedule> page = new Page<>(pageNum, pageSize);
-        
+
         // 构建查询条件
         LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
-        
+        //获取教师关联班级
+        QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
+        classQueryWrapper.eq("teacher_no",queryDTO.getTeacherNo());
+        List<Class> classList = classService.list(classQueryWrapper);
+        List<String> classIds = classList.stream()
+                .map(Class::getId)
+                .collect(Collectors.toList());
+        LambdaQueryWrapper<Course> courseQueryWrapper = new LambdaQueryWrapper<>();
+        courseQueryWrapper.in(Course::getClassId, classIds);
+        List<Course> courseList = courseService.list(courseQueryWrapper);
+        List<String> courseIds = courseList.stream()
+                .map(Course::getCourseId)
+                .collect(Collectors.toList());
+        queryWrapper.in(CourseSchedule::getId, courseIds);
         // 课程名称条件（模糊查询）
         if (!isBlank(queryDTO.getCourseName())) {
             queryWrapper.like(CourseSchedule::getCourseName, queryDTO.getCourseName().trim());
         }
+
+        // 班级名称条件（模糊查询）
+        if (!isBlank(queryDTO.getClassName())) {
+            // 通过班级名称获取班级ID列表
+            LambdaQueryWrapper<Class> classQueryWrapper1 = new LambdaQueryWrapper<>();
+            classQueryWrapper1.like(Class::getClassName, queryDTO.getClassName().trim());
+            List<Class> classList1 = classService.list(classQueryWrapper);
+            if (!classList.isEmpty()) {
+                // 获取班级ID列表
+                List<String> classIds1 = classList.stream()
+                        .map(Class::getId)
+                        .collect(Collectors.toList());
+
+                // 通过课程关联表查询对应的课程ID
+                LambdaQueryWrapper<Course> courseQueryWrapper1 = new LambdaQueryWrapper<>();
+                courseQueryWrapper.in(Course::getClassId, classIds);
+                List<Course> courseList1 = courseService.list(courseQueryWrapper);
+                if (!courseList.isEmpty()) {
+                   List<String> courseIds1 = courseList.stream()
+                            .map(Course::getCourseId)
+                            .collect(Collectors.toList());
+                            queryWrapper.in(CourseSchedule::getId, courseIds);
+                } else {
+                    // 如果没有找到对应的课程，返回空结果
+                    queryWrapper.apply("1 = 0"); // 一个永远为false的条件
+                }
+            } else {
+                // 如果没有找到对应的班级，返回空结果
+                queryWrapper.apply("1 = 0"); // 一个永远为false的条件
+            }
+        }
+
+
         
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
@@ -308,5 +361,40 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             log.error("生成课表导入模板失败", e);
             throw new com.xuegongbu.common.exception.BusinessException("生成课表导入模板失败: " + e.getMessage());
         }
+    }
+
+    @Override
+    public Result<String> addClass(List<String> classList,String courseId) {
+        QueryWrapper<Class> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("className", classList);
+        List<Class> classes = classMapper.selectList(queryWrapper);
+        int successCount = classes.size();
+        int failCount = classList.size() - successCount;
+        for(Class clazz:classes){
+            Course course = new Course();
+            course.setCourseId(courseId);
+            course.setClassId(clazz.getId());
+            courseService.save(course);
+        }
+        return Result.success(String.format("成功添加%d个班级，失败%d个", successCount, failCount));
+    }
+
+    /**
+     * 根据班级ID查询课表
+     * @param id 班级ID
+     * @return 课表列表
+     */
+    @Override
+    public Page<CourseSchedule> queryByClass(String id, int pageNum, int pageSize) {
+        Page<CourseSchedule> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<CourseSchedule> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<Course> courseQueryWrapper = new QueryWrapper<>();
+        courseQueryWrapper.eq("class_id", id);
+        List<Course> courseList = courseService.list(courseQueryWrapper);
+        List<String> courseIds = courseList.stream()
+                .map(Course::getCourseId)
+                .collect(Collectors.toList());
+        queryWrapper.in("course_id", courseIds);
+        return this.page(page, queryWrapper);
     }
 }

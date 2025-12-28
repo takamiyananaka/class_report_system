@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.dto.CourseScheduleWithClassIdQueryDTO;
 import com.xuegongbu.service.CourseScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.session.SaSession;
@@ -87,7 +89,7 @@ public class CourseScheduleController {
      * 默认查询当前登录教师的课表，也可以通过参数指定教师ID或班级名称查询
      */
     @PostMapping("/query")
-    @Operation(summary = "分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。可通过teacherNo、className等参数进行过滤查询")
+    @Operation(summary = "按老师分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。教师工号默认从后端获取")
     public Result<Page<CourseSchedule>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
         // 如果没有指定教师工号，则使用当前登录教师的工号
         if (queryDTO.getTeacherNo() == null) {
@@ -126,6 +128,16 @@ public class CourseScheduleController {
         return Result.success(result);
     }
 
+    /**
+     * 按班分页查询课表
+     */
+    @PostMapping("/queryByClass")
+    @Operation(summary = "按班分页查询课表", description = "按班分页查询课表,id为班级id")
+    public Result<Page<CourseSchedule>> queryByClass(@RequestBody CourseScheduleWithClassIdQueryDTO queryDTO) {
+        Page<CourseSchedule> result = courseScheduleService.queryByClass(queryDTO.getClassId(),queryDTO.getPageNum(),queryDTO.getPageSize());
+        log.info("查询课表完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
+        return Result.success(result);
+    }
 
     /**
      * 下载课表导入模板
@@ -144,41 +156,25 @@ public class CourseScheduleController {
     }
 
     /**
+     * 为课程添加班级，以列表的形式
+     */
+    @PostMapping("/addClass/{id}")
+    @Operation(summary = "为课程添加班级", description = "为课程添加班级，以列表的形式")
+    public Result<String> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级列表") @RequestBody List<String> classList, @Parameter(description = "课程ID") @PathVariable String id) {
+        log.info("为课程添加班级，班级列表：{}", classList);
+       courseScheduleService.addClass(classList,id);
+        log.info("为课程添加班级完成");
+        return Result.success("添加班级成功");
+    }
+
+    /**
      * 创建课表
      */
     @PostMapping("/add")
     @Operation(summary = "创建课表", description = "教师创建新课表，教师工号从登录状态获取，ID自动生成")
     public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("创建课表，课表信息：{}", courseSchedule);
-        
-        // 获取当前登录教师的工号
-        if (!StpUtil.isLogin()) {
-            return Result.error("未登录或登录已过期，请重新登录");
-        }
-        
-        String teacherNo = null;
-        try {
-            // 优先从会话中获取完整的用户信息
-            SaSession session = StpUtil.getSession();
-            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
-            if (teacher != null) {
-                teacherNo = teacher.getTeacherNo();
-            } else {
-                // 回退到原来的逻辑
-                Object loginId = StpUtil.getLoginId();
-                if (loginId instanceof String) {
-                    teacherNo = (String) loginId;
-                }
-            }
-        } catch (Exception e) {
-            log.error("无法解析当前登录教师工号: {}", e.getMessage());
-            return Result.error("无法获取当前登录用户信息");
-        }
-        
-        if (teacherNo == null) {
-            return Result.error("无法获取当前登录用户信息");
-        }
-        
+
         // 验证必填字段
         if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
             return Result.error("课程名称不能为空");
@@ -229,35 +225,7 @@ public class CourseScheduleController {
         if (!isValidWeekday(courseSchedule.getWeekday())) {
             return Result.error("星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日");
         }
-        
-        // 获取当前登录教师的工号
-        if (!StpUtil.isLogin()) {
-            return Result.error("未登录或登录已过期，请重新登录");
-        }
-        
-        String teacherNo = null;
-        try {
-            // 优先从会话中获取完整的用户信息
-            SaSession session = StpUtil.getSession();
-            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
-            if (teacher != null) {
-                teacherNo = teacher.getTeacherNo();
-            } else {
-                // 回退到原来的逻辑
-                Object loginId = StpUtil.getLoginId();
-                if (loginId instanceof String) {
-                    teacherNo = (String) loginId;
-                }
-            }
-        } catch (Exception e) {
-            log.error("无法解析当前登录教师工号: {}", e.getMessage());
-            return Result.error("无法获取当前登录用户信息");
-        }
-        
-        if (teacherNo == null) {
-            return Result.error("无法获取当前登录用户信息");
-        }
-        
+
         // 根据课程名称查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();

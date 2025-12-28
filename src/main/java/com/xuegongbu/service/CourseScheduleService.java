@@ -2,11 +2,13 @@ package com.xuegongbu.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -32,4 +34,8 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @param response HTTP响应对象
      */
     void downloadTemplate(jakarta.servlet.http.HttpServletResponse response);
+
+    Result<String> addClass(List<String> classList, String courseId);
+
+    Page<CourseSchedule> queryByClass(String id,int pageNum,int pageSize);
 }
