@@ -43,17 +43,11 @@ public class TeacherController {
         if (!StpUtil.isLogin()) {
             throw new com.xuegongbu.common.exception.BusinessException("未登录或登录已过期，请重新登录");
         }
-
-        try {
-            Object loginId = StpUtil.getLoginId();
-            if (loginId instanceof String) {
-                return (String) loginId;
-            }
-            throw new com.xuegongbu.common.exception.BusinessException("无法获取当前登录学院信息");
-        } catch (Exception e) {
-            log.error("无法解析当前登录学院信息: {}", e.getMessage());
-            throw new com.xuegongbu.common.exception.BusinessException("无法获取当前登录学院信息");
+        College college = (College) StpUtil.getSession().get("collegeInfo");
+        if(college == null){
+            throw new com.xuegongbu.common.exception.BusinessException("当前用户未登录或登录已过期，请重新登录");
         }
+        return college.getCollegeNo();
     }
 
     /**
