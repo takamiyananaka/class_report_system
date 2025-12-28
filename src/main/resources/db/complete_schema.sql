@@ -547,6 +547,11 @@ INSERT INTO teacher (id, username, password, real_name, teacher_no, phone, email
 VALUES ('1000000000000000002', 'teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1)
 ON DUPLICATE KEY UPDATE username = username;
 
+-- 插入测试学院管理员（用户名：collegeAdmin，密码：123456）
+INSERT INTO college_admin (id, username, password, real_name, phone, email, college_id)
+VALUES ('1000000000000000003', 'collegeAdmin', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '学院管理员', '13700137000', 'collegeadmin@example.com', '1')
+ON DUPLICATE KEY UPDATE username = username;
+
 -- ====================================
 -- 说明
 -- ====================================

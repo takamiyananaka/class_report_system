@@ -39,18 +39,11 @@ public class AlertController {
             return Result.error("用户未认证");
         }
 
-        // 优先从会话中获取完整的用户信息
         String teacherNo = null;
         try {
-            SaSession session = StpUtil.getSession();
-            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
-            if (teacher != null) {
-                teacherNo = teacher.getTeacherNo();
-            } else {
-                Object loginId = StpUtil.getLoginId();
-                if (loginId instanceof String) {
-                    teacherNo = (String) loginId;
-                }
+            Object loginId = StpUtil.getLoginId();
+            if (loginId instanceof String) {
+                teacherNo = (String) loginId;
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());

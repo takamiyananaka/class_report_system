@@ -48,14 +48,6 @@ public class ClassController {
                 return null;
             }
 
-            // 从会话中获取完整的用户信息
-            SaSession session = StpUtil.getSession();
-            Teacher teacher = (Teacher) session.get("userInfo");
-            if (teacher != null) {
-                return teacher.getTeacherNo();
-            }
-            
-            // 如果会话中没有用户信息
             Object loginId = StpUtil.getLoginId();
             if (loginId instanceof String) {
                 return (String) loginId;

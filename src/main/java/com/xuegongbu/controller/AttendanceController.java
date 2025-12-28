@@ -192,17 +192,9 @@ public class AttendanceController {
 
         String teacherNo = null;
         try {
-            // 优先从会话中获取完整的用户信息
-            SaSession session = StpUtil.getSession();
-            Teacher teacher = (Teacher) session.get("userInfo");
-            if (teacher != null) {
-                teacherNo = teacher.getTeacherNo();
-            } else {
-                // 回退到使用登录ID作为教师工号（如果登录ID就是教师工号）
-                Object loginId = StpUtil.getLoginId();
-                if (loginId instanceof String) {
-                    teacherNo = (String) loginId;
-                }
+            Object loginId = StpUtil.getLoginId();
+            if (loginId instanceof String) {
+                teacherNo = (String) loginId;
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());

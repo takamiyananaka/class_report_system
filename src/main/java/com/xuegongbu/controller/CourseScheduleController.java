@@ -53,17 +53,9 @@ public class CourseScheduleController {
             
             String teacherNo = null;
             try {
-                // 优先从会话中获取完整的用户信息
-                SaSession session = StpUtil.getSession();
-                com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
-                if (teacher != null) {
-                    teacherNo = teacher.getTeacherNo();
-                } else {
-                    // 回退到原来的逻辑
-                    Object loginId = StpUtil.getLoginId();
-                    if (loginId instanceof String) {
-                        teacherNo = (String) loginId;
-                    }
+                Object loginId = StpUtil.getLoginId();
+                if (loginId instanceof String) {
+                    teacherNo = (String) loginId;
                 }
             } catch (Exception e) {
                 log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -95,19 +87,10 @@ public class CourseScheduleController {
         if (queryDTO.getTeacherNo() == null) {
             if (StpUtil.isLogin()) {
                 try {
-                    // 优先从会话中获取完整的用户信息
-                    SaSession session = StpUtil.getSession();
-                    com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
                     String currentTeacherNo = null;
-                    
-                    if (teacher != null) {
-                        currentTeacherNo = teacher.getTeacherNo();
-                    } else {
-                        // 回退到原来的逻辑
-                        Object loginId = StpUtil.getLoginId();
-                        if (loginId instanceof String) {
-                            currentTeacherNo = (String) loginId;
-                        }
+                    Object loginId = StpUtil.getLoginId();
+                    if (loginId instanceof String) {
+                        currentTeacherNo = (String) loginId;
                     }
                     
                     if (currentTeacherNo != null) {
@@ -261,17 +244,9 @@ public class CourseScheduleController {
         
         String teacherNo = null;
         try {
-            // 优先从会话中获取完整的用户信息
-            SaSession session = StpUtil.getSession();
-            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
-            if (teacher != null) {
-                teacherNo = teacher.getTeacherNo();
-            } else {
-                // 回退到原来的逻辑
-                Object loginId = StpUtil.getLoginId();
-                if (loginId instanceof String) {
-                    teacherNo = (String) loginId;
-                }
+            Object loginId = StpUtil.getLoginId();
+            if (loginId instanceof String) {
+                teacherNo = (String) loginId;
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());
@@ -314,17 +289,9 @@ public class CourseScheduleController {
         
         String teacherNo = null;
         try {
-            // 优先从会话中获取完整的用户信息
-            SaSession session = StpUtil.getSession();
-            com.xuegongbu.domain.Teacher teacher = (com.xuegongbu.domain.Teacher) session.get("userInfo");
-            if (teacher != null) {
-                teacherNo = teacher.getTeacherNo();
-            } else {
-                // 回退到原来的逻辑
-                Object loginId = StpUtil.getLoginId();
-                if (loginId instanceof String) {
-                    teacherNo = (String) loginId;
-                }
+            Object loginId = StpUtil.getLoginId();
+            if (loginId instanceof String) {
+                teacherNo = (String) loginId;
             }
         } catch (Exception e) {
             log.error("无法解析当前登录教师工号: {}", e.getMessage());

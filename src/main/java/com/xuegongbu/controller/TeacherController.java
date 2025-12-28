@@ -45,10 +45,9 @@ public class TeacherController {
         }
 
         try {
-            SaSession session = StpUtil.getSession();
-            College college = (College) session.get("userInfo");
-            if (college != null && college.getCollegeNo() != null) {
-                return college.getCollegeNo();
+            Object loginId = StpUtil.getLoginId();
+            if (loginId instanceof String) {
+                return (String) loginId;
             }
             throw new com.xuegongbu.common.exception.BusinessException("无法获取当前登录学院信息");
         } catch (Exception e) {
