@@ -143,12 +143,13 @@ public class AttendanceTask {
             // 获取当前时间信息
             LocalDateTime now = LocalDateTime.now();
             DayOfWeek dayOfWeek = now.getDayOfWeek();
+            String weekdayStr = ClassTimeUtil.convertDayOfWeekToChinese(dayOfWeek);
 
             log.info("当前时间 {} 是第 {} 节课的第5分钟，开始查询课程", now.toLocalTime(), classPeriod);
 
             // 查询当前正在进行的课程（根据星期几和当前课程节次的时间范围）
             QueryWrapper<CourseSchedule> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("weekday", dayOfWeek.getValue())
+            queryWrapper.eq("weekday", weekdayStr)
                     .eq("start_time", ClassTimeUtil.getStartTimeAsLocalTime(classPeriod))
                     .eq("end_time", ClassTimeUtil.getEndTimeAsLocalTime(classPeriod));
 
@@ -170,7 +171,6 @@ public class AttendanceTask {
             log.error("执行第 {} 节课的考勤任务时发生错误", classPeriod, e);
         }
     }
-
 
     /**
      * 为特定课程执行自动考勤

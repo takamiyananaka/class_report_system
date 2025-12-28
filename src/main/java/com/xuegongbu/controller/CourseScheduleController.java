@@ -179,18 +179,15 @@ public class CourseScheduleController {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 设置教师工号
-        courseSchedule.setTeacherNo(teacherNo);
-        
         // 验证必填字段
         if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
             return Result.error("课程名称不能为空");
         }
-        if (courseSchedule.getClassName() == null || courseSchedule.getClassName().trim().isEmpty()) {
-            return Result.error("班级名称不能为空");
+        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday().trim().isEmpty()) {
+            return Result.error("星期几不能为空");
         }
-        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday() < 1 || courseSchedule.getWeekday() > 7) {
-            return Result.error("星期几必须是1-7之间的数字");
+        if (!isValidWeekday(courseSchedule.getWeekday())) {
+            return Result.error("星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日");
         }
         if (courseSchedule.getWeekRange() == null || courseSchedule.getWeekRange().trim().isEmpty()) {
             return Result.error("周次范围不能为空");
@@ -220,14 +217,17 @@ public class CourseScheduleController {
     @PutMapping("/update")
     @Operation(summary = "更新课表", description = "教师更新课表信息，通过课程名称和班级名称定位，只能更新自己的课表")
     public Result<String> updateCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
-        log.info("更新课表，课程名称：{}，班级名称：{}，课表信息：{}", 
-                courseSchedule.getCourseName(), courseSchedule.getClassName(), courseSchedule);
+        log.info("更新课表，课程名称：{}，课表信息：{}", 
+                courseSchedule.getCourseName(), courseSchedule);
         
         if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
             return Result.error("课程名称不能为空");
         }
-        if (courseSchedule.getClassName() == null || courseSchedule.getClassName().trim().isEmpty()) {
-            return Result.error("班级名称不能为空");
+        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday().trim().isEmpty()) {
+            return Result.error("星期几不能为空");
+        }
+        if (!isValidWeekday(courseSchedule.getWeekday())) {
+            return Result.error("星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日");
         }
         
         // 获取当前登录教师的工号
@@ -258,12 +258,10 @@ public class CourseScheduleController {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 根据课程名称、班级名称和教师工号查询课表
+        // 根据课程名称查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim())
-                   .eq(CourseSchedule::getClassName, courseSchedule.getClassName().trim())
-                   .eq(CourseSchedule::getTeacherNo, teacherNo);
+        queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim());
         
         CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
         if (existing == null) {
@@ -272,7 +270,6 @@ public class CourseScheduleController {
         
         // 设置ID以便更新
         courseSchedule.setId(existing.getId());
-        courseSchedule.setTeacherNo(teacherNo);
         
         courseScheduleService.updateById(courseSchedule);
         log.info("更新课表完成");
@@ -317,12 +314,10 @@ public class CourseScheduleController {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 根据课程名称、班级名称和教师工号查询课表
+        // 根据课程名称查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
-                   .eq(CourseSchedule::getClassName, className.trim())
-                   .eq(CourseSchedule::getTeacherNo, teacherNo);
+        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim());
         
         CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
         if (existing == null) {
@@ -372,12 +367,10 @@ public class CourseScheduleController {
             return Result.error("无法获取当前登录用户信息");
         }
         
-        // 根据课程名称、班级名称和教师工号查询课表
+        // 根据课程名称查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim())
-                   .eq(CourseSchedule::getClassName, className.trim())
-                   .eq(CourseSchedule::getTeacherNo, teacherNo);
+        queryWrapper.eq(CourseSchedule::getCourseName, courseName.trim());
         
         CourseSchedule courseSchedule = courseScheduleService.getOne(queryWrapper);
         if (courseSchedule == null) {
@@ -442,5 +435,23 @@ public class CourseScheduleController {
         courseScheduleService.removeById(id);
         log.info("删除课表完成");
         return Result.success("删除成功");
+    }
+
+    /**
+     * 验证星期几格式是否正确
+     * @param weekday 星期几（汉字格式）
+     * @return 是否有效
+     */
+    private boolean isValidWeekday(String weekday) {
+        if (weekday == null) {
+            return false;
+        }
+        String[] validWeekdays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
+        for (String validWeekday : validWeekdays) {
+            if (validWeekday.equals(weekday.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

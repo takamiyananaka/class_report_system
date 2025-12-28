@@ -3,13 +3,10 @@ package com.xuegongbu.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.xuegongbu.domain.Alert;
-import com.xuegongbu.domain.Attendance;
-import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.domain.*;
+import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.AlertQueryDTO;
-import com.xuegongbu.mapper.AlertMapper;
-import com.xuegongbu.mapper.AttendanceMapper;
-import com.xuegongbu.mapper.CourseScheduleMapper;
+import com.xuegongbu.mapper.*;
 import com.xuegongbu.service.AlertService;
 import com.xuegongbu.service.MailService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +28,11 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
     private MailService mailService;
     @Autowired
     private AttendanceMapper attendanceMapper;
+    @Autowired
+    private ClassMapper classMapper;
+    
+    @Autowired
+    private TeacherMapper teacherMapper;
 
     /**
      * 分页查询教师关联的预警记录（支持日期查询）
@@ -45,26 +47,27 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
         int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
         Page<Alert> page = new Page<>(pageNum, pageSize);
         
-        // 根据教师ID查询其关联的课程安排
-        QueryWrapper<CourseSchedule> courseQueryWrapper = new QueryWrapper<>();
-        courseQueryWrapper.eq("teacher_no", teacherNo);
+        List<String> classIds = new java.util.ArrayList<>();
         
-        // 提取课程ID列表
-        List<CourseSchedule> courses = courseScheduleMapper.selectList(courseQueryWrapper);
+
+        if (queryDTO.getClassIds() != null && !queryDTO.getClassIds().isEmpty()) {
+            // 如果指定了班级ID数组，根据班级ID获取课程ID
+            classIds =queryDTO.getClassIds();
+        } else {
+            // 如果没有指定班级ID，则根据教师工号获取班级ID
+            QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
+            classQueryWrapper.eq("teacher_no", teacherNo);
+            List<Class> classes = classMapper.selectList(classQueryWrapper);
+        }
         
-        if (courses.isEmpty()) {
+        if (classIds.isEmpty()) {
             // 如果没有课程，返回空分页结果
             return page;
         }
         
-        // 提取课程ID列表
-        List<String> courseIds = courses.stream()
-                .map(CourseSchedule::getId)
-                .toList();
-        
         // 根据课程ID列表查询预警记录
         QueryWrapper<Alert> alertQueryWrapper = new QueryWrapper<>();
-        alertQueryWrapper.in("course_id", courseIds);
+        alertQueryWrapper.in("class_id", classIds);
         
         // 添加日期查询条件
         if (queryDTO.getDate() != null) {
@@ -117,28 +120,66 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
                 // 根据不同级别设置不同的预警消息
                 String messageTemplate;
                 if (alert.getAlertLevel() == 1) {
-                    messageTemplate = "课程 %s 出勤率偏低，实到 %d 人，应到 %d 人，出勤率 %.2f%%";
+                    messageTemplate = "课程 %s (班级: %s) 出勤率偏低，实到 %d 人，应到 %d 人，出勤率 %.2f%%";
                 } else if (alert.getAlertLevel() == 2) {
-                    messageTemplate = "课程 %s 出勤率严重偏低，实到 %d 人，应到 %d 人，出勤率 %.2f%%";
+                    messageTemplate = "课程 %s (班级: %s) 出勤率严重偏低，实到 %d 人，应到 %d 人，出勤率 %.2f%%";
                 } else {
-                    messageTemplate = "课程 %s 出勤率极度偏低，实到 %d 人，应到 %d 人，出勤率 %.2f%%";
+                    messageTemplate = "课程 %s (班级: %s) 出勤率极度偏低，实到 %d 人，应到 %d 人，出勤率 %.2f%%";
                 }
                 
-                alert.setAlertMessage(String.format(messageTemplate, 
-                        course.getCourseName(), 
-                        attendance.getActualCount(), 
-                        attendance.getExpectedCount(),
-                        attendanceRate.multiply(BigDecimal.valueOf(100)).doubleValue()));
-                alert.setReadStatus(0);
-                alert.setNotifyStatus(0);
-                save(alert);
+
+                // 查询课程关联的所有班级
+                QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
+                classQueryWrapper.eq("course_id", course.getId());
+                List<Class> classList = classMapper.selectList(classQueryWrapper);
                 
-                // 直接发送邮件通知
-                mailService.sendAlertNotification(alert);
-                
-                log.info("为课程 {} 生成了{}预警记录，出勤率: {}%", course.getCourseName(), 
-                        alert.getAlertLevel() == 1 ? "低级别" : (alert.getAlertLevel() == 2 ? "中级别" : "高级别"),
-                        attendanceRate.multiply(BigDecimal.valueOf(100)).intValue());
+                // 为每个班级创建一个预警记录
+                for (Class cls : classList) {
+                    //获取班级老师
+                    QueryWrapper<Teacher> teacherQueryWrapper = new QueryWrapper<>();
+                    teacherQueryWrapper.eq("teacher_no", cls.getTeacherNo());
+                    Teacher teacher = teacherMapper.selectOne(teacherQueryWrapper);
+
+                    //创建预警记录
+                    Alert classAlert = new Alert();
+                    classAlert.setCourseId(course.getId());
+                    classAlert.setClassId(cls.getId()); // 设置班级ID
+                    classAlert.setAttendanceId(attendance.getId());
+                    classAlert.setExpectedCount(attendance.getExpectedCount());
+                    classAlert.setActualCount(attendance.getActualCount());
+                    classAlert.setAlertType(alert.getAlertType());
+                    classAlert.setAlertLevel(alert.getAlertLevel());
+                    
+                    classAlert.setAlertMessage(String.format(messageTemplate, 
+                            course.getCourseName(), 
+                            cls.getClassName(),
+                            attendance.getActualCount(), 
+                            attendance.getExpectedCount(),
+                            attendanceRate.multiply(BigDecimal.valueOf(100)).doubleValue()));
+                    classAlert.setReadStatus(0);
+                    classAlert.setNotifyStatus(0);
+                    save(classAlert);
+                    
+                    // 检查教师是否开启邮件通知
+                    Integer enableEmailNotification = teacher.getEnableEmailNotification();
+                    if (enableEmailNotification != null && enableEmailNotification == 1) {
+                        // 发送邮件通知
+                        mailService.sendAlertNotification(classAlert, teacher);
+                    } else {
+                        log.info("教师 {} 已关闭邮件通知，不发送邮件", teacher.getTeacherNo());
+                        // 更新预警状态为已发送（实际上没有发送邮件）
+                        classAlert.setNotifyStatus(1);
+                        classAlert.setNotifyTime(LocalDateTime.now());
+                        updateById(classAlert);
+                    }
+                    
+                    log.info("为课程 {} (班级: {}) 生成了{}预警记录，出勤率: {}%", course.getCourseName(),
+                            cls.getClassName(),
+                            alert.getAlertLevel() == 1 ? "低级别" : (alert.getAlertLevel() == 2 ? "中级别" : "高级别"),
+                            attendanceRate.multiply(BigDecimal.valueOf(100)).intValue());
+                }
+
+
             }
 
         } catch (Exception e) {

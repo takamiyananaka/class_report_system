@@ -8,8 +8,13 @@ import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.mapper.CourseScheduleMapper;
+import com.xuegongbu.domain.Class;
+import com.xuegongbu.domain.Course;
+import com.xuegongbu.service.ClassService;
+import com.xuegongbu.service.CourseService;
 import com.xuegongbu.service.CourseScheduleService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +28,12 @@ import java.util.Map;
 @Slf4j
 @Service
 public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper, CourseSchedule> implements CourseScheduleService {
+    
+    @Autowired
+    private ClassService classService;
+    
+    @Autowired
+    private CourseService courseService;
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
@@ -78,13 +89,13 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getClassName())) {
-                        errorMessages.add(String.format("第%d行：班级名称不能为空", i + 2));
+                    if (isBlank(dto.getWeekday())) {
+                        errorMessages.add(String.format("第%d行：星期几不能为空", i + 2));
                         failCount++;
                         continue;
                     }
-                    if (dto.getWeekday() == null || dto.getWeekday() < 1 || dto.getWeekday() > 7) {
-                        errorMessages.add(String.format("第%d行：星期几必须是1-7之间的数字", i + 2));
+                    if (!isValidWeekday(dto.getWeekday())) {
+                        errorMessages.add(String.format("第%d行：星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日", i + 2));
                         failCount++;
                         continue;
                     }
@@ -115,19 +126,70 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     }
                     
                     CourseSchedule courseSchedule = new CourseSchedule();
-                    courseSchedule.setCourseName(dto.getCourseName().trim());
+
+                    // 验证并处理班级列表
+                    String[] classArray = null;
+                    if (dto.getClassList() != null && !dto.getClassList().trim().isEmpty()) {
+                        classArray = dto.getClassList().trim().split("[,，]"); // 支持中文逗号和英文逗号分隔
+                    }
+                    
+                    if (classArray == null || classArray.length == 0) {
+                        errorMessages.add(String.format("第%d行：上课班级不能为空", i + 2));
+                        failCount++;
+                        continue;
+                    }
+                    
+                    // 验证班级是否存在
+                    List<Class> classEntities = new ArrayList<>();
+                    int totalExpectedCount = 0;
+                    for (String className : classArray) {
+                        className = className.trim();
+                        if (className.isEmpty()) {
+                            continue;
+                        }
+                        
+                        LambdaQueryWrapper<Class> classQueryWrapper = new LambdaQueryWrapper<>();
+                        classQueryWrapper.eq(Class::getClassName, className);
+                        Class classEntity = classService.getOne(classQueryWrapper);
+                        
+                        if (classEntity == null) {
+                            errorMessages.add(String.format("第%d行：班级 '%s' 不存在", i + 2, className));
+                            failCount++;
+                            continue;
+                        }
+                        
+                        classEntities.add(classEntity);
+                        totalExpectedCount += classEntity.getCount();
+                    }
+                    
+                    if (classEntities.isEmpty()) {
+                        // 如果所有班级都不存在，则跳过此行
+                        continue;
+                    }
+                    
+                    // 设置课表基本信息
                     courseSchedule.setCourseNo(isBlank(dto.getCourseNo()) ? null : dto.getCourseNo().trim());
                     courseSchedule.setOrderNo(isBlank(dto.getOrderNo()) ? null : dto.getOrderNo().trim());
-                    courseSchedule.setTeacherNo(teacherNo); // 使用当前登录教师的工号
-                    courseSchedule.setClassName(dto.getClassName().trim());
-                    courseSchedule.setWeekday(dto.getWeekday());
+                    courseSchedule.setCourseName(dto.getCourseName().trim());
+                    courseSchedule.setWeekday(dto.getWeekday().trim());
                     courseSchedule.setWeekRange(dto.getWeekRange().trim());
                     courseSchedule.setStartPeriod(dto.getStartPeriod());
                     courseSchedule.setEndPeriod(dto.getEndPeriod());
                     courseSchedule.setClassroom(dto.getClassroom().trim());
+                    courseSchedule.setExpectedCount(totalExpectedCount); // 设置预到人数为所有班级人数之和
                     
-                    courseScheduleList.add(courseSchedule);
-                    successCount++;
+                    // 先保存课表获取ID
+                    this.save(courseSchedule);
+                    
+                    // 保存课程与班级的关联关系
+                    for (Class classEntity : classEntities) {
+                        Course course = new Course();
+                        course.setCourseId(courseSchedule.getId()); // 使用课表ID作为课程ID
+                        course.setClassId(classEntity.getId());
+                        courseService.save(course);
+                    }
+                    
+                    successCount++; // 现在可以增加成功计数
                 } catch (Exception e) {
                     log.error("处理第{}行数据时出错: {}", i + 2, e.getMessage(), e);
                     errorMessages.add(String.format("第%d行：%s", i + 2, e.getMessage()));
@@ -135,10 +197,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                 }
             }
             
-            // 批量保存
-            if (!courseScheduleList.isEmpty()) {
-                this.saveBatch(courseScheduleList);
-            }
+            // 由于每个课表都需要单独处理关联关系，所以不需要批量保存courseScheduleList
+            // 课表已经在循环中单独保存了
             
             log.info("导入完成，成功：{}条，失败：{}条", successCount, failCount);
             
@@ -172,6 +232,24 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         return str == null || str.trim().isEmpty();
     }
     
+    /**
+     * 验证星期几格式是否正确
+     * @param weekday 星期几（汉字格式）
+     * @return 是否有效
+     */
+    private boolean isValidWeekday(String weekday) {
+        if (weekday == null) {
+            return false;
+        }
+        String[] validWeekdays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
+        for (String validWeekday : validWeekdays) {
+            if (validWeekday.equals(weekday.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     @Override
     public Page<CourseSchedule> queryPage(CourseScheduleQueryDTO queryDTO) {
         // 设置分页参数
@@ -181,16 +259,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         
         // 构建查询条件
         LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
-        
-        // 教师工号条件
-        if (!isBlank(queryDTO.getTeacherNo())) {
-            queryWrapper.eq(CourseSchedule::getTeacherNo, queryDTO.getTeacherNo().trim());
-        }
-        
-        // 班级名称条件（模糊查询）
-        if (!isBlank(queryDTO.getClassName())) {
-            queryWrapper.like(CourseSchedule::getClassName, queryDTO.getClassName().trim());
-        }
         
         // 课程名称条件（模糊查询）
         if (!isBlank(queryDTO.getCourseName())) {
@@ -221,12 +289,12 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setCourseName("高等数学");
             example.setCourseNo("MATH101");
             example.setOrderNo("01");
-            example.setClassName("25计算机类-1班");
-            example.setWeekday(1); // 星期一
+            example.setWeekday("星期一"); // 星期一（汉字格式）
             example.setWeekRange("3-16周"); // 周次范围
             example.setStartPeriod(1);
             example.setEndPeriod(2);
             example.setClassroom("成都校区/思学楼/A101");
+            example.setClassList("25计算机类-1班,25计算机类-2班");
             // 不再包含教师ID，将由系统根据当前登录教师自动填充
             templateData.add(example);
             

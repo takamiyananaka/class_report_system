@@ -139,4 +139,31 @@ public class ClassTimeUtil {
     public static Integer[] getAllClassNumbers() {
         return CLASS_START_TIME_MAP.keySet().toArray(new Integer[0]);
     }
+
+
+    /**
+     * 将DayOfWeek枚举转换为中文星期
+     * @param dayOfWeek DayOfWeek枚举
+     * @return 中文星期字符串
+     */
+    public static String convertDayOfWeekToChinese(java.time.DayOfWeek dayOfWeek) {
+        switch (dayOfWeek) {
+            case MONDAY:
+                return "星期一";
+            case TUESDAY:
+                return "星期二";
+            case WEDNESDAY:
+                return "星期三";
+            case THURSDAY:
+                return "星期四";
+            case FRIDAY:
+                return "星期五";
+            case SATURDAY:
+                return "星期六";
+            case SUNDAY:
+                return "星期日";
+            default:
+                return "星期一"; // 默认值
+        }
+    }
 }
