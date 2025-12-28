@@ -201,7 +201,7 @@ public class TeacherController {
         teacher.setPhone(request.getPhone());
         teacher.setEmail(request.getEmail());
         teacher.setDepartment(request.getDepartment());
-
+        teacher.setAttendanceThreshold(request.getAttendanceThreshold());
         // 如果提供了新密码，则更新密码
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             // 验证密码长度
@@ -265,5 +265,37 @@ public class TeacherController {
         log.info("学院{}查询教师完成，共{}条记录，当前第{}页", collegeNo, result.getTotal(), result.getCurrent());
         return Result.success(result);
     }
+
+    /**
+     * 教师自己的个人信息修改
+     */
+    @PutMapping("/profile")
+    @Operation(summary = "教师自己的个人信息修改", description = "教师自己的个人信息修改")
+    public Result<String> updateProfile(@RequestBody Teacher teacher) {
+        // 获取当前登录用户的教师工号
+        String teacherNo = StpUtil.getLoginIdAsString();
+        Teacher existingTeacher = teacherService.lambdaQuery()
+                .eq(Teacher::getTeacherNo, teacherNo)
+                .one();
+
+        if (existingTeacher == null) {
+                    return Result.error("教师不存在");
+                }
+
+        teacher.setTeacherNo(teacherNo);
+        teacher.setId(existingTeacher.getId());
+        // 如果提供了新密码，则更新密码
+        if (teacher.getPassword() != null && !teacher.getPassword().isEmpty()){
+            // 验证密码长度
+            if (teacher.getPassword().length() < 6) {
+                return Result.error("密码长度不能少于6位");
+            }
+            teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
+        }
+        teacherService.updateById(teacher);
+        log.info("教师{}修改个人信息成功", teacherNo);
+        return Result.success("修改成功");
+    }
+
 
 }
