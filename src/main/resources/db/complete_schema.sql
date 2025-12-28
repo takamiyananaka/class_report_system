@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS teacher (
     college_no VARCHAR(50) COMMENT '学院号',
     identity TINYINT DEFAULT 2 COMMENT '身份：1-只是教师，2-教师且是辅导员',
     status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+    attendance_threshold DECIMAL(5,2) DEFAULT 0.90 COMMENT '考勤预警阈值（如0.90表示90%）',
+    enable_email_notification TINYINT DEFAULT 1 COMMENT '是否开启邮件通知：0-否，1-是',
     last_login_time DATETIME COMMENT '最后登录时间',
     last_login_ip VARCHAR(50) COMMENT '最后登录IP',
     remark VARCHAR(500) COMMENT '备注',
@@ -141,27 +143,25 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     course_name VARCHAR(100) NOT NULL COMMENT '课程名称',
     course_no VARCHAR(50) COMMENT '课程号',
     order_no VARCHAR(50) COMMENT '课序号',
-    teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号',
-    class_name VARCHAR(100) NOT NULL COMMENT '班级名称',
-    weekday TINYINT NOT NULL COMMENT '星期几（1-7）',
+    weekday VARCHAR(20) NOT NULL COMMENT '星期几（汉字：星期一至星期日）',
+    expected_count INT COMMENT '预到人数',
     week_range VARCHAR(50) NOT NULL COMMENT '周次范围（格式：x-x周，例如：3-16周）',
     start_period TINYINT NOT NULL COMMENT '开始节次（1-12）',
     end_period TINYINT NOT NULL COMMENT '结束节次（1-12）',
     classroom VARCHAR(100) NOT NULL COMMENT '教室',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_teacher_no (teacher_no),
-    INDEX idx_class_name (class_name),
     INDEX idx_weekday (weekday),
-    CHECK (weekday >= 1 AND weekday <= 7),
-    CHECK (start_period >= 1 AND start_period <= 12),
-    CHECK (end_period >= 1 AND end_period <= 12),
-    CHECK (end_period >= start_period)
+    CONSTRAINT chk_start_period CHECK (start_period >= 1 AND start_period <= 12),
+    CONSTRAINT chk_end_period CHECK (end_period >= 1 AND end_period <= 12),
+    CONSTRAINT chk_period_range CHECK (end_period >= start_period)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
 
 -- 修改已存在的course_schedule表的字段类型和字段
 ALTER TABLE course_schedule MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
-ALTER TABLE course_schedule MODIFY COLUMN teacher_no VARCHAR(50) NOT NULL COMMENT '教师工号';
+
+-- 修改weekday字段为VARCHAR类型（汉字星期）
+ALTER TABLE course_schedule MODIFY COLUMN weekday VARCHAR(20) NOT NULL COMMENT '星期几（汉字：星期一至星期日）';
 
 -- 添加course_no字段
 SET @col_exists = 0;
@@ -234,6 +234,51 @@ WHERE TABLE_SCHEMA = DATABASE()
 SET @sql = IF(@col_exists = 0, 
     'ALTER TABLE course_schedule ADD COLUMN end_period TINYINT COMMENT ''结束节次（1-12）''',
     'SELECT ''Column end_period already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 删除teacher_no字段（如果存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'teacher_no';
+
+SET @sql = IF(@col_exists > 0, 
+    'ALTER TABLE course_schedule DROP COLUMN teacher_no',
+    'SELECT ''Column teacher_no does not exist'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 删除class_name字段（如果存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'class_name';
+
+SET @sql = IF(@col_exists > 0, 
+    'ALTER TABLE course_schedule DROP COLUMN class_name',
+    'SELECT ''Column class_name does not exist'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加expected_count字段（如果不存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'expected_count';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN expected_count INT COMMENT ''预到人数''',
+    'SELECT ''Column expected_count already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -395,6 +440,7 @@ ALTER TABLE attendance MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课
 CREATE TABLE IF NOT EXISTS alert (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     course_id VARCHAR(64) NOT NULL COMMENT '课程ID',
+    class_id VARCHAR(64) NOT NULL COMMENT '班级ID',
     attendance_id VARCHAR(64) COMMENT '考勤记录ID',
     alert_type INT NOT NULL COMMENT '预警类型：1-人数不足，2-迟到过多，3-旷课严重',
     alert_level INT COMMENT '预警级别：1-低，2-中，3-高',
@@ -402,6 +448,7 @@ CREATE TABLE IF NOT EXISTS alert (
     actual_count INT COMMENT '实到人数',
     alert_message VARCHAR(500) COMMENT '预警信息',
     notify_status INT COMMENT '通知状态：0-未发送，1-已发送，2-发送失败',
+    read_status INT COMMENT '阅读状态：0-未读，1-已读',
     notify_time DATETIME COMMENT '通知时间',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -414,6 +461,36 @@ CREATE TABLE IF NOT EXISTS alert (
 ALTER TABLE alert MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 ALTER TABLE alert MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
 ALTER TABLE alert MODIFY COLUMN attendance_id VARCHAR(64) COMMENT '考勤记录ID';
+
+-- 添加class_id字段（如果不存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'alert' 
+  AND COLUMN_NAME = 'class_id';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE alert ADD COLUMN class_id VARCHAR(64) NOT NULL COMMENT ''班级ID''',
+    'SELECT ''Column class_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加read_status字段（如果不存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'alert' 
+  AND COLUMN_NAME = 'read_status';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE alert ADD COLUMN read_status INT COMMENT ''阅读状态：0-未读，1-已读''',
+    'SELECT ''Column read_status already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 10. 图片抓取记录表
