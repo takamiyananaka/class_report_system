@@ -11,12 +11,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * 学院表
+ * 学院信息表 - 仅包含学院基本信息，不含登录认证信息
  * @TableName college
  */
 @TableName(value = "college")
 @Data
-@Schema(description = "学院表")
+@Schema(description = "学院信息表")
 public class College implements Serializable {
 
     /**
@@ -35,22 +35,6 @@ public class College implements Serializable {
     private String name;
 
     /**
-     * 学院账号
-     */
-    @NotBlank(message="[学院账号]不能为空")
-    @Size(max= 50,message="编码长度不能超过50")
-    @Schema(description = "学院账号")
-    private String username;
-
-    /**
-     * 学院密码（BCrypt加密）
-     */
-    @NotBlank(message="[学院密码]不能为空")
-    @Size(max= 255,message="编码长度不能超过255")
-    @Schema(description = "学院密码（BCrypt加密）")
-    private String password;
-
-    /**
      * 学院号
      */
     @NotBlank(message="[学院号]不能为空")
@@ -59,17 +43,11 @@ public class College implements Serializable {
     private String collegeNo;
 
     /**
-     * 最后登录时间
+     * 学院描述
      */
-    @Schema(description = "最后登录时间")
-    private LocalDateTime loginTime;
-
-    /**
-     * 最后登录IP
-     */
-    @Size(max= 50,message="编码长度不能超过50")
-    @Schema(description = "最后登录IP")
-    private String loginIp;
+    @Size(max= 500,message="编码长度不能超过500")
+    @Schema(description = "学院描述")
+    private String description;
 
     /**
      * 创建时间

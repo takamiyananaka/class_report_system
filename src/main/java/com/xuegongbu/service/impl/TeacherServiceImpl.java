@@ -53,6 +53,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
         // Sa-Token 登录认证，使用教师工号作为登录标识，并存储完整的用户信息
         StpUtil.login(teacher.getTeacherNo());
+        StpUtil.getSession().set("role", "teacher");
         StpUtil.getSession().set("userInfo", teacher);
         String token = StpUtil.getTokenValue();
 
@@ -65,7 +66,8 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         userInfo.put("phone", teacher.getPhone());
         userInfo.put("email", teacher.getEmail());
         userInfo.put("department", teacher.getDepartment());
-
+        userInfo.put("collegeNo", teacher.getCollegeNo());
+        userInfo.put("role", "teacher");
         log.info("教师登录成功: {}", teacher.getUsername());
         return new LoginResponse(token, userInfo);
     }

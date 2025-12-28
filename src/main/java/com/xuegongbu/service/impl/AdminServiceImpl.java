@@ -51,7 +51,8 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         this.updateById(admin);
 
         // Sa-Token 登录认证，使用管理员ID作为登录标识，并标记角色为admin，并存储完整的用户信息
-        StpUtil.login(admin.getId(), "admin");
+        StpUtil.login(admin.getId());
+        StpUtil.getSession().set("role", "admin");
         StpUtil.getSession().set("userInfo", admin);
         String token = StpUtil.getTokenValue();
 

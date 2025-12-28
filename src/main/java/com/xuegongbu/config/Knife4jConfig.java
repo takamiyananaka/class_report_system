@@ -37,7 +37,7 @@ public class Knife4jConfig {
                         .version("1.0.0")
                         .description("学工部课程考勤系统接口文档，提供教师管理、课程管理、考勤管理等功能\n\n" +
                                 "**Sa-Token认证使用说明：**\n" +
-                                "1. 先调用 `/front/login` 或 `/admin/login` 接口登录获取 Token\n" +
+                                "1. 先调用 认证 接口登录获取 Token\n" +
                                 "2. 点击右上角 **Authorize** 🔓 按钮\n" +
                                 "3. 在弹出的对话框中输入 Token（不需要加 \"Bearer \" 前缀）\n" +
                                 "4. 点击 **Authorize** 确认\n" +
@@ -73,37 +73,16 @@ public class Knife4jConfig {
     }
 
     /**
-     * 前台模块
-     */
-    @Bean
-    public GroupedOpenApi frontApi() {
-        return GroupedOpenApi.builder()
-                .group("01-前台模块")
-                .pathsToMatch("/front/**")
-                .build();
-    }
-
-    /**
      * 教师模块
      */
     @Bean
     public GroupedOpenApi teacherApi() {
         return GroupedOpenApi.builder()
-                .group("02-教师模块")
+                .group("01-教师模块")
                 .pathsToMatch("/teacher/**")
                 .build();
     }
 
-    /**
-     * 课程模块
-     */
-    @Bean
-    public GroupedOpenApi courseApi() {
-        return GroupedOpenApi.builder()
-                .group("03-课程模块")
-                .pathsToMatch("/course/**")
-                .build();
-    }
 
     /**
      * 课表模块
@@ -111,11 +90,55 @@ public class Knife4jConfig {
     @Bean
     public GroupedOpenApi courseScheduleApi() {
         return GroupedOpenApi.builder()
-                .group("04-课表模块")
+                .group("02-课表模块")
                 .pathsToMatch("/courseSchedule/**")
                 .build();
     }
 
+    /**
+     * 学院模块
+     */
+    @Bean
+    public GroupedOpenApi collegeApi() {
+        return GroupedOpenApi.builder()
+                .group("03-学院模块")
+                .pathsToMatch("/college/**")
+                .build();
+    }
+
+    /**
+     * 认证模块
+     */
+    @Bean
+    public GroupedOpenApi authApi() {
+        return GroupedOpenApi.builder()
+                .group("04-认证模块")
+                .pathsToMatch("/auth/**")
+                .build();
+    }
+
+    /**
+     * 考勤模块
+     */
+    @Bean
+    public GroupedOpenApi attendanceApi() {
+        return GroupedOpenApi.builder()
+                .group("05-考勤模块")
+                .pathsToMatch("/attendance/**")
+                .build();
+    }
+
+    /**
+     * 预警模块
+     */
+
+    @Bean
+    public GroupedOpenApi warningApi() {
+        return GroupedOpenApi.builder()
+                .group("06-预警模块")
+                .pathsToMatch("/alert/**")
+                .build();
+    }
     /**
      * 全局接口认证配置
      * 自动为所有接口添加 Authorization 认证要求，但排除登录接口

@@ -34,25 +34,45 @@ CREATE TABLE IF NOT EXISTS admin (
 ALTER TABLE admin MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 
 -- ====================================
--- 2. 学院表
+-- 2. 学院信息表
 -- ====================================
 CREATE TABLE IF NOT EXISTS college (
     id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
     name VARCHAR(100) NOT NULL UNIQUE COMMENT '学院名',
-    username VARCHAR(50) NOT NULL UNIQUE COMMENT '学院账号',
-    password VARCHAR(255) NOT NULL COMMENT '学院密码（BCrypt加密）',
     college_no VARCHAR(50) NOT NULL UNIQUE COMMENT '学院号',
-    login_time DATETIME COMMENT '最后登录时间',
-    login_ip VARCHAR(50) COMMENT '最后登录IP',
+    description VARCHAR(500) COMMENT '学院描述',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
+    INDEX idx_college_no (college_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学院信息表';
+
+-- 修改已存在的college表的id字段类型
+ALTER TABLE college MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
+-- ====================================
+-- 2.1 学院管理员表
+-- ====================================
+CREATE TABLE IF NOT EXISTS college_admin (
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
+    username VARCHAR(50) NOT NULL COMMENT '学院管理员账号',
+    password VARCHAR(255) NOT NULL COMMENT '学院管理员密码（BCrypt加密）',
+    real_name VARCHAR(50) COMMENT '真实姓名',
+    phone VARCHAR(20) COMMENT '手机号',
+    email VARCHAR(100) COMMENT '邮箱',
+    college_id VARCHAR(64) NOT NULL COMMENT '所属学院ID',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+    last_login_time DATETIME COMMENT '最后登录时间',
+    last_login_ip VARCHAR(50) COMMENT '最后登录IP',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
     INDEX idx_username (username),
-    INDEX idx_college_no (college_no)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学院表';
+    INDEX idx_college_id (college_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学院管理员表';
 
--- 修改已存在的college表的id字段类型
-ALTER TABLE college MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+-- 修改已存在的college_admin表的id字段类型
+ALTER TABLE college_admin MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 
 -- ====================================
 -- 3. 教师表

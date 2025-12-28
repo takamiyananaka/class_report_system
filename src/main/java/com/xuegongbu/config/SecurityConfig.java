@@ -48,8 +48,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                                 "/favicon.ico"
                         ).permitAll()
                         // 允许登录接口
-                        .requestMatchers("/front/login").permitAll()
-                        .requestMatchers("/admin/login").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
                         // 允许下载模板
                         .requestMatchers("/courseSchedule/downloadTemplate").permitAll()
                         .requestMatchers("/class/downloadTemplate").permitAll()
@@ -110,6 +109,9 @@ public class SecurityConfig implements WebMvcConfigurer {
                         "/favicon.ico",
                         "/front/login",
                         "/admin/login",
+                        "/auth/login",
+                        "/college/login",
+                        "/collegeAdmin/login",
                         "/courseSchedule/downloadTemplate",
                         "/class/downloadTemplate"
                 );
