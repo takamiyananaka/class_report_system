@@ -279,6 +279,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         List<String> courseIds = courseList.stream()
                 .map(Course::getCourseId)
                 .collect(Collectors.toList());
+        if(courseIds.isEmpty()){
+            return page;
+        }
         queryWrapper.in(CourseSchedule::getId, courseIds);
         // 课程名称条件（模糊查询）
         if (!isBlank(queryDTO.getCourseName())) {
