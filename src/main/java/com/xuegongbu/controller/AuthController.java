@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/Auth")
+@RequestMapping("/auth")
 @Tag(name = "统一认证", description = "鉴权接口，支持登录，登出，获取角色,获取用户信息")
 public class AuthController {
 
