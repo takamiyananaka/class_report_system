@@ -516,6 +516,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         List<String> courseIds = courseList.stream()
                 .map(Course::getCourseId)
                 .collect(Collectors.toList());
+        if(courseIds.isEmpty()){
+            return new Page<>();
+        }
         queryWrapper.in("id", courseIds);
         return this.page(page, queryWrapper);
     }
