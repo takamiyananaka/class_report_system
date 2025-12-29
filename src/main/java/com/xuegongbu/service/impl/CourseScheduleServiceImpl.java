@@ -9,6 +9,7 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.dto.CourseScheduleVO;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.domain.Class;
@@ -28,6 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 @Service
@@ -257,50 +260,108 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         return false;
     }
     
+    /**
+     * 将CourseSchedule实体转换为CourseScheduleVO
+     */
+    private CourseScheduleVO convertToVO(CourseSchedule courseSchedule) {
+        CourseScheduleVO vo = new CourseScheduleVO();
+        vo.setId(courseSchedule.getId());
+        vo.setCourseNo(courseSchedule.getCourseNo());
+        vo.setOrderNo(courseSchedule.getOrderNo());
+        vo.setCourseName(courseSchedule.getCourseName());
+        vo.setWeekday(courseSchedule.getWeekday());
+        vo.setWeekRange(courseSchedule.getWeekRange());
+        vo.setStartPeriod(courseSchedule.getStartPeriod());
+        vo.setEndPeriod(courseSchedule.getEndPeriod());
+        vo.setClassroom(courseSchedule.getClassroom());
+        vo.setExpectedCount(courseSchedule.getExpectedCount());
+        vo.setCreateTime(courseSchedule.getCreateTime());
+        vo.setUpdateTime(courseSchedule.getUpdateTime());
+        
+        // 查询并设置关联的班级信息
+        List<String> classList = getClassNamesByCourseId(courseSchedule.getId());
+        vo.setCourseNames(classList);
+        
+        return vo;
+    }
+    
+    /**
+     * 根据课程ID获取关联的班级名称列表
+     */
+    private List<String> getClassNamesByCourseId(String courseId) {
+        LambdaQueryWrapper<Course> courseQueryWrapper = new LambdaQueryWrapper<>();
+        courseQueryWrapper.eq(Course::getCourseId, courseId);
+        
+        List<Course> courseList = courseService.list(courseQueryWrapper);
+        List<String> classIds = courseList.stream()
+                .map(Course::getClassId)
+                .collect(Collectors.toList());
+        
+        if (!classIds.isEmpty()) {
+            LambdaQueryWrapper<Class> classQueryWrapper = new LambdaQueryWrapper<>();
+            classQueryWrapper.in(Class::getId, classIds);
+            List<Class> classList = classService.list(classQueryWrapper);
+            return classList.stream()
+                    .map(Class::getClassName)
+                    .collect(Collectors.toList());
+        }
+        
+        return new ArrayList<>();
+    }
+    
     @Override
-    public Page<CourseSchedule> queryPage(CourseScheduleQueryDTO queryDTO) {
+    public Page<CourseScheduleVO> queryPage(CourseScheduleQueryDTO queryDTO) {
         // 设置分页参数
         int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
         int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
-        Page<CourseSchedule> page = new Page<>(pageNum, pageSize);
-
+        
         // 构建查询条件
         LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
-        //获取教师关联班级
+        
+        // 获取教师关联班级
         QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
-        classQueryWrapper.eq("teacher_no",queryDTO.getTeacherNo());
-
+        classQueryWrapper.eq("teacher_no", queryDTO.getTeacherNo());
+        
         List<Class> classList = classService.list(classQueryWrapper);
-
-        //如果有班级名称条件，则剔除其中无效班级
+        
+        // 如果有班级名称条件，则剔除其中无效班级
         if (!isBlank(queryDTO.getClassName())) {
             classList = classList.stream()
                     .filter(classEntity -> classEntity.getClassName().contains(queryDTO.getClassName()))
                     .collect(Collectors.toList());
         }
+        
         if(classList.isEmpty()){
-            page.setTotal(0);
-            return page;
+            Page<CourseScheduleVO> emptyPage = new Page<>();
+            emptyPage.setTotal(0);
+            emptyPage.setRecords(new ArrayList<>());
+            return emptyPage;
         }
+        
         List<String> classIds = classList.stream()
                 .map(Class::getId)
                 .collect(Collectors.toList());
+        
         LambdaQueryWrapper<Course> courseQueryWrapper = new LambdaQueryWrapper<>();
         courseQueryWrapper.in(Course::getClassId, classIds);
         List<Course> courseList = courseService.list(courseQueryWrapper);
         List<String> courseIds = courseList.stream()
                 .map(Course::getCourseId)
                 .collect(Collectors.toList());
+        
         if(courseIds.isEmpty()){
-            page.setTotal(0);
-            return page;
+            Page<CourseScheduleVO> emptyPage = new Page<>();
+            emptyPage.setTotal(0);
+            emptyPage.setRecords(new ArrayList<>());
+            return emptyPage;
         }
+        
         queryWrapper.in(CourseSchedule::getId, courseIds);
+        
         // 课程名称条件（模糊查询）
         if (!isBlank(queryDTO.getCourseName())) {
             queryWrapper.like(CourseSchedule::getCourseName, queryDTO.getCourseName().trim());
         }
-
         
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
@@ -308,7 +369,22 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, pageNum={}, pageSize={}", 
                 queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), pageNum, pageSize);
         
-        return this.page(page, queryWrapper);
+        // 执行查询获取CourseSchedule分页结果
+        Page<CourseSchedule> courseSchedulePage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
+        
+        // 转换为VO分页结果
+        Page<CourseScheduleVO> voPage = new Page<>();
+        voPage.setCurrent(courseSchedulePage.getCurrent());
+        voPage.setSize(courseSchedulePage.getSize());
+        voPage.setTotal(courseSchedulePage.getTotal());
+        
+        List<CourseScheduleVO> voList = courseSchedulePage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        
+        voPage.setRecords(voList);
+        
+        return voPage;
     }
 
     @Override

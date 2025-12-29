@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.dto.CourseScheduleVO;
 import com.xuegongbu.dto.CourseScheduleWithClassIdQueryDTO;
 import com.xuegongbu.service.CourseScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,7 +83,7 @@ public class CourseScheduleController {
      */
     @PostMapping("/query")
     @Operation(summary = "按老师分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。教师工号默认从后端获取")
-    public Result<Page<CourseSchedule>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
+    public Result<Page<CourseScheduleVO>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
         // 如果没有指定教师工号，则使用当前登录教师的工号
         if (queryDTO.getTeacherNo() == null) {
             if (StpUtil.isLogin()) {
@@ -106,7 +107,7 @@ public class CourseScheduleController {
         }
         
         log.info("查询课表请求，参数：{}", queryDTO);
-        Page<CourseSchedule> result = courseScheduleService.queryPage(queryDTO);
+        Page<CourseScheduleVO> result = courseScheduleService.queryPage(queryDTO);
         log.info("查询课表完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
         return Result.success(result);
     }

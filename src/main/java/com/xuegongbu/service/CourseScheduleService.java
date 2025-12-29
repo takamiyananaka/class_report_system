@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.dto.CourseScheduleVO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,7 +28,7 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @param queryDTO 查询条件
      * @return 分页结果
      */
-    Page<CourseSchedule> queryPage(CourseScheduleQueryDTO queryDTO);
+    Page<CourseScheduleVO> queryPage(CourseScheduleQueryDTO queryDTO);
     
     /**
      * 下载课表导入模板
