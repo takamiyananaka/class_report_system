@@ -370,10 +370,24 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         // 查询并设置关联的班级信息
         List<String> classNames = getClassNamesByCourseId(courseSchedule.getId());
         vo.setClassNames(classNames);
-        
+        //设置是否在上课时间
+        vo.setInClassTime(isInClassTime(courseSchedule));
         return vo;
     }
-    
+
+    private Boolean isInClassTime(CourseSchedule courseSchedule) {
+        LocalDateTime now = LocalDateTime.now();
+        //星期几匹配
+        if(ClassTimeUtil.convertDayOfWeekToChinese(now.getDayOfWeek())!=courseSchedule.getWeekday()){
+            return false;
+        }
+        //节次匹配
+        if(!(ClassTimeUtil.getClassNumberByTime(now.toLocalTime())>courseSchedule.getStartPeriod()&&ClassTimeUtil.getClassNumberByTime(now.toLocalTime())<courseSchedule.getEndPeriod())){
+            return false;
+        }
+        return true;
+    }
+
     /**
      * 根据课程ID获取关联的班级名称列表
      */
@@ -629,6 +643,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         List<String> courseIds = courseList.stream()
                 .map(Course::getCourseId)
                 .collect(Collectors.toList());
+        if(courseIds.isEmpty()){
+            return new ArrayList<>();
+        }
         LambdaQueryWrapper<CourseSchedule> courseScheduleQueryWrapper = new LambdaQueryWrapper<>();
         courseScheduleQueryWrapper.in(CourseSchedule::getId, courseIds);
         // 获取当前时间

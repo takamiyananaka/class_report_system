@@ -137,7 +137,7 @@ public class CourseScheduleController {
     public Result<List<String>> queryClassCurrentCourse(@Parameter(description = "班级ID") @PathVariable String classId) {
         log.info("查询班级当前正在上的课的名字，班级ID：{}", classId);
         List<String> result = courseScheduleService.queryClassCurrentCourse(classId);
-        if(result==null){
+        if(result.isEmpty()){
             return Result.success(Collections.singletonList("当前本班无正在上课的课程"));
         }
         log.info("查询班级当前正在上的课的名字完成，结果：{}", result);

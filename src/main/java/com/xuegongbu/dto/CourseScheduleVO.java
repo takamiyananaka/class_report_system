@@ -11,4 +11,7 @@ import java.util.List;
 public class CourseScheduleVO extends CourseSchedule {
     @Schema(description = "班级名称列表")
     private List<String> classNames;
+
+    @Schema(description = "是否在上课时间")
+    private Boolean inClassTime;
 }
