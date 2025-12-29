@@ -46,28 +46,6 @@ public class CourseScheduleController {
             @RequestPart("file") MultipartFile file) {
         try {
             log.info("开始导入课表，文件名：{}", file.getOriginalFilename());
-            
-//            // 获取当前登录教师的工号
-//            if (!StpUtil.isLogin()) {
-//                return Result.error("未登录或登录已过期，请重新登录");
-//            }
-//
-//            String teacherNo = null;
-//            try {
-//                Object loginId = StpUtil.getLoginId();
-//                if (loginId instanceof String) {
-//                    teacherNo = (String) loginId;
-//                }
-//            } catch (Exception e) {
-//                log.error("无法解析当前登录教师工号: {}", e.getMessage());
-//                return Result.error("无法获取当前登录用户信息");
-//            }
-//
-//            if (teacherNo == null) {
-//                return Result.error("无法获取当前登录用户信息");
-//            }
-//
-//            log.info("当前登录教师工号: {}", teacherNo);
             Map<String, Object> result = courseScheduleService.importFromExcel(file);
             log.info("课表导入完成：{}", result.get("message"));
             return Result.success(result);
