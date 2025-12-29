@@ -508,7 +508,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
      * @return 课表列表
      */
     @Override
-    public Page<CourseSchedule> queryByClass(String id, int pageNum, int pageSize) {
+    public Page<CourseScheduleVO> queryByClass(String id, int pageNum, int pageSize) {
         Page<CourseSchedule> page = new Page<>(pageNum, pageSize);
         QueryWrapper<CourseSchedule> queryWrapper = new QueryWrapper<>();
         QueryWrapper<Course> courseQueryWrapper = new QueryWrapper<>();
@@ -521,6 +521,19 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             return new Page<>();
         }
         queryWrapper.in("id", courseIds);
-        return this.page(page, queryWrapper);
+        queryWrapper.orderByDesc("create_time");
+        Page<CourseSchedule> courseSchedulePage = this.page(page, queryWrapper);
+        // 转换为VO分页结果
+        Page<CourseScheduleVO> voPage = new Page<>();
+        voPage.setCurrent(courseSchedulePage.getCurrent());
+        voPage.setSize(courseSchedulePage.getSize());
+        voPage.setTotal(courseSchedulePage.getTotal());
+
+        List<CourseScheduleVO> voList = courseSchedulePage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+
+        voPage.setRecords(voList);
+        return voPage;
     }
 }

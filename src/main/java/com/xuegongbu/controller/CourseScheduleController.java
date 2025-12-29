@@ -94,8 +94,8 @@ public class CourseScheduleController {
      */
     @PostMapping("/queryByClass")
     @Operation(summary = "按班分页查询课表", description = "按班分页查询课表,id为班级id")
-    public Result<Page<CourseSchedule>> queryByClass(@RequestBody CourseScheduleWithClassIdQueryDTO queryDTO) {
-        Page<CourseSchedule> result = courseScheduleService.queryByClass(queryDTO.getClassId(),queryDTO.getPageNum(),queryDTO.getPageSize());
+    public Result<Page<CourseScheduleVO>> queryByClass(@RequestBody CourseScheduleWithClassIdQueryDTO queryDTO) {
+        Page<CourseScheduleVO> result = courseScheduleService.queryByClass(queryDTO.getClassId(),queryDTO.getPageNum(),queryDTO.getPageSize());
         log.info("查询课表完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
         return Result.success(result);
     }
