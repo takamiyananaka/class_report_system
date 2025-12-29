@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import cn.dev33.satoken.stp.StpUtil;
@@ -128,6 +129,20 @@ public class CourseScheduleController {
         return Result.success("添加班级成功");
     }
 
+    /**
+     * 查询班级当前正在上的课的名字
+     */
+    @GetMapping("/queryClassCurrentCourse/{classId}")
+    @Operation(summary = "查询班级当前正在上的课的名字", description = "查询班级当前正在上的课的名字")
+    public Result<List<String>> queryClassCurrentCourse(@Parameter(description = "班级ID") @PathVariable String classId) {
+        log.info("查询班级当前正在上的课的名字，班级ID：{}", classId);
+        List<String> result = courseScheduleService.queryClassCurrentCourse(classId);
+        if(result==null){
+            return Result.success(Collections.singletonList("当前本班无正在上课的课程"));
+        }
+        log.info("查询班级当前正在上的课的名字完成，结果：{}", result);
+        return Result.success(result);
+    }
     /**
      * 创建课表
      */

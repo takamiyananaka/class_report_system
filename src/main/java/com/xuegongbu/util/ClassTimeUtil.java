@@ -140,6 +140,45 @@ public class ClassTimeUtil {
         return CLASS_START_TIME_MAP.keySet().toArray(new Integer[0]);
     }
 
+    /**
+     * 根据时间获取对应的课程节数
+     * @param time LocalTime格式的时间
+     * @return 课程节数，如果不在任何课程时间内则返回-1
+     */
+    public static int getClassNumberByTime(LocalTime time) {
+        // 只比较小时和分钟，忽略秒和纳秒
+        LocalTime timeOnlyHourMinute = LocalTime.of(time.getHour(), time.getMinute());
+        
+        for (Map.Entry<Integer, LocalTime> entry : CLASS_START_TIME_MAP.entrySet()) {
+            Integer classNumber = entry.getKey();
+            LocalTime startTime = entry.getValue();
+            LocalTime endTime = CLASS_END_TIME_MAP.get(classNumber);
+            
+            // 只比较小时和分钟
+            LocalTime startOnlyHourMinute = LocalTime.of(startTime.getHour(), startTime.getMinute());
+            LocalTime endOnlyHourMinute = LocalTime.of(endTime.getHour(), endTime.getMinute());
+            
+            if (timeOnlyHourMinute.isAfter(startOnlyHourMinute) && timeOnlyHourMinute.isBefore(endOnlyHourMinute) || 
+                timeOnlyHourMinute.equals(startOnlyHourMinute) || timeOnlyHourMinute.equals(endOnlyHourMinute)) {
+                return classNumber;
+            }
+        }
+        return -1; // 未找到匹配的课程时间
+    }
+
+    /**
+     * 根据时间字符串获取对应的课程节数
+     * @param timeStr 时间字符串，格式为 "HH:MM"
+     * @return 课程节数，如果不在任何课程时间内则返回-1
+     */
+    public static int getClassNumberByTimeString(String timeStr) {
+        try {
+            LocalTime time = LocalTime.parse(timeStr);
+            return getClassNumberByTime(time);
+        } catch (Exception e) {
+            return -1; // 时间格式错误或未找到匹配的课程时间
+        }
+    }
 
     /**
      * 将DayOfWeek枚举转换为中文星期

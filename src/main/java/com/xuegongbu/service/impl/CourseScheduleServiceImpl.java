@@ -15,6 +15,7 @@ import com.xuegongbu.dto.CourseScheduleVO;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.*;
+import com.xuegongbu.util.ClassTimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -617,5 +619,32 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
         voPage.setRecords(voList);
         return voPage;
+    }
+
+    @Override
+    public List<String> queryClassCurrentCourse(String classId) {
+        LambdaQueryWrapper<Course> courseQueryWrapper = new LambdaQueryWrapper<>();
+        courseQueryWrapper.eq(Course::getClassId, classId);
+        List<Course> courseList = courseService.list(courseQueryWrapper);
+        List<String> courseIds = courseList.stream()
+                .map(Course::getCourseId)
+                .collect(Collectors.toList());
+        LambdaQueryWrapper<CourseSchedule> courseScheduleQueryWrapper = new LambdaQueryWrapper<>();
+        courseScheduleQueryWrapper.in(CourseSchedule::getId, courseIds);
+        // 获取当前时间
+        LocalDateTime now = LocalDateTime.now();
+        Integer period = ClassTimeUtil.getClassNumberByTime(now.toLocalTime());
+        //必须是当前星期
+        courseScheduleQueryWrapper.eq(CourseSchedule::getWeekday, ClassTimeUtil.convertDayOfWeekToChinese(now.getDayOfWeek()));
+        //开始节次<=当前节次<=结束节次
+        courseScheduleQueryWrapper.ge(CourseSchedule::getStartPeriod, period);
+        courseScheduleQueryWrapper.le(CourseSchedule::getEndPeriod, period);
+        List<CourseSchedule> courseScheduleList = this.list(courseScheduleQueryWrapper);
+        if(courseScheduleList.isEmpty()){
+            return new ArrayList<>();
+        }
+        return courseScheduleList.stream()
+                .map(CourseSchedule::getCourseName)
+                .collect(Collectors.toList());
     }
 }

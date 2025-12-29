@@ -38,4 +38,6 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
     Result<String> addClass(List<String> classList, String courseId);
 
     Page<CourseScheduleVO> queryByClass(String id,int pageNum,int pageSize);
+
+    List<String> queryClassCurrentCourse(String classId);
 }

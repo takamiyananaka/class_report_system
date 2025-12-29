@@ -139,7 +139,6 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
                     QueryWrapper<Teacher> teacherQueryWrapper = new QueryWrapper<>();
                     teacherQueryWrapper.eq("teacher_no", cls.getTeacherNo());
                     Teacher teacher = teacherMapper.selectOne(teacherQueryWrapper);
-
                     //创建预警记录
                     Alert classAlert = new Alert();
                     classAlert.setCourseId(course.getId());
