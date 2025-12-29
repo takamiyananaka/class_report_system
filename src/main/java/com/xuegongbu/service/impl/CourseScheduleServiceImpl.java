@@ -57,17 +57,14 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
+    public Map<String, Object> importFromExcel(MultipartFile file) {
         Map<String, Object> result = new HashMap<>();
         
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件不能为空");
         }
         
-        if (teacherNo == null) {
-            throw new IllegalArgumentException("教师工号不能为空");
-        }
-        
+
         // 检查文件扩展名和Content-Type
         String originalFilename = file.getOriginalFilename();
         String contentType = file.getContentType();
