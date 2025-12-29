@@ -471,7 +471,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setEndPeriod(2);
             example.setClassroom("成都校区/思学楼/A101");
             example.setClassList("25计算机类-1班,25计算机类-2班");
-            // 不再包含教师ID，将由系统根据当前登录教师自动填充
             templateData.add(example);
             
             // 写入Excel

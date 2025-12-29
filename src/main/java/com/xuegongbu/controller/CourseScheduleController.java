@@ -39,7 +39,7 @@ public class CourseScheduleController {
      * Excel导入课表
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。教师ID将根据当前登录用户自动填充。Excel格式要求：第一行为表头，列顺序为：课程名称、课程号、课序号、班级名称、星期几(1-7)、周次范围(格式：x-x周)、开始节次(1-12)、结束节次(1-12)、教室")
+    @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。Excel格式要求：第一行为表头，列顺序为：课程名称、课程号、课序号、班级名称、星期几(1-7)、周次范围(格式：x-x周)、开始节次(1-12)、结束节次(1-12)、教室，上课班级")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -57,10 +57,10 @@ public class CourseScheduleController {
 
     /**
      * 分页查询课表
-     * 默认查询当前登录教师的课表，也可以通过参数指定教师ID或班级名称查询
+     * 老师查询自己班级课表，管理员查看本院老师课表
      */
     @PostMapping("/query")
-    @Operation(summary = "按老师分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。教师工号默认从后端获取")
+    @Operation(summary = "老师和管理员分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。教师工号默认从后端获取。管理员查询本院课表")
     public Result<Page<CourseScheduleVO>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
         //如果角色身份为教师，则使用当前教师工号查询
         if (StpUtil.hasRole("teacher")) {
