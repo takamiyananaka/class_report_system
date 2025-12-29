@@ -1,5 +1,6 @@
 package com.xuegongbu.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -10,13 +11,17 @@ import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.dto.CourseScheduleVO;
+import com.xuegongbu.domain.CollegeAdmin;
+import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.Course;
 import com.xuegongbu.service.ClassService;
+import com.xuegongbu.service.CollegeAdminService;
 import com.xuegongbu.service.CourseService;
 import com.xuegongbu.service.CourseScheduleService;
+import com.xuegongbu.service.TeacherService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +48,12 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     private CourseService courseService;
     @Autowired
     private ClassMapper classMapper;
+    
+    @Autowired
+    private TeacherService teacherService;
+    
+    @Autowired
+    private CollegeAdminService collegeAdminService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -279,8 +290,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         vo.setUpdateTime(courseSchedule.getUpdateTime());
         
         // 查询并设置关联的班级信息
-        List<String> classList = getClassNamesByCourseId(courseSchedule.getId());
-        vo.setCourseNames(classList);
+        List<String> classNames = getClassNamesByCourseId(courseSchedule.getId());
+        vo.setClassNames(classNames);
         
         return vo;
     }
@@ -318,9 +329,60 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         // 构建查询条件
         LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
         
-        // 获取教师关联班级
+        // 获取当前登录用户的角色
+        Object roleObj = StpUtil.getSession().get("role");
+        String currentRole = roleObj != null ? roleObj.toString() : null;
+
+        List<String> teacherNos = new ArrayList<>();
+
+        if ("college_admin".equals(currentRole)) {
+            // 如果是学院管理员，获取该学院的所有教师工号
+            if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().isEmpty()) {
+                // 如果指定了教师工号，则只查询该教师的课表（回退到教师查询逻辑）
+                teacherNos.add(queryDTO.getTeacherNo());
+            } else {
+                // 否则查询该学院管理员管理的所有教师的课表
+                String currentLoginId = StpUtil.getLoginIdAsString();
+                
+                // 查询学院管理员信息
+                LambdaQueryWrapper<CollegeAdmin> collegeAdminQueryWrapper = new LambdaQueryWrapper<>();
+                collegeAdminQueryWrapper.eq(CollegeAdmin::getUsername, currentLoginId); // 假设登录ID是用户名
+                CollegeAdmin collegeAdmin = collegeAdminService.getOne(collegeAdminQueryWrapper);
+                
+                if (collegeAdmin != null) {
+                    // 根据学院ID查询该学院的所有教师工号
+                    LambdaQueryWrapper<Teacher> teacherQueryWrapper = new LambdaQueryWrapper<>();
+                    teacherQueryWrapper.eq(Teacher::getCollegeNo, collegeAdmin.getCollegeId());
+                    List<Teacher> teachers = teacherService.list(teacherQueryWrapper);
+                    teacherNos = teachers.stream()
+                            .map(Teacher::getTeacherNo)
+                            .collect(Collectors.toList());
+                }
+            }
+        } else {
+            // 如果是教师或其他角色，使用原有的逻辑
+            if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().isEmpty()) {
+                teacherNos.add(queryDTO.getTeacherNo());
+            } else {
+                // 如果没有指定教师工号，尝试从当前登录教师获取
+                if (StpUtil.isLogin()) {
+                    String currentLoginId = StpUtil.getLoginIdAsString();
+                    teacherNos.add(currentLoginId); // 假设登录ID是教师工号
+                }
+            }
+        }
+        
+        if (teacherNos.isEmpty()) {
+            // 如果没有找到对应的教师工号，返回空结果
+            Page<CourseScheduleVO> emptyPage = new Page<>();
+            emptyPage.setTotal(0);
+            emptyPage.setRecords(new ArrayList<>());
+            return emptyPage;
+        }
+        
+        // 获取这些教师关联的班级
         QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
-        classQueryWrapper.eq("teacher_no", queryDTO.getTeacherNo());
+        classQueryWrapper.in("teacher_no", teacherNos);
         
         List<Class> classList = classService.list(classQueryWrapper);
         

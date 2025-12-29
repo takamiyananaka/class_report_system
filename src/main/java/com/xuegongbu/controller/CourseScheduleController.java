@@ -84,8 +84,8 @@ public class CourseScheduleController {
     @PostMapping("/query")
     @Operation(summary = "按老师分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。教师工号默认从后端获取")
     public Result<Page<CourseScheduleVO>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
-        // 如果没有指定教师工号，则使用当前登录教师的工号
-        if (queryDTO.getTeacherNo() == null) {
+        //如果角色身份为教师，则使用当前教师工号查询
+        if (StpUtil.hasRole("teacher")) {
             if (StpUtil.isLogin()) {
                 try {
                     String currentTeacherNo = null;
@@ -93,7 +93,7 @@ public class CourseScheduleController {
                     if (loginId instanceof String) {
                         currentTeacherNo = (String) loginId;
                     }
-                    
+
                     if (currentTeacherNo != null) {
                         queryDTO.setTeacherNo(currentTeacherNo);
                         log.info("使用当前登录教师工号查询课表: {}", currentTeacherNo);
@@ -105,7 +105,6 @@ public class CourseScheduleController {
                 }
             }
         }
-        
         log.info("查询课表请求，参数：{}", queryDTO);
         Page<CourseScheduleVO> result = courseScheduleService.queryPage(queryDTO);
         log.info("查询课表完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());

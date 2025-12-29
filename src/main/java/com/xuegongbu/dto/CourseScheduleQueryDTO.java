@@ -10,7 +10,7 @@ import lombok.Data;
 @Schema(description = "课表查询请求参数")
 public class CourseScheduleQueryDTO {
 
-    @Schema(description = "教师工号", example = "T001")
+    @Schema(description = "教师工号,只作为学院管理员的查询条件", example = "T001")
     private String teacherNo;
 
     @Schema(description = "班级名称", example = "计算机2021级1班")
