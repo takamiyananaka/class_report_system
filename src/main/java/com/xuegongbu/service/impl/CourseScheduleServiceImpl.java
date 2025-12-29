@@ -75,10 +75,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         }
         
         try {
-            // 读取Excel数据
+            // 读取Excel数据，按表头名称映射
             List<CourseScheduleExcelDTO> excelDataList = EasyExcel.read(file.getInputStream())
                     .head(CourseScheduleExcelDTO.class)
                     .sheet()
+                    .headRowNumber(1)
                     .doReadSync();
             
             if (excelDataList == null || excelDataList.isEmpty()) {
@@ -96,7 +97,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             for (int i = 0; i < excelDataList.size(); i++) {
                 try {
                     CourseScheduleExcelDTO dto = excelDataList.get(i);
-                    
+                    // 处理节次
+                    Integer startPeriod = extractNumberFromString(dto.getStartPeriod());
+                    Integer endPeriod = extractNumberFromString(dto.getEndPeriod());
                     // 验证必填字段
                     if (isBlank(dto.getCourseName())) {
                         errorMessages.add(String.format("第%d行：课程名称不能为空", i + 2));
@@ -109,7 +112,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         continue;
                     }
                     if (!isValidWeekday(dto.getWeekday())) {
-                        errorMessages.add(String.format("第%d行：星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日", i + 2));
+                        errorMessages.add(String.format("第%d行：星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日，当前为："+dto.getWeekday(), i + 2));
                         failCount++;
                         continue;
                     }
@@ -118,25 +121,33 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         failCount++;
                         continue;
                     }
-                    if (dto.getStartPeriod() == null || dto.getStartPeriod() < 1 || dto.getStartPeriod() > 12) {
-                        errorMessages.add(String.format("第%d行：开始节次必须是1-12之间的数字", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (dto.getEndPeriod() == null || dto.getEndPeriod() < 1 || dto.getEndPeriod() > 12) {
-                        errorMessages.add(String.format("第%d行：结束节次必须是1-12之间的数字", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (dto.getEndPeriod() < dto.getStartPeriod()) {
-                        errorMessages.add(String.format("第%d行：结束节次必须大于或等于开始节次", i + 2));
-                        failCount++;
-                        continue;
-                    }
                     if (isBlank(dto.getClassroom())) {
                         errorMessages.add(String.format("第%d行：教室不能为空", i + 2));
                         failCount++;
                         continue;
+                    }
+                    if (isBlank(dto.getOrderNo())) {
+                        errorMessages.add(String.format("第%d行：课序号不能为空", i + 2));
+                        failCount++;
+                        continue;
+                    }
+                    if (isBlank(dto.getCourseNo())) {
+                        errorMessages.add(String.format("第%d行：课程号不能为空", i + 2));
+                        failCount++;
+                        continue;
+                    }
+                    //验证节次
+                    if (startPeriod == null || startPeriod < 1 || startPeriod > 12) {
+                        errorMessages.add(String.format("第%d行：开始节次格式错误，请填写1-12之间的数字", i + 2));
+                        failCount++;
+                    }
+                    if (endPeriod == null || endPeriod < 1 || endPeriod > 12) {
+                        errorMessages.add(String.format("第%d行：结束节次格式错误，请填写1-12之间的数字", i + 2));
+                        failCount++;
+                    }
+                    if (startPeriod > endPeriod) {
+                        errorMessages.add(String.format("第%d行：开始节次不能大于结束节次", i + 2));
+                        failCount++;
                     }
                     
                     CourseSchedule courseSchedule = new CourseSchedule();
@@ -187,9 +198,18 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     courseSchedule.setCourseName(dto.getCourseName().trim());
                     courseSchedule.setWeekday(dto.getWeekday().trim());
                     courseSchedule.setWeekRange(dto.getWeekRange().trim());
-                    courseSchedule.setStartPeriod(dto.getStartPeriod());
-                    courseSchedule.setEndPeriod(dto.getEndPeriod());
-                    courseSchedule.setClassroom(dto.getClassroom().trim());
+                    
+                    // 从字符串中提取数字设置开始节次
+
+                    courseSchedule.setStartPeriod(startPeriod);
+                    
+                    // 从字符串中提取数字设置结束节次
+
+                    courseSchedule.setEndPeriod(endPeriod);
+                    
+                    // 处理教室格式，将类似"思学楼C506"转换为"成都校区/思学楼/思学楼C506"
+                    String formattedClassroom = formatClassroom(dto.getClassroom());
+                    courseSchedule.setClassroom(formattedClassroom);
                     courseSchedule.setExpectedCount(totalExpectedCount); // 设置预到人数为所有班级人数之和
                     
                     // 先保存课表获取ID
@@ -236,6 +256,69 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         } catch (Exception e) {
             log.error("导入课表数据失败", e);
             throw new IllegalStateException("导入课表数据失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 从字符串中提取第一个数字
+     * @param str 包含数字的字符串
+     * @return 提取的数字，如果未找到则返回null
+     */
+    private Integer extractNumberFromString(String str) {
+        if (str == null || str.isEmpty()) {
+            return null;
+        }
+
+        // 使用正则表达式查找第一个数字序列
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+");
+        java.util.regex.Matcher matcher = pattern.matcher(str);
+
+        if (matcher.find()) {
+            return Integer.valueOf(matcher.group());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 格式化教室名称，将类似"思学楼C506"转换为"成都校区/思学楼/思学楼C506"
+     * @param classroom 原始教室名称
+     * @return 格式化后的教室名称
+     */
+    private String formatClassroom(String classroom) {
+        if (classroom == null || classroom.trim().isEmpty()) {
+            return classroom;
+        }
+        
+        classroom = classroom.trim();
+        
+        // 提取楼名和房间号
+        String building = "";
+        String roomNumber = "";
+        
+        // 查找数字开始的位置，将字符串分为楼名和房间号
+        int numberStartIndex = -1;
+        for (int i = 0; i < classroom.length(); i++) {
+            if (Character.isDigit(classroom.charAt(i))) {
+                numberStartIndex = i;
+                break;
+            }
+        }
+        
+        if (numberStartIndex > 0) {
+            // 分离楼名和房间号
+            building = classroom.substring(0, numberStartIndex);
+            roomNumber = classroom.substring(numberStartIndex);
+        } else {
+            // 如果没有找到数字，将整个字符串作为楼名
+            building = classroom;
+        }
+        
+        // 格式化为"成都校区/楼名/楼名+房间号"
+        if (!roomNumber.isEmpty()) {
+            return "成都校区/" + building + "/" + building + roomNumber;
+        } else {
+            return "成都校区/" + building + "/" + building;
         }
     }
     
@@ -467,9 +550,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setOrderNo("01");
             example.setWeekday("星期一"); // 星期一（汉字格式）
             example.setWeekRange("3-16周"); // 周次范围
-            example.setStartPeriod(1);
-            example.setEndPeriod(2);
-            example.setClassroom("成都校区/思学楼/A101");
+            example.setStartPeriod("第1节");
+            example.setEndPeriod("第2节");
+            example.setClassroom("思学楼A101");
             example.setClassList("25计算机类-1班,25计算机类-2班");
             templateData.add(example);
             
