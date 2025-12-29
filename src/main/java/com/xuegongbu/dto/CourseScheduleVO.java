@@ -10,5 +10,5 @@ import java.util.List;
 @Schema(description = "课表VO对象")
 public class CourseScheduleVO extends CourseSchedule {
     @Schema(description = "班级名称列表")
-    private List<String> courseNames;
+    private List<String> classNames;
 }
