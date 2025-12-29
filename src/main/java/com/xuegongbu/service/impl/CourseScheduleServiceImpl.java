@@ -7,21 +7,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.Result;
-import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.domain.*;
+import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.dto.CourseScheduleVO;
-import com.xuegongbu.domain.CollegeAdmin;
-import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
-import com.xuegongbu.domain.Class;
-import com.xuegongbu.domain.Course;
-import com.xuegongbu.service.ClassService;
-import com.xuegongbu.service.CollegeAdminService;
-import com.xuegongbu.service.CourseService;
-import com.xuegongbu.service.CourseScheduleService;
-import com.xuegongbu.service.TeacherService;
+import com.xuegongbu.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,6 +47,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     
     @Autowired
     private CollegeAdminService collegeAdminService;
+
+    @Autowired
+    private CollegeService collegeService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -340,20 +336,28 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             } else {
                 // 否则查询该学院管理员管理的所有教师的课表
                 String currentLoginId = StpUtil.getLoginIdAsString();
-                
+
                 // 查询学院管理员信息
                 LambdaQueryWrapper<CollegeAdmin> collegeAdminQueryWrapper = new LambdaQueryWrapper<>();
-                collegeAdminQueryWrapper.eq(CollegeAdmin::getUsername, currentLoginId); // 假设登录ID是用户名
+                collegeAdminQueryWrapper.eq(CollegeAdmin::getId, currentLoginId);
                 CollegeAdmin collegeAdmin = collegeAdminService.getOne(collegeAdminQueryWrapper);
-                
+
                 if (collegeAdmin != null) {
-                    // 根据学院ID查询该学院的所有教师工号
-                    LambdaQueryWrapper<Teacher> teacherQueryWrapper = new LambdaQueryWrapper<>();
-                    teacherQueryWrapper.eq(Teacher::getCollegeNo, collegeAdmin.getCollegeId());
-                    List<Teacher> teachers = teacherService.list(teacherQueryWrapper);
-                    teacherNos = teachers.stream()
-                            .map(Teacher::getTeacherNo)
-                            .collect(Collectors.toList());
+                    // 根据学院ID查询学院号
+                    LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
+                    collegeQueryWrapper.eq(College::getId, collegeAdmin.getCollegeId());
+                    College college = collegeService.getOne(collegeQueryWrapper);
+                    if (college != null) {
+                        // 根据学院号查询教师工号
+                        LambdaQueryWrapper<Teacher> teacherQueryWrapper = new LambdaQueryWrapper<>();
+                        teacherQueryWrapper.eq(Teacher::getCollegeNo, college.getCollegeNo());
+                        List<Teacher> teacherList = teacherService.list(teacherQueryWrapper);
+                        if (teacherList != null && !teacherList.isEmpty()) {
+                            teacherNos = teacherList.stream()
+                                    .map(Teacher::getTeacherNo)
+                                    .collect(Collectors.toList());
+                        }
+                    }
                 }
             }
         } else {
