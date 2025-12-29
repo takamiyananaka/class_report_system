@@ -203,7 +203,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     failCount++;
                 }
             }
-            
+
             // 由于每个课表都需要单独处理关联关系，所以不需要批量保存courseScheduleList
             // 课表已经在循环中单独保存了
             
@@ -271,6 +271,13 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         classQueryWrapper.eq("teacher_no",queryDTO.getTeacherNo());
 
         List<Class> classList = classService.list(classQueryWrapper);
+
+        //如果有班级名称条件，则剔除其中无效班级
+        if (!isBlank(queryDTO.getClassName())) {
+            classList = classList.stream()
+                    .filter(classEntity -> classEntity.getClassName().contains(queryDTO.getClassName()))
+                    .collect(Collectors.toList());
+        }
         if(classList.isEmpty()){
             page.setTotal(0);
             return page;
@@ -293,38 +300,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         if (!isBlank(queryDTO.getCourseName())) {
             queryWrapper.like(CourseSchedule::getCourseName, queryDTO.getCourseName().trim());
         }
-
-        // 班级名称条件（模糊查询）
-        if (!isBlank(queryDTO.getClassName())) {
-            // 通过班级名称获取班级ID列表
-            LambdaQueryWrapper<Class> classQueryWrapper1 = new LambdaQueryWrapper<>();
-            classQueryWrapper1.like(Class::getClassName, queryDTO.getClassName().trim());
-            List<Class> classList1 = classService.list(classQueryWrapper);
-            if (!classList.isEmpty()) {
-                // 获取班级ID列表
-                List<String> classIds1 = classList.stream()
-                        .map(Class::getId)
-                        .collect(Collectors.toList());
-
-                // 通过课程关联表查询对应的课程ID
-                LambdaQueryWrapper<Course> courseQueryWrapper1 = new LambdaQueryWrapper<>();
-                courseQueryWrapper.in(Course::getClassId, classIds);
-                List<Course> courseList1 = courseService.list(courseQueryWrapper);
-                if (!courseList.isEmpty()) {
-                   List<String> courseIds1 = courseList.stream()
-                            .map(Course::getCourseId)
-                            .collect(Collectors.toList());
-                            queryWrapper.in(CourseSchedule::getId, courseIds);
-                } else {
-                    // 如果没有找到对应的课程，返回空结果
-                    queryWrapper.apply("1 = 0"); // 一个永远为false的条件
-                }
-            } else {
-                // 如果没有找到对应的班级，返回空结果
-                queryWrapper.apply("1 = 0"); // 一个永远为false的条件
-            }
-        }
-
 
         
         // 按创建时间倒序排序

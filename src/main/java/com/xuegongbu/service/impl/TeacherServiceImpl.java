@@ -1,11 +1,13 @@
 package com.xuegongbu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
+import com.xuegongbu.dto.TeacherQueryDTO;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.TeacherService;
 import lombok.extern.slf4j.Slf4j;
@@ -75,11 +77,11 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     }
 
     @Override
-    public com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> queryPage(com.xuegongbu.dto.TeacherQueryDTO queryDTO) {
+    public Page<Teacher> queryPage(TeacherQueryDTO queryDTO) {
         // 设置分页参数
         int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
         int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
+        Page<Teacher> page = new Page<>(pageNum, pageSize);
         
         // 构建查询条件
         LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
@@ -112,7 +114,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(Teacher::getCreateTime);
         
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> result = this.page(page, queryWrapper);
+       Page<Teacher> result = this.page(page, queryWrapper);
         
         // 移除密码字段
         result.getRecords().forEach(teacher -> teacher.setPassword(null));
