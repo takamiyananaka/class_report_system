@@ -1,26 +1,36 @@
 package com.xuegongbu.controller;
 
-import cn.dev33.satoken.session.SaSession;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.College;
+import com.xuegongbu.domain.CollegeAdmin;
 import com.xuegongbu.domain.Teacher;
+import com.xuegongbu.dto.TeacherExcelDTO;
 import com.xuegongbu.dto.TeacherQueryDTO;
 import com.xuegongbu.dto.TeacherRequest;
+import com.xuegongbu.mapper.CollegeAdminMapper;
+import com.xuegongbu.mapper.CollegeMapper;
 import com.xuegongbu.service.TeacherService;
 import com.xuegongbu.vo.TeacherVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +46,12 @@ public class TeacherController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private CollegeMapper collegeMapper;
+
+    @Autowired
+    private CollegeAdminMapper collegeAdminMapper;
+    
     /**
      * 获取当前登录学院的collegeNo
      */
@@ -45,7 +61,7 @@ public class TeacherController {
         }
         College college = (College) StpUtil.getSession().get("collegeInfo");
         if(college == null){
-            throw new com.xuegongbu.common.exception.BusinessException("当前用户未登录或登录已过期，请重新登录");
+            throw new com.xuegongbu.common.exception.BusinessException("当前用户非学院管理员");
         }
         return college.getCollegeNo();
     }
@@ -290,5 +306,111 @@ public class TeacherController {
         return Result.success("修改成功");
     }
 
+    /**
+     * 批量导入教师
+     */
+    @PostMapping("/import")
+    @Operation(summary = "批量导入教师", description = "批量导入教师，需要提供工号和真实姓名，其他字段使用默认值")
+    public Result<String> importTeachers(@RequestParam("file") MultipartFile file) {
+        String collegeNo = getCurrentCollegeNo();
+        log.info("学院{}批量导入教师", collegeNo);
 
+        if (file.isEmpty()) {
+            return Result.error("上传的文件不能为空");
+        }
+
+        try {
+            // 读取Excel文件
+            List<TeacherExcelDTO> teacherExcelList = EasyExcel.read(file.getInputStream())
+                    .head(TeacherExcelDTO.class)
+                    .sheet()
+                    .doReadSync();
+
+            if (teacherExcelList.isEmpty()) {
+                return Result.error("Excel文件中没有数据");
+            }
+            College college = (College) StpUtil.getSession().get("collegeInfo");
+            if (college == null) {
+                return Result.error("未找到对应的学院信息");
+            }
+
+            // 验证Excel数据
+            for (int i = 0; i < teacherExcelList.size(); i++) {
+                TeacherExcelDTO dto = teacherExcelList.get(i);
+                if (dto.getTeacherNo() == null || dto.getTeacherNo().trim().isEmpty()) {
+                    return Result.error("第" + (i + 2) + "行工号不能为空");
+                }
+                if (dto.getRealName() == null || dto.getRealName().trim().isEmpty()) {
+                    return Result.error("第" + (i + 2) + "行真实姓名不能为空");
+                }
+            }
+
+            // 批量导入教师
+            int successCount = 0;
+            int skipCount = 0;
+
+            for (TeacherExcelDTO dto : teacherExcelList) {
+                // 检查工号是否已存在
+                Teacher existingTeacher = teacherService.lambdaQuery()
+                        .eq(Teacher::getTeacherNo, dto.getTeacherNo())
+                        .one();
+                
+                if (existingTeacher != null) {
+                    skipCount++;
+                    continue; // 跳过已存在的教师
+                }
+
+                Teacher teacher = new Teacher();
+                teacher.setTeacherNo(dto.getTeacherNo());
+                teacher.setRealName(dto.getRealName());
+                teacher.setUsername(dto.getTeacherNo()); // 用户名为工号
+                teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
+                teacher.setCollegeNo(college.getCollegeNo()); // 学院号
+                teacher.setDepartment(college.getName()); // 所属部门为学院名
+                teacher.setPhone(null); // 手机号初始为空
+                teacher.setEmail(null); // 邮箱初始为空
+                teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
+                teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
+                teacher.setStatus(1); // 默认启用状态
+
+                teacherService.save(teacher);
+                successCount++;
+            }
+
+            log.info("学院{}批量导入教师完成，成功{}个，跳过{}个", collegeNo, successCount, skipCount);
+            return Result.success("批量导入完成，成功导入" + successCount + "个教师，跳过" + skipCount + "个已存在的教师");
+        } catch (IOException e) {
+            log.error("批量导入教师时发生错误", e);
+            return Result.error("文件读取失败：" + e.getMessage());
+        } catch (Exception e) {
+            log.error("批量导入教师时发生错误", e);
+            return Result.error("导入失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 生成教师导入模板
+     */
+    @GetMapping("/downloadTemplate")
+    @Operation(summary = "下载教师导入模板", description = "下载教师批量导入的Excel模板")
+    public void downloadTemplate(HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        
+        String fileName = "教师导入模板.xlsx";
+        try {
+            fileName = URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            fileName = "TeacherTemplate.xlsx";
+        }
+        
+        response.setHeader("Content-disposition", "attachment;filename=" + fileName);
+        
+        // 创建模板数据
+        List<TeacherExcelDTO> templateData = List.of(new TeacherExcelDTO());
+        
+        EasyExcel.write(response.getOutputStream(), TeacherExcelDTO.class)
+                .sheet("教师导入模板")
+                .doWrite(templateData);
+    }
 }
