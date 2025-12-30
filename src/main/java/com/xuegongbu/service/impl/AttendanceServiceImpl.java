@@ -186,6 +186,9 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     @Override
     public List<Double> queryAttendanceRateByClass(String id) {
         List<String> courseIds = courseMapper.selectCourseIdsByClassId(id);
+        if(courseIds.isEmpty()){
+            return new ArrayList<>();
+        }
         List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(new QueryWrapper<CourseSchedule>().in("id", courseIds));
         //构建最近七天的时间列表
         List<LocalDate> dateList = new ArrayList<>();
