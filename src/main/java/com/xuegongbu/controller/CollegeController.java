@@ -1,5 +1,6 @@
 package com.xuegongbu.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
@@ -46,6 +47,7 @@ public class CollegeController {
      */
     @GetMapping("/colleges")
     @Operation(summary = "查询所有学院", description = "管理员查询所有学院列表")
+    @SaCheckRole("admin")
     public Result<List<CollegeVO>> listColleges() {
         log.info("管理员查询所有学院");
         List<College> colleges = collegeService.list();
@@ -63,6 +65,7 @@ public class CollegeController {
      */
     @GetMapping("/colleges/{id}")
     @Operation(summary = "根据ID查询学院", description = "管理员根据学院ID查询学院详情")
+    @SaCheckRole("admin")
     public Result<CollegeVO> getCollege(@Parameter(description = "学院ID") @PathVariable String id) {
         log.info("管理员查询学院详情，ID：{}", id);
         College college = collegeService.getById(id);
@@ -79,6 +82,7 @@ public class CollegeController {
      */
     @PostMapping("/colleges")
     @Operation(summary = "创建学院", description = "管理员创建新学院，密码必须至少6位字符")
+    @SaCheckRole("admin")
     public Result<String> createCollege(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "学院信息") @Valid @RequestBody CollegeRequest request) {
         log.info("管理员创建学院，学院名：{}", request.getName());
 
@@ -103,6 +107,7 @@ public class CollegeController {
      */
     @PutMapping("/colleges/{id}")
     @Operation(summary = "更新学院", description = "管理员更新学院信息，如提供新密码则必须至少6位字符")
+    @SaCheckRole("admin")
     public Result<String> updateCollege(@Parameter(description = "学院ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "学院信息") @Valid @RequestBody CollegeRequest request) {
         log.info("管理员更新学院，ID：{}", id);
 
@@ -135,6 +140,7 @@ public class CollegeController {
      */
     @DeleteMapping("/colleges/{id}")
     @Operation(summary = "删除学院", description = "管理员删除学院")
+    @SaCheckRole("admin")
     public Result<String> deleteCollege(@Parameter(description = "学院ID") @PathVariable String id) {
         log.info("管理员删除学院，ID：{}", id);
 

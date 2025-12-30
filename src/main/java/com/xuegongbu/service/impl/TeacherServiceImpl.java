@@ -1,12 +1,16 @@
 package com.xuegongbu.service.impl;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuegongbu.common.Result;
 import com.xuegongbu.common.exception.BusinessException;
+import com.xuegongbu.domain.College;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
+import com.xuegongbu.dto.TeacherExcelDTO;
 import com.xuegongbu.dto.TeacherQueryDTO;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.TeacherService;
@@ -15,9 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import cn.dev33.satoken.stp.StpUtil;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -54,7 +61,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         this.updateById(teacher);
 
         // Sa-Token 登录认证，使用教师工号作为登录标识，并存储完整的用户信息
-        StpUtil.login(teacher.getTeacherNo());
+        StpUtil.login(teacher.getTeacherNo(),"teacher");
         StpUtil.getSession().set("role", "teacher");
 
         String token = StpUtil.getTokenValue();
@@ -123,6 +130,76 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                 queryDTO.getTeacherNo(), queryDTO.getDepartment(), queryDTO.getRealName(), queryDTO.getPhone(), queryDTO.getCollegeNo(), pageNum, pageSize);
         
         return result;
+    }
+
+    @Override
+    public Result<String> importTeachers(MultipartFile file, String collegeNo) {
+        try {
+            // 读取Excel文件
+            List<TeacherExcelDTO> teacherExcelList = EasyExcel.read(file.getInputStream())
+                    .head(TeacherExcelDTO.class)
+                    .sheet()
+                    .doReadSync();
+
+            if (teacherExcelList.isEmpty()) {
+                return Result.error("Excel文件中没有数据");
+            }
+
+            College college = (College) StpUtil.getSession().get("collegeInfo");
+            if(college == null){
+                throw new com.xuegongbu.common.exception.BusinessException("当前用户非学院管理员");
+            }
+            for (int i = 0; i < teacherExcelList.size(); i++) {
+                TeacherExcelDTO dto = teacherExcelList.get(i);
+                if (dto.getTeacherNo() == null || dto.getTeacherNo().trim().isEmpty()) {
+                    return Result.error("第" + (i + 2) + "行工号不能为空");
+                }
+                if (dto.getRealName() == null || dto.getRealName().trim().isEmpty()) {
+                    return Result.error("第" + (i + 2) + "行真实姓名不能为空");
+                }
+            }
+
+            // 批量导入教师
+            int successCount = 0;
+            int skipCount = 0;
+
+            for (TeacherExcelDTO dto : teacherExcelList) {
+                // 检查工号是否已存在
+                Teacher existingTeacher = lambdaQuery()
+                        .eq(Teacher::getTeacherNo, dto.getTeacherNo())
+                        .one();
+
+                if (existingTeacher != null) {
+                    skipCount++;
+                    continue; // 跳过已存在的教师
+                }
+
+                Teacher teacher = new Teacher();
+                teacher.setTeacherNo(dto.getTeacherNo());
+                teacher.setRealName(dto.getRealName());
+                teacher.setUsername(dto.getTeacherNo()); // 用户名为工号
+                teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
+                teacher.setCollegeNo(college.getCollegeNo()); // 学院号
+                teacher.setDepartment(college.getName()); // 所属部门为学院名
+                teacher.setPhone(null); // 手机号初始为空
+                teacher.setEmail(null); // 邮箱初始为空
+                teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
+                teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
+                teacher.setStatus(1); // 默认启用状态
+
+                save(teacher);
+                successCount++;
+            }
+
+            log.info("学院{}批量导入教师完成，成功{}个，跳过{}个", collegeNo, successCount, skipCount);
+            return Result.success("批量导入完成，成功导入" + successCount + "个教师，跳过" + skipCount + "个已存在的教师");
+        } catch (IOException e) {
+            log.error("批量导入教师时发生错误", e);
+            return Result.error("文件读取失败：" + e.getMessage());
+        } catch (Exception e) {
+            log.error("批量导入教师时发生错误", e);
+            return Result.error("导入失败：" + e.getMessage());
+        }
     }
 
 }

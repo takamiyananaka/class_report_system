@@ -59,10 +59,26 @@ public class TeacherController {
         if (!StpUtil.isLogin()) {
             throw new com.xuegongbu.common.exception.BusinessException("未登录或登录已过期，请重新登录");
         }
-        College college = (College) StpUtil.getSession().get("collegeInfo");
-        if(college == null){
-            throw new com.xuegongbu.common.exception.BusinessException("当前用户非学院管理员");
+        
+        // 检查当前用户是否为学院管理员
+        if (!StpUtil.hasRole("college_admin")) {
+            throw new com.xuegongbu.common.exception.BusinessException("当前用户不是学院管理员，无权限操作");
         }
+        
+        // 获取当前登录的学院管理员ID
+        String collegeAdminId = StpUtil.getLoginIdAsString();
+        // 根据ID查询学院管理员信息
+        CollegeAdmin currentCollegeAdmin = collegeAdminMapper.selectById(collegeAdminId);
+        if (currentCollegeAdmin == null) {
+            throw new com.xuegongbu.common.exception.BusinessException("未找到当前登录的学院管理员信息");
+        }
+
+        // 获取学院信息
+        College college = collegeMapper.selectById(currentCollegeAdmin.getCollegeId());
+        if (college == null) {
+            throw new com.xuegongbu.common.exception.BusinessException("未找到对应的学院信息");
+        }
+        
         return college.getCollegeNo();
     }
 
@@ -71,6 +87,7 @@ public class TeacherController {
      */
     @GetMapping("/teachers")
     @Operation(summary = "查询本学院的所有教师", description = "学院查询本学院（college_no匹配）的教师列表")
+    @SaCheckRole("college_admin")
     public Result<List<TeacherVO>> listTeachers() {
         String collegeNo = getCurrentCollegeNo();
         log.info("学院{}查询本学院的所有教师", collegeNo);
@@ -94,6 +111,7 @@ public class TeacherController {
      */
     @GetMapping("/teachers/{id}")
     @Operation(summary = "根据ID查询本学院的教师", description = "学院根据教师ID查询本学院的教师详情")
+    @SaCheckRole("college_admin")
     public Result<TeacherVO> getTeacher(@Parameter(description = "教师ID") @PathVariable String id) {
         String collegeNo = getCurrentCollegeNo();
         log.info("学院{}查询教师详情，ID：{}", collegeNo, id);
@@ -118,6 +136,7 @@ public class TeacherController {
      */
     @PostMapping("/teachers")
     @Operation(summary = "创建本学院的教师", description = "学院创建本学院的新教师，密码必须至少6位字符")
+    @SaCheckRole("college_admin")
     public Result<String> createTeacher(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
         String collegeNo = getCurrentCollegeNo();
         log.info("学院{}创建教师，用户名：{}", collegeNo, request.getUsername());
@@ -170,6 +189,7 @@ public class TeacherController {
      */
     @PutMapping("/teachers/{id}")
     @Operation(summary = "更新本学院的教师", description = "学院更新本学院的教师信息，如提供新密码则必须至少6位字符")
+    @SaCheckRole("college_admin")
     public Result<String> updateTeacher(@Parameter(description = "教师ID") @PathVariable String id,
                                         @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
         String collegeNo = getCurrentCollegeNo();
@@ -237,6 +257,7 @@ public class TeacherController {
      */
     @DeleteMapping("/teachers/{id}")
     @Operation(summary = "删除本学院的教师", description = "学院删除本学院的教师")
+    @SaCheckRole("college_admin")
     public Result<String> deleteTeacher(@Parameter(description = "教师ID") @PathVariable String id) {
         String collegeNo = getCurrentCollegeNo();
         log.info("学院{}删除教师，ID：{}", collegeNo, id);
@@ -261,6 +282,7 @@ public class TeacherController {
      */
     @PostMapping("/teachers/query")
     @Operation(summary = "查询本学院的教师", description = "支持按教师工号、部门、真实姓名（模糊）、电话号码查询本学院的教师")
+    @SaCheckRole("college_admin")
     public Result<Page<Teacher>> queryTeachers(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody TeacherQueryDTO queryDTO) {
         String collegeNo = getCurrentCollegeNo();
         log.info("学院{}查询教师请求，参数：{}", collegeNo, queryDTO);
@@ -280,6 +302,7 @@ public class TeacherController {
      */
     @PutMapping("/profile")
     @Operation(summary = "教师自己的个人信息修改", description = "教师自己的个人信息修改")
+    @SaCheckRole("teacher")
     public Result<String> updateProfile(@RequestBody Teacher teacher) {
         // 获取当前登录用户的教师工号
         String teacherNo = StpUtil.getLoginIdAsString();
@@ -311,6 +334,7 @@ public class TeacherController {
      */
     @PostMapping("/import")
     @Operation(summary = "批量导入教师", description = "批量导入教师，需要提供工号和真实姓名，其他字段使用默认值")
+    @SaCheckRole("college_admin")
     public Result<String> importTeachers(@RequestParam("file") MultipartFile file) {
         String collegeNo = getCurrentCollegeNo();
         log.info("学院{}批量导入教师", collegeNo);
@@ -319,73 +343,7 @@ public class TeacherController {
             return Result.error("上传的文件不能为空");
         }
 
-        try {
-            // 读取Excel文件
-            List<TeacherExcelDTO> teacherExcelList = EasyExcel.read(file.getInputStream())
-                    .head(TeacherExcelDTO.class)
-                    .sheet()
-                    .doReadSync();
-
-            if (teacherExcelList.isEmpty()) {
-                return Result.error("Excel文件中没有数据");
-            }
-            College college = (College) StpUtil.getSession().get("collegeInfo");
-            if (college == null) {
-                return Result.error("未找到对应的学院信息");
-            }
-
-            // 验证Excel数据
-            for (int i = 0; i < teacherExcelList.size(); i++) {
-                TeacherExcelDTO dto = teacherExcelList.get(i);
-                if (dto.getTeacherNo() == null || dto.getTeacherNo().trim().isEmpty()) {
-                    return Result.error("第" + (i + 2) + "行工号不能为空");
-                }
-                if (dto.getRealName() == null || dto.getRealName().trim().isEmpty()) {
-                    return Result.error("第" + (i + 2) + "行真实姓名不能为空");
-                }
-            }
-
-            // 批量导入教师
-            int successCount = 0;
-            int skipCount = 0;
-
-            for (TeacherExcelDTO dto : teacherExcelList) {
-                // 检查工号是否已存在
-                Teacher existingTeacher = teacherService.lambdaQuery()
-                        .eq(Teacher::getTeacherNo, dto.getTeacherNo())
-                        .one();
-                
-                if (existingTeacher != null) {
-                    skipCount++;
-                    continue; // 跳过已存在的教师
-                }
-
-                Teacher teacher = new Teacher();
-                teacher.setTeacherNo(dto.getTeacherNo());
-                teacher.setRealName(dto.getRealName());
-                teacher.setUsername(dto.getTeacherNo()); // 用户名为工号
-                teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
-                teacher.setCollegeNo(college.getCollegeNo()); // 学院号
-                teacher.setDepartment(college.getName()); // 所属部门为学院名
-                teacher.setPhone(null); // 手机号初始为空
-                teacher.setEmail(null); // 邮箱初始为空
-                teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
-                teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
-                teacher.setStatus(1); // 默认启用状态
-
-                teacherService.save(teacher);
-                successCount++;
-            }
-
-            log.info("学院{}批量导入教师完成，成功{}个，跳过{}个", collegeNo, successCount, skipCount);
-            return Result.success("批量导入完成，成功导入" + successCount + "个教师，跳过" + skipCount + "个已存在的教师");
-        } catch (IOException e) {
-            log.error("批量导入教师时发生错误", e);
-            return Result.error("文件读取失败：" + e.getMessage());
-        } catch (Exception e) {
-            log.error("批量导入教师时发生错误", e);
-            return Result.error("导入失败：" + e.getMessage());
-        }
+        return teacherService.importTeachers(file, collegeNo);
     }
 
     /**
@@ -393,6 +351,7 @@ public class TeacherController {
      */
     @GetMapping("/downloadTemplate")
     @Operation(summary = "下载教师导入模板", description = "下载教师批量导入的Excel模板")
+    @SaCheckRole("college_admin")
     public void downloadTemplate(HttpServletResponse response) throws IOException {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");

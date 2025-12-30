@@ -1,19 +1,18 @@
 package com.xuegongbu.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.dto.AlertQueryDTO;
 import com.xuegongbu.service.AlertService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.session.SaSession;
 
 import java.util.List;
 
@@ -31,6 +30,7 @@ public class AlertController {
     */
     @PostMapping("/getAlertList")
     @Operation(summary = "分页条件查询预警列表", description = "分页条件查询预警列表")
+    @SaCheckRole("teacher")
     public Result<Page<Alert>> getAlertList(@RequestBody AlertQueryDTO queryDTO){
         log.info("开始执行获取预警记录任务");
         
@@ -71,6 +71,7 @@ public class AlertController {
     */
     @DeleteMapping("/deleteAlerts")
     @Operation(summary = "批量删除预警记录", description = "批量删除预警记录")
+    @SaCheckRole("teacher")
     public Result<String> deleteAlerts(@RequestBody List<String> ids){
         log.info("开始执行批量删除预警记录任务");
         Result<String> result = alertService.removeByIds(ids) ? Result.success("删除成功") : Result.error("删除失败");
@@ -83,6 +84,7 @@ public class AlertController {
     */
     @PutMapping("/updateAlertReadStatus")
     @Operation(summary = "修改阅读状态", description = "修改阅读状态")
+    @SaCheckRole("teacher")
     public Result<String> updateAlertReadStatus(@RequestParam String  id){
         log.info("开始执行修改阅读状态任务,id: {}", id);
         Alert alert = alertService.getById(id);

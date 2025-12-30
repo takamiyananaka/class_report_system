@@ -1,5 +1,6 @@
 package com.xuegongbu.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
@@ -31,6 +32,7 @@ public class AttendanceController {
      */
     @PostMapping("/queryAttendance")
     @Operation(summary = "查询课程考勤记录列表", description = "查询课程所有考勤记录（分页，支持按日期查询）")
+    @SaCheckRole("teacher")
     public Result<Page<Attendance>> queryAttendanceByCourseId(@RequestBody AttendanceQueryDTO queryDTO) {
         log.info("查询课程考勤记录，参数：{}", queryDTO);
         
@@ -52,6 +54,7 @@ public class AttendanceController {
      */
     @GetMapping("/manualAttendance")
     @Operation(summary = "手动考勤", description = "手动考勤")
+    @SaCheckRole("teacher")
     public Result<String> manualAttendance(
             @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
         log.info("手动考勤，课程ID：{}", courseId);
@@ -65,6 +68,7 @@ public class AttendanceController {
      */
     @GetMapping("/queryCurrentAttendance")
     @Operation(summary = "查询当前考勤记录", description = "查询当前考勤记录")
+    @SaCheckRole("teacher")
     public Result<Attendance> queryCurrentAttendance(@Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
         log.info("查询当前考勤记录，课程ID：{}", courseId);
         Attendance attendance = attendanceService.queryCurrentAttendance(courseId);
@@ -76,6 +80,7 @@ public class AttendanceController {
      */
     @GetMapping("/get/{id}")
     @Operation(summary = "根据ID查询考勤记录", description = "根据考勤ID查询考勤详情")
+    @SaCheckRole("teacher")
     public Result<Attendance> getAttendanceById(@Parameter(description = "考勤ID") @PathVariable String id) {
         log.info("根据ID查询考勤记录，考勤ID：{}", id);
         Attendance attendance = attendanceService.getById(id);
@@ -91,6 +96,7 @@ public class AttendanceController {
      */
     @PostMapping("/add")
     @Operation(summary = "创建考勤记录", description = "创建新的考勤记录，ID自动生成")
+    @SaCheckRole("teacher")
     public Result<Attendance> addAttendance(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤信息") @RequestBody Attendance attendance) {
         log.info("创建考勤记录，考勤信息：{}", attendance);
         
@@ -109,6 +115,7 @@ public class AttendanceController {
      */
     @PutMapping("/update/{id}")
     @Operation(summary = "根据ID更新考勤记录", description = "通过考勤ID更新考勤信息")
+    @SaCheckRole("teacher")
     public Result<String> updateAttendanceById(@Parameter(description = "考勤ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤信息") @RequestBody Attendance attendance) {
         log.info("根据ID更新考勤记录，考勤ID：{}，考勤信息：{}", id, attendance);
         
@@ -130,6 +137,7 @@ public class AttendanceController {
      */
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "根据ID删除考勤记录", description = "通过考勤ID删除考勤记录")
+    @SaCheckRole("teacher")
     public Result<String> deleteAttendanceById(@Parameter(description = "考勤ID") @PathVariable String id) {
         log.info("根据ID删除考勤记录，考勤ID：{}", id);
         
@@ -148,6 +156,7 @@ public class AttendanceController {
      */
     @DeleteMapping("/deleteBatch")
     @Operation(summary = "批量删除考勤记录", description = "批量删除考勤记录")
+    @SaCheckRole("teacher")
     public Result<String> deleteAttendanceBatch(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤ID列表") @RequestBody List<String> ids) {
         log.info("批量删除考勤记录，考勤ID列表：{}", ids);
 
@@ -161,6 +170,7 @@ public class AttendanceController {
      */
     @GetMapping("/queryAttendanceRateByTeacher")
     @Operation(summary = "按老师查询其所有班级的最近一周的总平均考勤率", description = "按老师查询最近一周的考勤率")
+    @SaCheckRole("teacher")
     public Result<List<Double>> queryAttendanceRateByTeacher() {
 
         log.info("按老师查询其所有班级的最近一周的平均考勤率");
@@ -175,6 +185,7 @@ public class AttendanceController {
      */
     @GetMapping("/queryAttendanceRateByClass/{id}")
     @Operation(summary = "按班级查询最近一周的考勤率", description = "按班级查询最近一周的考勤率")
+    @SaCheckRole("teacher")
     public Result<List<Double>> queryAttendanceRateByClass(@Parameter(description = "班级id") @PathVariable String id) {
         log.info("按班级查询最近一周的考勤率");
         List<Double> attendanceRateList = attendanceService.queryAttendanceRateByClass(id);

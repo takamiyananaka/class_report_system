@@ -1,30 +1,29 @@
 package com.xuegongbu.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Class;
-import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.ClassQueryDTO;
 import com.xuegongbu.service.ClassService;
 import com.xuegongbu.service.TeacherService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.session.SaSession;
+import org.springframework.http.MediaType;
 
-/**
- * 班级管理控制器
- */
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/class")
@@ -64,6 +63,7 @@ public class ClassController {
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Excel导入班级", description = "通过上传Excel文件批量导入班级数据。辅导员工号自动从当前登录用户获取。Excel格式要求：第一行为表头，列顺序为：班级名称、班级人数、年级、专业")
+    @SaCheckRole("teacher")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -93,6 +93,7 @@ public class ClassController {
      */
     @PostMapping("/query")  //
     @Operation(summary = "分页查询班级", description = "分页查询班级，支持多条件查询。可通过className（模糊）、teacherNo等参数进行过滤查询。不提供任何条件则查询全部")
+    @SaCheckRole("teacher")
     public Result<Page<Class>> query(@RequestBody ClassQueryDTO queryDTO) {  //
         log.info("查询班级请求，参数：{}", queryDTO);
         Page<Class> result = classService.queryPage(queryDTO);
@@ -105,7 +106,8 @@ public class ClassController {
      */
     @PostMapping("/add")
     @Operation(summary = "创建班级", description = "创建新班级，ID自动生成。辅导员工号自动从当前登录用户获取。")
-    public Result<Class> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class classEntity) {
+    @SaCheckRole("teacher")
+    public Result<Class> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class  classEntity) {
         log.info("创建班级，班级信息：{}", classEntity);
         
         // 获取当前登录教师的工号
@@ -144,6 +146,7 @@ public class ClassController {
      */
     @PutMapping("/update")
     @Operation(summary = "更新班级", description = "通过班级名称更新班级信息")
+    @SaCheckRole("teacher")
     public Result<String> updateClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class classEntity) {
         log.info("更新班级，班级名称：{}，班级信息：{}", classEntity.getClassName(), classEntity);
         
@@ -179,6 +182,7 @@ public class ClassController {
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除班级", description = "通过班级名称删除班级（逻辑删除）")
+    @SaCheckRole("teacher")
     public Result<String> deleteClass(@Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("删除班级，班级名称：{}", className);
         
@@ -207,6 +211,7 @@ public class ClassController {
      */
     @GetMapping("/get")
     @Operation(summary = "查询班级详情", description = "根据班级名称查询班级详情")
+    @SaCheckRole("teacher")
     public Result<Class> getClass(@Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("查询班级详情，班级名称：{}", className);
         
@@ -228,6 +233,7 @@ public class ClassController {
      */
     @GetMapping("/get/{id}")
     @Operation(summary = "根据ID查询班级详情", description = "根据班级ID查询班级详情")
+    @SaCheckRole("teacher")
     public Result<Class> getClassById(@Parameter(description = "班级ID") @PathVariable String id) {
         log.info("根据ID查询班级详情，班级ID：{}", id);
         
@@ -244,6 +250,7 @@ public class ClassController {
      */
     @PutMapping("/update/{id}")
     @Operation(summary = "根据ID更新班级", description = "通过班级ID更新班级信息")
+    @SaCheckRole("teacher")
     public Result<String> updateClassById(@Parameter(description = "班级ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class classEntity) {
         log.info("根据ID更新班级，班级ID：{}，班级信息：{}", id, classEntity);
         
@@ -270,6 +277,7 @@ public class ClassController {
      */
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "根据ID删除班级", description = "通过班级ID删除班级（逻辑删除）")
+    @SaCheckRole("teacher")
     public Result<String> deleteClassById(@Parameter(description = "班级ID") @PathVariable String id) {
         log.info("根据ID删除班级，班级ID：{}", id);
         
@@ -293,6 +301,7 @@ public class ClassController {
      */
     @GetMapping("/downloadTemplate")
     @Operation(summary = "下载班级导入模板", description = "下载Excel格式的班级导入模板文件")
+    @SaCheckRole("teacher")
     public void downloadTemplate(jakarta.servlet.http.HttpServletResponse response) {
         try {
             log.info("下载班级导入模板");

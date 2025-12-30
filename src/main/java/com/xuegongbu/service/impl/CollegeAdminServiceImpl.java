@@ -60,7 +60,7 @@ public class CollegeAdminServiceImpl extends ServiceImpl<CollegeAdminMapper, Col
 
         College collegeInfo = collegeMapper.selectById(collegeAdmin.getCollegeId());
         // Sa-Token 登录认证，使用学院管理员ID作为登录标识，并标记角色为college_admin，并存储完整的用户信息
-        StpUtil.login(collegeAdmin.getId());
+        StpUtil.login(collegeAdmin.getId(),"college_admin");
         StpUtil.getSession().set("role", "college_admin");
         StpUtil.getSession().set("collegeInfo", collegeInfo);
         String token = StpUtil.getTokenValue();

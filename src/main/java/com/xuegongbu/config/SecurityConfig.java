@@ -27,6 +27,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
 
+import com.xuegongbu.config.CorsProperties;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig implements WebMvcConfigurer {
@@ -100,6 +102,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         registry.addInterceptor(new SaInterceptor(handle -> StpUtil.checkLogin()))
                 .addPathPatterns("/**")
                 .excludePathPatterns(
+                        // 公开接口
                         "/doc.html",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
@@ -107,13 +110,12 @@ public class SecurityConfig implements WebMvcConfigurer {
                         "/swagger-resources/**",
                         "/webjars/**",
                         "/favicon.ico",
-                        "/front/login",
-                        "/admin/login",
                         "/auth/login",
-                        "/college/login",
-                        "/collegeAdmin/login",
+                        "/auth/logout",
+                        // 模板下载接口
                         "/courseSchedule/downloadTemplate",
-                        "/class/downloadTemplate"
+                        "/class/downloadTemplate",
+                        "/teacher/downloadTemplate"
                 );
     }
     
@@ -125,6 +127,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         @Override
         public void commence(HttpServletRequest request, HttpServletResponse response,
                             org.springframework.security.core.AuthenticationException authException) throws IOException {
+
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
             Result<String> result = Result.error("当前登录状态已过期，请重新登录");
