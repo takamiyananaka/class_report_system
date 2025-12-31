@@ -378,11 +378,14 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     private Boolean isInClassTime(CourseSchedule courseSchedule) {
         LocalDateTime now = LocalDateTime.now();
         //星期几匹配
-        if(ClassTimeUtil.convertDayOfWeekToChinese(now.getDayOfWeek())!=courseSchedule.getWeekday()){
+        String weekday = ClassTimeUtil.convertDayOfWeekToChinese(now.getDayOfWeek());
+        if(!weekday.equals(courseSchedule.getWeekday())){
+            log.info("星期不匹配 当前星期：{}，星期：{}",weekday,courseSchedule.getWeekday());
             return false;
         }
         //节次匹配
         if(!(ClassTimeUtil.getClassNumberByTime(now.toLocalTime())>courseSchedule.getStartPeriod()&&ClassTimeUtil.getClassNumberByTime(now.toLocalTime())<courseSchedule.getEndPeriod())){
+            log.info("不在节次范围内 当前节次：{}，开始节次：{}，结束节次：{}",ClassTimeUtil.getClassNumberByTime(now.toLocalTime()),courseSchedule.getStartPeriod(),courseSchedule.getEndPeriod());
             return false;
         }
         return true;
