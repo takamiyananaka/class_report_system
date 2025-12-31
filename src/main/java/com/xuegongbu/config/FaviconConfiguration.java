@@ -24,7 +24,7 @@ public class FaviconConfiguration implements WebMvcConfigurer {
         registry.addInterceptor(new HandlerInterceptor() {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-                if (!"GET".equalsIgnoreCase(request.getMethod()) || !request.getRequestURI().toString().equals("/favicon.ico")) {
+                if (!"GET".equalsIgnoreCase(request.getMethod()) || !request.getRequestURI().toString().equals("/swpuLogo.jpg")) {
                     return true;
                 }
                 response.setStatus(HttpStatus.NO_CONTENT.value()); // 设置状态码为204 No Content
