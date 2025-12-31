@@ -1,6 +1,7 @@
 package com.xuegongbu.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
@@ -169,16 +170,20 @@ public class AttendanceController {
      * 按老师查询最近一周的考勤率（考勤率数组，七天）
      */
     @GetMapping("/queryAttendanceRateByTeacher")
-    @Operation(summary = "按老师查询其所有班级的最近一周的总平均考勤率", description = "按老师查询最近一周的考勤率")
-    @SaCheckRole("teacher")
-    public Result<List<Double>> queryAttendanceRateByTeacher() {
+    @Operation(summary = "按老师查询其所有班级的最近一周的总平均考勤率", description = "按老师查询最近一周的考勤率，学院管理员和老师通用")
+    @SaCheckRole(value = {"teacher", "college_admin"}, mode = SaMode.OR)
+    public Result<List<Double>> queryAttendanceRateByTeacher(@Parameter(description = "老师工号,学院管理员查询时候需要") @RequestParam(value = "teacherNo", required = false) String teacherNo) {
 
         log.info("按老师查询其所有班级的最近一周的平均考勤率");
-        String teacherNo = getTeacherNoFromSession() ;
+        if(StpUtil.hasRole("teacher")){
+            teacherNo = getTeacherNoFromSession() ;
+        }
         List<Double> attendanceRateList = attendanceService.queryAttendanceRateByTeacher(teacherNo);
         log.info("按老师查询其所有班级的最近一周的平均考勤率完成");
         return Result.success(attendanceRateList);
     }
+
+
 
     /**
      * 按班级查询最近一周的考勤率（考勤率数组，七天）
