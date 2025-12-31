@@ -1,5 +1,6 @@
 package com.xuegongbu.task;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.Attendance;
@@ -148,11 +149,13 @@ public class AttendanceTask {
             log.info("当前时间 {} 是第 {} 节课的第5分钟，开始查询课程", now.toLocalTime(), classPeriod);
 
             // 查询当前正在进行的课程（根据星期几和当前课程节次的时间范围）
-            QueryWrapper<CourseSchedule> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("weekday", weekdayStr)
-                    .eq("start_time", ClassTimeUtil.getStartTimeAsLocalTime(classPeriod))
-                    .eq("end_time", ClassTimeUtil.getEndTimeAsLocalTime(classPeriod));
+            LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
 
+            //星期符合
+            queryWrapper.eq(CourseSchedule::getWeekday, weekdayStr);
+            //当前节次在开始节次和结束节次之间
+            queryWrapper.ge(CourseSchedule::getStartPeriod, classPeriod);
+            queryWrapper.le(CourseSchedule::getEndPeriod, classPeriod);
             List<CourseSchedule> ongoingCourses = courseScheduleService.list(queryWrapper);
 
             log.info("找到 {} 个第 {} 节课的课程", ongoingCourses.size(), classPeriod);

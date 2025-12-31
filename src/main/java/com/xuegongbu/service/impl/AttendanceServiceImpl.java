@@ -96,12 +96,14 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         LocalDateTime now = LocalDateTime.now();
         String weekday = ClassTimeUtil.convertDayOfWeekToChinese(now.getDayOfWeek());
         if (!weekday.equals(course.getWeekday())) {
+            log.error("今天不是该课程的上课日："+weekday);
             throw new BusinessException("今天不是该课程的上课日");
         }
 
         // 获取当前时间对应的节次
         Integer currentPeriod = getCurrentPeriod(now.toLocalTime());
         if (currentPeriod == null || currentPeriod < course.getStartPeriod() || currentPeriod > course.getEndPeriod()) {
+            log.error("当前不在该课程的上课节次范围内："+currentPeriod);
             throw new BusinessException("当前不在该课程的上课节次范围内");
         }
 
