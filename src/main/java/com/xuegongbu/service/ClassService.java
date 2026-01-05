@@ -20,17 +20,6 @@ public interface ClassService extends IService<Class> {
     Map<String, Object> importFromExcel(MultipartFile file, String teacherNo);
     
     /**
-     * 添加单个班级
-     * @param className 班级名称
-     * @param count 班级人数
-     * @param grade 年级
-     * @param major 专业
-     * @param teacherNo 辅导员工号
-     * @return 添加结果
-     */
-    Result<Class> addSingleClass(String className, Integer count, String grade, String major, String teacherNo);
-    
-    /**
      * 分页查询班级
      * @param queryDTO 查询条件
      * @return 分页结果
