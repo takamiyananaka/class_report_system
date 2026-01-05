@@ -159,12 +159,13 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             }
             
             // 返回结果，如果有失败的班级，在消息中说明
+            Result<CourseSchedule> result = Result.success(courseSchedule);
             if (!failedClasses.isEmpty()) {
                 String failedClassNames = String.join(",", failedClasses);
-                return Result.success(courseSchedule, failedClassNames + "不存在，导入失败，其余班级正常导入");
+                result.setMessage(failedClassNames + "不存在，导入失败，其余班级正常导入");
             }
             
-            return Result.success(courseSchedule);
+            return result;
             
         } catch (Exception e) {
             log.error("添加课程失败", e);
