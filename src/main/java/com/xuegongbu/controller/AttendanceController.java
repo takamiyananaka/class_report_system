@@ -35,7 +35,7 @@ public class AttendanceController {
      */
     @PostMapping("/queryAttendance")
     @Operation(summary = "查询课程考勤记录列表", description = "查询课程所有考勤记录（分页，支持按日期查询）")
-    @SaCheckRole("teacher")
+    @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
     public Result<Page<Attendance>> queryAttendanceByCourseId(@RequestBody AttendanceQueryDTO queryDTO) {
         log.info("查询课程考勤记录，参数：{}", queryDTO);
         
@@ -56,8 +56,8 @@ public class AttendanceController {
      * 统计·报表查询考勤记录，维度：学院，班级（辅导员，班级名称），任课老师，课程类型，时间（学年，学期，月，周，日），
      */
     @GetMapping("/queryAttendanceReport")
-    @Operation(summary = "统计·报表查询考勤记录", description = "统计·报表查询考勤记录，维度：学院，班级（辅导员，班级名称），任课老师，课程类型，时间（学年，学期，月，周，日），三级角色统一用考勤报表页面查询")
-    @SaCheckRole("college_admin")
+    @Operation(summary = "统计·报表查询考勤记录", description = "统计·报表查询考勤记录，维度：学院，班级（辅导员，班级名称），课序号，课程类型，时间范围（具体日期范围），学年，学期，三级角色统一用考勤报表页面查询")
+    @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
     public Result<Page<Attendance>> queryAttendanceReport(AttendanceReportQueryDTO queryDTO){
         log.info("统计·报表查询考勤记录，参数：{}", queryDTO);
         Page<Attendance> attendancePage = attendanceService.queryAttendanceReport(queryDTO);
@@ -70,7 +70,7 @@ public class AttendanceController {
      */
     @GetMapping("/exportAttendanceReport")
     @Operation(summary = "报表生成接口（excel）", description = "报表生成接口（excel）,与查询共用查询条件，根据该查询条件对应的考勤记录生成报表")
-    @SaCheckRole("college_admin")
+    @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
     public Result<String> exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response){
         log.info("报表生成接口（excel），参数：{}", queryDTO);
         attendanceService.exportAttendanceReport(queryDTO, response);
@@ -83,7 +83,7 @@ public class AttendanceController {
      */
     @GetMapping("/manualAttendance")
     @Operation(summary = "手动考勤", description = "手动考勤")
-    @SaCheckRole("teacher")
+    @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
     public Result<String> manualAttendance(
             @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
         log.info("手动考勤，课程ID：{}", courseId);
@@ -97,7 +97,7 @@ public class AttendanceController {
      */
     @GetMapping("/queryCurrentAttendance")
     @Operation(summary = "查询当前考勤记录", description = "查询当前考勤记录")
-    @SaCheckRole("teacher")
+    @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
     public Result<Attendance> queryCurrentAttendance(@Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
         log.info("查询当前考勤记录，课程ID：{}", courseId);
         Attendance attendance = attendanceService.queryCurrentAttendance(courseId);
@@ -110,7 +110,7 @@ public class AttendanceController {
      */
     @DeleteMapping("/deleteBatch")
     @Operation(summary = "批量删除考勤记录", description = "批量删除考勤记录")
-    @SaCheckRole("teacher")
+    @SaCheckRole(value = {"admin"}, mode = SaMode.OR)
     public Result<String> deleteAttendanceBatch(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤ID列表") @RequestBody List<String> ids) {
         log.info("批量删除考勤记录，考勤ID列表：{}", ids);
 

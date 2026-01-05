@@ -245,6 +245,8 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
     @Override
     public void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response) {
+        queryDTO.setPageNum(1);
+        queryDTO.setPageSize(Integer.MAX_VALUE);
         Page<Attendance> attendancePage = queryAttendanceReport(queryDTO);
 
     }
