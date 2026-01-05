@@ -42,7 +42,7 @@ public class CourseScheduleController {
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Excel导入课表", description = "通过上传Excel文件批量导入课表数据。Excel格式要求：第一行为表头，列顺序为：课程名称、课程号、课序号、班级名称、星期几(1-7)、周次范围(格式：x-x周)、开始节次(1-12)、结束节次(1-12)、教室，上课班级")
-    @SaCheckRole("college_admin")
+    @SaCheckRole("admin")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -65,7 +65,7 @@ public class CourseScheduleController {
      */
     @PostMapping("/query")
     @Operation(summary = "老师和管理员分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。教师工号默认从后端获取。管理员查询本院课表")
-    @SaCheckRole(value = {"teacher", "college_admin", "admin"}, mode = SaMode.OR)
+    @SaCheckRole("teacher")
     public Result<Page<CourseScheduleVO>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
         log.info("查询课表请求，参数：{}", queryDTO);
         Page<CourseScheduleVO> result = courseScheduleService.queryPage(queryDTO);
@@ -106,7 +106,7 @@ public class CourseScheduleController {
      */
     @PostMapping("/addClass/{id}")
     @Operation(summary = "为课程添加班级", description = "为课程添加班级，以列表的形式")
-    @SaCheckRole("college_admin")
+    @SaCheckRole("admin")
     public Result<String> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级列表") @RequestBody List<String> classList, @Parameter(description = "课程ID") @PathVariable String id) {
         log.info("为课程添加班级，班级列表：{}", classList);
        courseScheduleService.addClass(classList,id);
@@ -134,7 +134,7 @@ public class CourseScheduleController {
      */
     @PostMapping("/add")
     @Operation(summary = "创建课表", description = "教师创建新课表，教师工号从登录状态获取，ID自动生成")
-    @SaCheckRole("college_admin")
+    @SaCheckRole("admin")
     public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("创建课表，课表信息：{}", courseSchedule);
 
@@ -175,7 +175,7 @@ public class CourseScheduleController {
      */
     @PutMapping("/update")
     @Operation(summary = "更新课表", description = "教师更新课表信息，通过课程名称和班级名称定位，只能更新自己的课表")
-    @SaCheckRole("college_admin")
+    @SaCheckRole("admin")
     public Result<String> updateCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("更新课表，课程名称：{}，课表信息：{}", 
                 courseSchedule.getCourseName(), courseSchedule);
@@ -213,31 +213,11 @@ public class CourseScheduleController {
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除课表", description = "教师删除课表，通过课程名称和班级名称定位，只能删除自己的课表")
-    @SaCheckRole("college_admin")
+    @SaCheckRole("admin")
     public Result<String> deleteCourseSchedule(
             @Parameter(description = "课程名称", required = true) @RequestParam(value = "courseName", required = true) String courseName,
             @Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("删除课表，课程名称：{}，班级名称：{}", courseName, className);
-        
-        // 获取当前登录教师的工号
-        if (!StpUtil.isLogin()) {
-            return Result.error("未登录或登录已过期，请重新登录");
-        }
-        
-        String teacherNo = null;
-        try {
-            Object loginId = StpUtil.getLoginId();
-            if (loginId instanceof String) {
-                teacherNo = (String) loginId;
-            }
-        } catch (Exception e) {
-            log.error("无法解析当前登录教师工号: {}", e.getMessage());
-            return Result.error("无法获取当前登录用户信息");
-        }
-        
-        if (teacherNo == null) {
-            return Result.error("无法获取当前登录用户信息");
-        }
         
         // 根据课程名称查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
@@ -259,30 +239,11 @@ public class CourseScheduleController {
      */
     @GetMapping("/get")
     @Operation(summary = "查询课表详情", description = "根据课程名称和班级名称查询课表详情，只能查询自己的课表")
+    @SaCheckRole("teacher")
     public Result<CourseSchedule> getCourseSchedule(
             @Parameter(description = "课程名称", required = true) @RequestParam(value = "courseName", required = true) String courseName,
             @Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("查询课表详情，课程名称：{}，班级名称：{}", courseName, className);
-        
-        // 获取当前登录教师的工号
-        if (!StpUtil.isLogin()) {
-            return Result.error("未登录或登录已过期，请重新登录");
-        }
-        
-        String teacherNo = null;
-        try {
-            Object loginId = StpUtil.getLoginId();
-            if (loginId instanceof String) {
-                teacherNo = (String) loginId;
-            }
-        } catch (Exception e) {
-            log.error("无法解析当前登录教师工号: {}", e.getMessage());
-            return Result.error("无法获取当前登录用户信息");
-        }
-        
-        if (teacherNo == null) {
-            return Result.error("无法获取当前登录用户信息");
-        }
         
         // 根据课程名称查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
@@ -303,6 +264,7 @@ public class CourseScheduleController {
      */
     @GetMapping("/get/{id}")
     @Operation(summary = "根据ID查询课表详情", description = "根据课表ID查询课表详情")
+    @SaCheckRole("teacher")
     public Result<CourseSchedule> getCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id) {
         log.info("根据ID查询课表详情，课表ID：{}", id);
         
@@ -320,7 +282,7 @@ public class CourseScheduleController {
      */
     @PutMapping("/update/{id}")
     @Operation(summary = "根据ID更新课表", description = "通过课表ID更新课表信息")
-    @SaCheckRole("college_admin")
+    @SaCheckRole("admin")
     public Result<String> updateCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id, @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("根据ID更新课表，课表ID：{}，课表信息：{}", id, courseSchedule);
         
@@ -350,7 +312,7 @@ public class CourseScheduleController {
      */
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "根据ID删除课表", description = "通过课表ID删除课表")
-    @SaCheckRole("college_admin")
+    @SaCheckRole("admin")
     public Result<String> deleteCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id) {
         log.info("根据ID删除课表，课表ID：{}", id);
         

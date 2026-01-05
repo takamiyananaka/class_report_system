@@ -185,6 +185,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     // 使用上传的预到人数，不进行计算
                     courseSchedule.setExpectedCount(expectedCount);
                     
+                    // 处理新增字段：学年和学期
+                    courseSchedule.setSchoolYear(isBlank(dto.getSchoolYear()) ? null : dto.getSchoolYear().trim());
+                    Integer semester = extractNumberFromString(dto.getSemester());
+                    courseSchedule.setSemester(semester);
+                    
                     // 处理班级列表
                     List<Class> successClasses = new ArrayList<>();
                     List<String> failedClasses = new ArrayList<>();
@@ -625,6 +630,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setTeacherName("张老师");
             example.setCourseType("专业课");
             example.setExpectedCount("90");
+            example.setSchoolYear("2024-2025");
+            example.setSemester("1");
             templateData.add(example);
             
             // 写入Excel
