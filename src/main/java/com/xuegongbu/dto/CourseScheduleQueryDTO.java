@@ -18,6 +18,12 @@ public class CourseScheduleQueryDTO {
 
     @Schema(description = "课程名称", example = "Java程序设计")
     private String courseName;
+    
+    @Schema(description = "任课老师", example = "张老师")
+    private String teacherName;
+    
+    @Schema(description = "课程类型（通识、专业课等）", example = "专业课")
+    private String courseType;
 
     @Schema(description = "页码（从1开始）", example = "1")
     private Integer pageNum = 1;
