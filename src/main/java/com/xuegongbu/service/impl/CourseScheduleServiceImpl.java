@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
-import com.xuegongbu.dto.CourseScheduleAddRequest;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.dto.CourseScheduleVO;
@@ -53,125 +52,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
     @Autowired
     private CollegeService collegeService;
-
-    /**
-     * 添加单个课程
-     * 处理课程基本信息的保存和班级关联
-     * @param request 课程信息（与Excel模板字段一致）
-     * @return 添加结果
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<CourseSchedule> addCourseSchedule(CourseScheduleAddRequest request) {
-        try {
-            // 验证必填字段
-            if (isBlank(request.getKcm())) {
-                return Result.error("课程名称不能为空");
-            }
-            if (isBlank(request.getKch())) {
-                return Result.error("课程号不能为空");
-            }
-            if (isBlank(request.getKxh())) {
-                return Result.error("课序号不能为空");
-            }
-            if (isBlank(request.getSkxq())) {
-                return Result.error("上课星期不能为空");
-            }
-            if (!isValidWeekday(request.getSkxq())) {
-                return Result.error("上课星期格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日");
-            }
-            if (isBlank(request.getZcmc())) {
-                return Result.error("上课周次不能为空");
-            }
-            if (request.getKsjc() == null || request.getKsjc() < 1 || request.getKsjc() > 12) {
-                return Result.error("开始节次必须是1-12之间的数字");
-            }
-            if (request.getJsjc() == null || request.getJsjc() < 1 || request.getJsjc() > 12) {
-                return Result.error("结束节次必须是1-12之间的数字");
-            }
-            if (request.getJsjc() < request.getKsjc()) {
-                return Result.error("结束节次必须大于或等于开始节次");
-            }
-            if (isBlank(request.getJasmc())) {
-                return Result.error("上课教室名不能为空");
-            }
-
-            // 创建课表对象
-            CourseSchedule courseSchedule = new CourseSchedule();
-            courseSchedule.setCourseNo(request.getKch().trim());
-            courseSchedule.setCourseName(request.getKcm().trim());
-            courseSchedule.setOrderNo(request.getKxh().trim());
-            courseSchedule.setWeekRange(request.getZcmc().trim());
-            courseSchedule.setWeekday(request.getSkxq().trim());
-            courseSchedule.setStartPeriod(request.getKsjc());
-            courseSchedule.setEndPeriod(request.getJsjc());
-            courseSchedule.setClassroom(request.getJasmc().trim());
-            courseSchedule.setTeacherName(isBlank(request.getRkls()) ? null : request.getRkls().trim());
-            courseSchedule.setCourseType(isBlank(request.getKclx()) ? null : request.getKclx().trim());
-            
-            // 处理预到人数：如果提供了预到人数且大于0，使用提供的值；否则根据班级计算
-            Integer providedExpectedCount = request.getYdrs();
-            
-            // 处理班级列表
-            List<String> failedClasses = new ArrayList<>();
-            List<Class> successClasses = new ArrayList<>();
-            int totalExpectedCount = 0;
-            
-            if (!isBlank(request.getWzskbj())) {
-                String[] classArray = request.getWzskbj().trim().split(",");
-                
-                for (String className : classArray) {
-                    className = className.trim();
-                    if (className.isEmpty()) {
-                        continue;
-                    }
-                    
-                    // 查询班级是否存在
-                    LambdaQueryWrapper<Class> classQueryWrapper = new LambdaQueryWrapper<>();
-                    classQueryWrapper.eq(Class::getClassName, className);
-                    Class classEntity = classService.getOne(classQueryWrapper);
-                    
-                    if (classEntity == null) {
-                        failedClasses.add(className);
-                    } else {
-                        successClasses.add(classEntity);
-                        totalExpectedCount += classEntity.getCount();
-                    }
-                }
-            }
-            
-            // 设置预到人数：优先使用提供的值，否则使用班级人数总和
-            if (providedExpectedCount != null && providedExpectedCount > 0) {
-                courseSchedule.setExpectedCount(providedExpectedCount);
-            } else {
-                courseSchedule.setExpectedCount(totalExpectedCount);
-            }
-            
-            // 保存课表
-            this.save(courseSchedule);
-            
-            // 保存课程与班级的关联关系
-            for (Class classEntity : successClasses) {
-                Course course = new Course();
-                course.setCourseId(courseSchedule.getId());
-                course.setClassId(classEntity.getId());
-                courseService.save(course);
-            }
-            
-            // 返回结果，如果有失败的班级，在消息中说明
-            Result<CourseSchedule> result = Result.success(courseSchedule);
-            if (!failedClasses.isEmpty()) {
-                String failedClassNames = String.join(",", failedClasses);
-                result.setMessage(failedClassNames + "不存在，导入失败，其余班级正常导入");
-            }
-            
-            return result;
-            
-        } catch (Exception e) {
-            log.error("添加课程失败", e);
-            return Result.error("添加课程失败: " + e.getMessage());
-        }
-    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -223,32 +103,32 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     
                     // 验证必填字段是否完整
                     if (isBlank(dto.getCourseNo())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：课程号不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getCourseName())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：课程名称不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getOrderNo())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：课序号不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getWeekRange())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：上课周次不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getWeekday())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：上课星期不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (!isValidWeekday(dto.getWeekday())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：上课星期格式不正确", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
@@ -258,57 +138,93 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     Integer endPeriod = extractNumberFromString(dto.getEndPeriod());
                     
                     if (startPeriod == null || startPeriod < 1 || startPeriod > 12) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：开始节次必须是1-12之间的数字", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (endPeriod == null || endPeriod < 1 || endPeriod > 12) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：结束节次必须是1-12之间的数字", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (startPeriod > endPeriod) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：结束节次必须大于或等于开始节次", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     
                     if (isBlank(dto.getClassroom())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：上课教室名不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     
-                    // 转换DTO为请求对象
-                    CourseScheduleAddRequest request = new CourseScheduleAddRequest();
-                    request.setKch(dto.getCourseNo());
-                    request.setKcm(dto.getCourseName());
-                    request.setKxh(dto.getOrderNo());
-                    request.setZcmc(dto.getWeekRange());
-                    request.setSkxq(dto.getWeekday());
-                    request.setKsjc(startPeriod);
-                    request.setJsjc(endPeriod);
-                    request.setJasmc(dto.getClassroom());
-                    request.setWzskbj(dto.getClassList());
-                    request.setRkls(dto.getTeacherName());
-                    request.setKclx(dto.getCourseType());
-                    
-                    // 转换预到人数
+                    // 验证预到人数（必填）
                     Integer expectedCount = extractNumberFromString(dto.getExpectedCount());
-                    request.setYdrs(expectedCount);
-                    
-                    // 调用添加课程方法
-                    Result<CourseSchedule> addResult = addCourseSchedule(request);
-                    
-                    if (addResult.getCode() == 0) {
-                        successCount++;
-                        // 如果有部分班级不存在的提示，添加到错误消息中
-                        if (addResult.getMessage() != null && addResult.getMessage().contains("不存在")) {
-                            errorMessages.add(String.format("第%d行：%s", rowNum, addResult.getMessage()));
-                        }
-                    } else {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：%s", rowNum, addResult.getMessage()));
+                    if (expectedCount == null || expectedCount <= 0) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
+                        continue;
+                    }
+                    
+                    // 创建课表对象
+                    CourseSchedule courseSchedule = new CourseSchedule();
+                    courseSchedule.setCourseNo(dto.getCourseNo().trim());
+                    courseSchedule.setCourseName(dto.getCourseName().trim());
+                    courseSchedule.setOrderNo(dto.getOrderNo().trim());
+                    courseSchedule.setWeekRange(dto.getWeekRange().trim());
+                    courseSchedule.setWeekday(dto.getWeekday().trim());
+                    courseSchedule.setStartPeriod(startPeriod);
+                    courseSchedule.setEndPeriod(endPeriod);
+                    courseSchedule.setClassroom(dto.getClassroom().trim());
+                    courseSchedule.setTeacherName(isBlank(dto.getTeacherName()) ? null : dto.getTeacherName().trim());
+                    courseSchedule.setCourseType(isBlank(dto.getCourseType()) ? null : dto.getCourseType().trim());
+                    // 使用上传的预到人数，不进行计算
+                    courseSchedule.setExpectedCount(expectedCount);
+                    
+                    // 处理班级列表
+                    List<Class> successClasses = new ArrayList<>();
+                    List<String> failedClasses = new ArrayList<>();
+                    
+                    if (!isBlank(dto.getClassList())) {
+                        String[] classArray = dto.getClassList().trim().split(",");
+                        
+                        for (String className : classArray) {
+                            className = className.trim();
+                            if (className.isEmpty()) {
+                                continue;
+                            }
+                            
+                            // 查询班级是否存在
+                            LambdaQueryWrapper<Class> classQueryWrapper = new LambdaQueryWrapper<>();
+                            classQueryWrapper.eq(Class::getClassName, className);
+                            Class classEntity = classService.getOne(classQueryWrapper);
+                            
+                            if (classEntity == null) {
+                                failedClasses.add(className);
+                            } else {
+                                successClasses.add(classEntity);
+                            }
+                        }
+                    }
+                    
+                    // 保存课表
+                    this.save(courseSchedule);
+                    
+                    // 保存课程与班级的关联关系
+                    for (Class classEntity : successClasses) {
+                        Course course = new Course();
+                        course.setCourseId(courseSchedule.getId());
+                        course.setClassId(classEntity.getId());
+                        courseService.save(course);
+                    }
+                    
+                    successCount++;
+                    
+                    // 如果有失败的班级，添加提示信息
+                    if (!failedClasses.isEmpty()) {
+                        String failedClassNames = String.join(",", failedClasses);
+                        errorMessages.add(String.format("第%d行：%s不存在，导入失败，其余班级正常导入", rowNum, failedClassNames));
                     }
                     
                 } catch (Exception e) {
