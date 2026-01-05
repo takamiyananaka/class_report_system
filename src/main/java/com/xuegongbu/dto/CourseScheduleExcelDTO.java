@@ -12,16 +12,16 @@ import java.io.Serializable;
 public class CourseScheduleExcelDTO implements Serializable {
 
     /**
-     * 课程名称
-     */
-    @ExcelProperty(value = "KCM")
-    private String courseName;
-
-    /**
      * 课程号
      */
     @ExcelProperty(value = "KCH")
     private String courseNo;
+
+    /**
+     * 课程名称
+     */
+    @ExcelProperty(value = "KCM")
+    private String courseName;
 
     /**
      * 课序号
@@ -29,18 +29,17 @@ public class CourseScheduleExcelDTO implements Serializable {
     @ExcelProperty(value = "KXH")
     private String orderNo;
     
+    /**
+     * 周次范围（格式：x-x周，例如：3-16周）
+     */
+    @ExcelProperty(value = "ZCMC")
+    private String weekRange;
 
     /**
      * 星期几（汉字）
      */
     @ExcelProperty(value = "SKXQ")
     private String weekday;
-
-    /**
-     * 周次范围（格式：x-x周，例如：3-16周）
-     */
-    @ExcelProperty(value = "ZCMC")
-    private String weekRange;
 
     /**
      * 开始节次（1-12）
@@ -69,7 +68,7 @@ public class CourseScheduleExcelDTO implements Serializable {
     /**
      * 任课老师
      */
-    @ExcelProperty(value = "RKls")
+    @ExcelProperty(value = "RKLS")
     private String teacherName;
     
     /**
@@ -77,4 +76,10 @@ public class CourseScheduleExcelDTO implements Serializable {
      */
     @ExcelProperty(value = "KCLX")
     private String courseType;
+    
+    /**
+     * 预到人数
+     */
+    @ExcelProperty(value = "YDRS")
+    private String expectedCount;
 }

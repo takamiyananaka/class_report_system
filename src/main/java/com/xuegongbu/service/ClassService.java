@@ -2,6 +2,7 @@ package com.xuegongbu.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.ClassQueryDTO;
 import org.springframework.web.multipart.MultipartFile;
