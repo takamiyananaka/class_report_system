@@ -407,13 +407,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     }
     
     /**
-     * 检查字符串是否为空
-     */
-    private boolean isBlank(String str) {
-        return str == null || str.trim().isEmpty();
-    }
-    
-    /**
      * 验证星期几格式是否正确
      * @param weekday 星期几（汉字格式）
      * @return 是否有效
