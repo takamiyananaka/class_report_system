@@ -14,6 +14,7 @@ import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.dto.CourseScheduleVO;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
+import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.*;
 import com.xuegongbu.util.ClassTimeUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
     @Autowired
     private CollegeService collegeService;
+    @Autowired
+    private TeacherMapper teacherMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -436,49 +439,18 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
         List<String> teacherNos = new ArrayList<>();
 
-        if ("college_admin".equals(currentRole)) {
-            // 如果是学院管理员，获取该学院的所有教师工号
-            if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().isEmpty()) {
-                // 如果指定了教师工号，则只查询该教师的课表（回退到教师查询逻辑）
-                teacherNos.add(queryDTO.getTeacherNo());
-            } else {
-                // 否则查询该学院管理员管理的所有教师的课表
-                String currentLoginId = StpUtil.getLoginIdAsString();
-
-                // 查询学院管理员信息
-                LambdaQueryWrapper<CollegeAdmin> collegeAdminQueryWrapper = new LambdaQueryWrapper<>();
-                collegeAdminQueryWrapper.eq(CollegeAdmin::getId, currentLoginId);
-                CollegeAdmin collegeAdmin = collegeAdminService.getOne(collegeAdminQueryWrapper);
-
-                if (collegeAdmin != null) {
-                    // 根据学院ID查询学院号
-                    LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
-                    collegeQueryWrapper.eq(College::getId, collegeAdmin.getCollegeId());
-                    College college = collegeService.getOne(collegeQueryWrapper);
-                    if (college != null) {
-                        // 根据学院号查询教师工号
-                        LambdaQueryWrapper<Teacher> teacherQueryWrapper = new LambdaQueryWrapper<>();
-                        teacherQueryWrapper.eq(Teacher::getCollegeNo, college.getCollegeNo());
-                        List<Teacher> teacherList = teacherService.list(teacherQueryWrapper);
-                        if (teacherList != null && !teacherList.isEmpty()) {
-                            teacherNos = teacherList.stream()
-                                    .map(Teacher::getTeacherNo)
-                                    .collect(Collectors.toList());
-                        }
-                    }
-                }
-            }
+        // 根据不同角色获取教师工号列表
+        if ("teacher".equals(currentRole)) {
+            // 如果是教师角色，直接使用当前登录教师工号
+            teacherNos = getTeacherNosForTeacherRole(queryDTO);
+        } else if ("college_admin".equals(currentRole)) {
+            // 如果是学院管理员角色，获取该学院的所有教师工号
+            teacherNos = getTeacherNosForCollegeAdminRole(queryDTO);
+        } else if ("admin".equals(currentRole)) {
+            // 如果是学校管理员角色，根据条件获取教师工号
+            teacherNos = getTeacherNosForAdminRole(queryDTO);
         } else {
-            // 如果是教师或其他角色，使用原有的逻辑
-            if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().isEmpty()) {
-                teacherNos.add(queryDTO.getTeacherNo());
-            } else {
-                // 如果没有指定教师工号，尝试从当前登录教师获取
-                if (StpUtil.isLogin()) {
-                    String currentLoginId = StpUtil.getLoginIdAsString();
-                    teacherNos.add(currentLoginId); // 假设登录ID是教师工号
-                }
-            }
+            log.error("当前用户角色无效");
         }
         
         if (teacherNos.isEmpty()) {
@@ -566,6 +538,80 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         voPage.setRecords(voList);
         
         return voPage;
+    }
+
+    /**
+     * 为教师角色获取教师工号列表
+     * @param queryDTO 查询条件
+     * @return 教师工号列表
+     */
+    private List<String> getTeacherNosForTeacherRole(CourseScheduleQueryDTO queryDTO) {
+        List<String> teacherNos = new ArrayList<>();
+        // 如果当前角色为教师，则直接使用该教师工号
+        if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().isEmpty()) {
+            // 如果指定了教师工号，则使用指定的教师工号（权限检查由业务逻辑完成）
+            teacherNos.add(queryDTO.getTeacherNo());
+        } else {
+            // 如果没有指定教师工号，使用当前登录教师工号
+            if (StpUtil.isLogin()) {
+                String currentLoginId = StpUtil.getLoginIdAsString();
+                teacherNos.add(currentLoginId);
+            }
+        }
+        return teacherNos;
+    }
+
+    /**
+     * 为学院管理员角色获取教师工号列表
+     * @param queryDTO 查询条件
+     * @return 教师工号列表
+     */
+    private List<String> getTeacherNosForCollegeAdminRole(CourseScheduleQueryDTO queryDTO) {
+        List<String> teacherNos = new ArrayList<>();
+        // 如果当前角色为学院管理员，则学院条件指定为该学院管理员的学院
+        CollegeAdmin collegeAdmin = (CollegeAdmin) StpUtil.getSession().get("userInfo");
+        if (collegeAdmin != null) {
+            // 判断有无教师工号条件
+            if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().isEmpty()) {
+                // 若有，则直接使用该教师工号
+                teacherNos.add(queryDTO.getTeacherNo());
+            } else {
+                // 否则执行按学院获取教师工号列表方法
+                LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
+                collegeQueryWrapper.eq(College::getId, collegeAdmin.getCollegeId());
+                College college = collegeService.getOne(collegeQueryWrapper);
+                if (college != null) {
+                    teacherNos = teacherMapper.queryTeacherNoByCollegeName(college.getName());
+                }
+            }
+        }
+        return teacherNos;
+    }
+
+    /**
+     * 为学校管理员角色获取教师工号列表
+     * @param queryDTO 查询条件
+     * @return 教师工号列表
+     */
+    private List<String> getTeacherNosForAdminRole(CourseScheduleQueryDTO queryDTO) {
+        List<String> teacherNos = new ArrayList<>();
+        // 当前角色为学校管理员的时候
+        // 先判断有无教师工号条件，若有则直接使用该教师工号
+        if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().isEmpty()) {
+            teacherNos.add(queryDTO.getTeacherNo());
+        } else if (queryDTO.getCollegeName() != null && !queryDTO.getCollegeName().isEmpty()) {
+            // 再判断有无学院条件，若有则直接使用按学院获得教师工号
+            teacherNos = teacherMapper.queryTeacherNoByCollegeName(queryDTO.getCollegeName());
+        } else {
+            // 都没有则获取所有教师工号
+            List<Teacher> teacherList = teacherService.list();
+            if (teacherList != null && !teacherList.isEmpty()) {
+                teacherNos = teacherList.stream()
+                        .map(Teacher::getTeacherNo)
+                        .collect(Collectors.toList());
+            }
+        }
+        return teacherNos;
     }
 
     @Override

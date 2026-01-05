@@ -67,27 +67,6 @@ public class CourseScheduleController {
     @Operation(summary = "老师和管理员分页查询课表", description = "分页查询课表，默认查询当前登录教师的课表。教师工号默认从后端获取。管理员查询本院课表")
     @SaCheckRole(value = {"teacher", "college_admin", "admin"}, mode = SaMode.OR)
     public Result<Page<CourseScheduleVO>> query(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody CourseScheduleQueryDTO queryDTO) {
-        //如果角色身份为教师，则使用当前教师工号查询
-        if (StpUtil.hasRole("teacher")) {
-            if (StpUtil.isLogin()) {
-                try {
-                    String currentTeacherNo = null;
-                    Object loginId = StpUtil.getLoginId();
-                    if (loginId instanceof String) {
-                        currentTeacherNo = (String) loginId;
-                    }
-
-                    if (currentTeacherNo != null) {
-                        queryDTO.setTeacherNo(currentTeacherNo);
-                        log.info("使用当前登录教师工号查询课表: {}", currentTeacherNo);
-                    } else {
-                        log.warn("无法解析当前登录教师工号，将查询所有课表");
-                    }
-                } catch (Exception e) {
-                    log.warn("无法解析当前登录教师工号，将查询所有课表: {}", e.getMessage());
-                }
-            }
-        }
         log.info("查询课表请求，参数：{}", queryDTO);
         Page<CourseScheduleVO> result = courseScheduleService.queryPage(queryDTO);
         log.info("查询课表完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
