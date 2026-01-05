@@ -133,61 +133,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         return result;
     }
 
-    /**
-     * 添加单个教师
-     * @param teacherNo 教师工号
-     * @param realName 真实姓名
-     * @param collegeNo 学院号
-     * @param departmentName 部门名称
-     * @return 添加结果
-     */
-    @Override
-    public Result<Teacher> addSingleTeacher(String teacherNo, String realName, String collegeNo, String departmentName) {
-        try {
-            // 验证必填字段
-            if (teacherNo == null || teacherNo.trim().isEmpty()) {
-                return Result.error("教师工号不能为空");
-            }
-            if (realName == null || realName.trim().isEmpty()) {
-                return Result.error("真实姓名不能为空");
-            }
-            if (collegeNo == null || collegeNo.trim().isEmpty()) {
-                return Result.error("学院号不能为空");
-            }
-            
-            // 检查工号是否已存在
-            Teacher existingTeacher = lambdaQuery()
-                    .eq(Teacher::getTeacherNo, teacherNo.trim())
-                    .one();
-            
-            if (existingTeacher != null) {
-                return Result.error("教师工号已存在");
-            }
-            
-            // 创建教师对象
-            Teacher teacher = new Teacher();
-            teacher.setTeacherNo(teacherNo.trim());
-            teacher.setRealName(realName.trim());
-            teacher.setUsername(teacherNo.trim()); // 用户名为工号
-            teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
-            teacher.setCollegeNo(collegeNo.trim());
-            teacher.setDepartment(departmentName != null ? departmentName.trim() : null);
-            teacher.setPhone(null); // 手机号初始为空
-            teacher.setEmail(null); // 邮箱初始为空
-            teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
-            teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
-            teacher.setStatus(1); // 默认启用状态
-            
-            save(teacher);
-            
-            return Result.success(teacher);
-            
-        } catch (Exception e) {
-            log.error("添加教师失败", e);
-            return Result.error("添加教师失败: " + e.getMessage());
-        }
-    }
-
     @Override
     public Result<String> importTeachers(MultipartFile file, String collegeNo) {
         try {
@@ -220,36 +165,44 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     
                     // 验证必填字段是否完整
                     if (dto.getTeacherNo() == null || dto.getTeacherNo().trim().isEmpty()) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：工号不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (dto.getRealName() == null || dto.getRealName().trim().isEmpty()) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：真实姓名不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     
-                    // 调用添加教师方法
-                    Result<Teacher> addResult = addSingleTeacher(
-                        dto.getTeacherNo(),
-                        dto.getRealName(),
-                        college.getCollegeNo(),
-                        college.getName()
-                    );
+                    // 检查工号是否已存在
+                    Teacher existingTeacher = lambdaQuery()
+                            .eq(Teacher::getTeacherNo, dto.getTeacherNo().trim())
+                            .one();
                     
-                    if (addResult.getCode() == 0) {
-                        successCount++;
-                    } else {
-                        // 如果是工号已存在，则跳过（不算失败）
-                        if (addResult.getMessage().contains("已存在")) {
-                            log.info("第{}行：教师工号已存在，跳过", rowNum);
-                            // 不增加failCount，也不添加到错误消息
-                        } else {
-                            errorMessages.add(String.format("第%d行上传失败,请检查该行数据：%s", rowNum, addResult.getMessage()));
-                            failCount++;
-                        }
+                    if (existingTeacher != null) {
+                        log.info("第{}行：教师工号已存在，跳过", rowNum);
+                        // 不增加failCount，也不添加到错误消息
+                        continue;
                     }
+                    
+                    // 创建教师对象
+                    Teacher teacher = new Teacher();
+                    teacher.setTeacherNo(dto.getTeacherNo().trim());
+                    teacher.setRealName(dto.getRealName().trim());
+                    teacher.setUsername(dto.getTeacherNo().trim()); // 用户名为工号
+                    teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
+                    teacher.setCollegeNo(college.getCollegeNo().trim());
+                    teacher.setDepartment(college.getName() != null ? college.getName().trim() : null);
+                    teacher.setPhone(null); // 手机号初始为空
+                    teacher.setEmail(null); // 邮箱初始为空
+                    teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
+                    teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
+                    teacher.setStatus(1); // 默认启用状态
+                    
+                    // 保存教师
+                    save(teacher);
+                    successCount++;
                     
                 } catch (Exception e) {
                     log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);

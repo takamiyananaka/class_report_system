@@ -26,55 +26,6 @@ import java.util.stream.Collectors;
 @Service
 public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements ClassService {
 
-    /**
-     * 添加单个班级
-     * @param className 班级名称
-     * @param count 班级人数
-     * @param grade 年级
-     * @param major 专业
-     * @param teacherNo 辅导员工号
-     * @return 添加结果
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Class> addSingleClass(String className, Integer count, String grade, String major, String teacherNo) {
-        try {
-            // 验证必填字段
-            if (isBlank(className)) {
-                return Result.error("班级名称不能为空");
-            }
-            if (count == null || count <= 0) {
-                return Result.error("班级人数必须大于0");
-            }
-            if (isBlank(grade)) {
-                return Result.error("年级不能为空");
-            }
-            if (isBlank(major)) {
-                return Result.error("专业不能为空");
-            }
-            if (isBlank(teacherNo)) {
-                return Result.error("辅导员工号不能为空");
-            }
-            
-            // 创建班级对象
-            Class classEntity = new Class();
-            classEntity.setClassName(className.trim());
-            classEntity.setCount(count);
-            classEntity.setGrade(grade.trim());
-            classEntity.setMajor(major.trim());
-            classEntity.setTeacherNo(teacherNo.trim());
-            
-            // 保存班级
-            this.save(classEntity);
-            
-            return Result.success(classEntity);
-            
-        } catch (Exception e) {
-            log.error("添加班级失败", e);
-            return Result.error("添加班级失败: " + e.getMessage());
-        }
-    }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
@@ -127,41 +78,37 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                     
                     // 验证必填字段是否完整
                     if (isBlank(dto.getClassName())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：班级名称不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (dto.getCount() == null || dto.getCount() <= 0) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：班级人数必须大于0", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getGrade())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：年级不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getMajor())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：专业不能为空", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     
-                    // 调用添加班级方法
-                    Result<Class> addResult = addSingleClass(
-                        dto.getClassName(),
-                        dto.getCount(),
-                        dto.getGrade(),
-                        dto.getMajor(),
-                        teacherNo
-                    );
+                    // 创建班级对象
+                    Class classEntity = new Class();
+                    classEntity.setClassName(dto.getClassName().trim());
+                    classEntity.setCount(dto.getCount());
+                    classEntity.setGrade(dto.getGrade().trim());
+                    classEntity.setMajor(dto.getMajor().trim());
+                    classEntity.setTeacherNo(teacherNo.trim());
                     
-                    if (addResult.getCode() == 0) {
-                        successCount++;
-                    } else {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：%s", rowNum, addResult.getMessage()));
-                        failCount++;
-                    }
+                    // 保存班级
+                    this.save(classEntity);
+                    successCount++;
                     
                 } catch (Exception e) {
                     log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);
