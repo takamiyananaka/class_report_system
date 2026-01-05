@@ -349,6 +349,14 @@ public class CourseScheduleController {
             return Result.error("课表不存在");
         }
         
+        // 验证任课老师和课程类型（非必填，但需要长度验证）
+        if (courseSchedule.getTeacherName() != null && courseSchedule.getTeacherName().length() > 100) {
+            return Result.error("任课老师名称长度不能超过100");
+        }
+        if (courseSchedule.getCourseType() != null && courseSchedule.getCourseType().length() > 50) {
+            return Result.error("课程类型长度不能超过50");
+        }
+        
         // 设置ID以便更新
         courseSchedule.setId(id);
         

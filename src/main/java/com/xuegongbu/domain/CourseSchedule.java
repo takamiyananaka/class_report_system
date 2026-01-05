@@ -94,6 +94,20 @@ public class CourseSchedule implements Serializable {
     private String classroom;
 
     /**
+     * 任课老师
+     */
+    @Size(max = 100, message = "任课老师名称长度不能超过100")
+    @Schema(description = "任课老师")
+    private String teacherName;
+
+    /**
+     * 课程类型（通识、专业课等）
+     */
+    @Size(max = 50, message = "课程类型长度不能超过50")
+    @Schema(description = "课程类型（通识、专业课等）")
+    private String courseType;
+
+    /**
     * 创建时间
     */
     @Schema(description = "创建时间")

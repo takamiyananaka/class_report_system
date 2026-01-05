@@ -30,8 +30,110 @@ CREATE TABLE IF NOT EXISTS admin (
     INDEX idx_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
 
--- 修改已存在的admin表的id字段类型
+-- 修改已存在的admin表的字段类型和添加缺失字段
 ALTER TABLE admin MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+ALTER TABLE admin MODIFY COLUMN password VARCHAR(255) COMMENT '密码（BCrypt加密）';
+ALTER TABLE admin MODIFY COLUMN status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'admin' 
+  AND COLUMN_NAME = 'real_name';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE admin ADD COLUMN real_name VARCHAR(50) COMMENT ''真实姓名''',
+    'SELECT ''Column real_name already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'admin' 
+  AND COLUMN_NAME = 'phone';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE admin ADD COLUMN phone VARCHAR(20) COMMENT ''手机号''',
+    'SELECT ''Column phone already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'admin' 
+  AND COLUMN_NAME = 'email';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE admin ADD COLUMN email VARCHAR(100) COMMENT ''邮箱''',
+    'SELECT ''Column email already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'admin' 
+  AND COLUMN_NAME = 'remark';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE admin ADD COLUMN remark VARCHAR(500) COMMENT ''备注''',
+    'SELECT ''Column remark already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'admin' 
+  AND COLUMN_NAME = 'last_login_time';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE admin ADD COLUMN last_login_time DATETIME COMMENT ''最后登录时间''',
+    'SELECT ''Column last_login_time already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'admin' 
+  AND COLUMN_NAME = 'last_login_ip';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE admin ADD COLUMN last_login_ip VARCHAR(50) COMMENT ''最后登录IP''',
+    'SELECT ''Column last_login_ip already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'admin' 
+  AND INDEX_NAME = 'idx_username';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE admin ADD INDEX idx_username (username)',
+    'SELECT ''Index idx_username already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 2. 学院信息表
@@ -47,8 +149,38 @@ CREATE TABLE IF NOT EXISTS college (
     INDEX idx_college_no (college_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学院信息表';
 
--- 修改已存在的college表的id字段类型
+-- 修改已存在的college表的字段类型和添加缺失字段
 ALTER TABLE college MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college' 
+  AND COLUMN_NAME = 'description';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE college ADD COLUMN description VARCHAR(500) COMMENT ''学院描述''',
+    'SELECT ''Column description already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college' 
+  AND INDEX_NAME = 'idx_college_no';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE college ADD INDEX idx_college_no (college_no)',
+    'SELECT ''Index idx_college_no already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 2.1 学院管理员表
@@ -71,8 +203,109 @@ CREATE TABLE IF NOT EXISTS college_admin (
     INDEX idx_college_id (college_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学院管理员表';
 
--- 修改已存在的college_admin表的id字段类型
+-- 修改已存在的college_admin表的字段类型和添加缺失字段
 ALTER TABLE college_admin MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+ALTER TABLE college_admin MODIFY COLUMN password VARCHAR(255) COMMENT '学院管理员密码（BCrypt加密）';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college_admin' 
+  AND COLUMN_NAME = 'real_name';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE college_admin ADD COLUMN real_name VARCHAR(50) COMMENT ''真实姓名''',
+    'SELECT ''Column real_name already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college_admin' 
+  AND COLUMN_NAME = 'phone';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE college_admin ADD COLUMN phone VARCHAR(20) COMMENT ''手机号''',
+    'SELECT ''Column phone already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college_admin' 
+  AND COLUMN_NAME = 'email';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE college_admin ADD COLUMN email VARCHAR(100) COMMENT ''邮箱''',
+    'SELECT ''Column email already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college_admin' 
+  AND COLUMN_NAME = 'last_login_time';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE college_admin ADD COLUMN last_login_time DATETIME COMMENT ''最后登录时间''',
+    'SELECT ''Column last_login_time already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college_admin' 
+  AND COLUMN_NAME = 'last_login_ip';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE college_admin ADD COLUMN last_login_ip VARCHAR(50) COMMENT ''最后登录IP''',
+    'SELECT ''Column last_login_ip already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college_admin' 
+  AND INDEX_NAME = 'idx_username';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE college_admin ADD INDEX idx_username (username)',
+    'SELECT ''Index idx_username already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'college_admin' 
+  AND INDEX_NAME = 'idx_college_id';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE college_admin ADD INDEX idx_college_id (college_id)',
+    'SELECT ''Index idx_college_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 3. 教师表
@@ -102,9 +335,14 @@ CREATE TABLE IF NOT EXISTS teacher (
     INDEX idx_college_no (college_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教师表';
 
--- 修改已存在的teacher表的id字段类型
+-- 修改已存在的teacher表的字段类型和添加缺失字段
 ALTER TABLE teacher MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
--- 添加college_no字段（使用存储过程检查是否存在）
+ALTER TABLE teacher MODIFY COLUMN password VARCHAR(255) COMMENT '密码（BCrypt加密）';
+ALTER TABLE teacher MODIFY COLUMN identity TINYINT DEFAULT 2 COMMENT '身份：1-只是教师，2-教师且是辅导员';
+ALTER TABLE teacher MODIFY COLUMN attendance_threshold DECIMAL(5,2) DEFAULT 0.90 COMMENT '考勤预警阈值（如0.90表示90%）';
+ALTER TABLE teacher MODIFY COLUMN enable_email_notification TINYINT DEFAULT 1 COMMENT '是否开启邮件通知：0-否，1-是';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -119,7 +357,105 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND COLUMN_NAME = 'phone';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE teacher ADD COLUMN phone VARCHAR(20) COMMENT ''手机号''',
+    'SELECT ''Column phone already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND COLUMN_NAME = 'email';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE teacher ADD COLUMN email VARCHAR(100) COMMENT ''邮箱''',
+    'SELECT ''Column email already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND COLUMN_NAME = 'last_login_time';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE teacher ADD COLUMN last_login_time DATETIME COMMENT ''最后登录时间''',
+    'SELECT ''Column last_login_time already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND COLUMN_NAME = 'last_login_ip';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE teacher ADD COLUMN last_login_ip VARCHAR(50) COMMENT ''最后登录IP''',
+    'SELECT ''Column last_login_ip already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND COLUMN_NAME = 'remark';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE teacher ADD COLUMN remark VARCHAR(500) COMMENT ''备注''',
+    'SELECT ''Column remark already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND INDEX_NAME = 'idx_username';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE teacher ADD INDEX idx_username (username)',
+    'SELECT ''Index idx_username already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'teacher' 
+  AND INDEX_NAME = 'idx_teacher_no';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE teacher ADD INDEX idx_teacher_no (teacher_no)',
+    'SELECT ''Index idx_teacher_no already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 SET @idx_exists = 0;
 SELECT COUNT(*) INTO @idx_exists 
 FROM INFORMATION_SCHEMA.STATISTICS 
@@ -152,8 +488,80 @@ CREATE TABLE IF NOT EXISTS class (
     INDEX idx_major (major)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='班级表';
 
--- 修改已存在的class表的id字段类型
+-- 修改已存在的class表的字段类型和添加缺失字段
 ALTER TABLE class MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'class' 
+  AND COLUMN_NAME = 'grade';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE class ADD COLUMN grade VARCHAR(50) COMMENT ''年级''',
+    'SELECT ''Column grade already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'class' 
+  AND COLUMN_NAME = 'major';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE class ADD COLUMN major VARCHAR(100) COMMENT ''专业''',
+    'SELECT ''Column major already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'class' 
+  AND INDEX_NAME = 'idx_teacher_no';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE class ADD INDEX idx_teacher_no (teacher_no)',
+    'SELECT ''Index idx_teacher_no already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'class' 
+  AND INDEX_NAME = 'idx_grade';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE class ADD INDEX idx_grade (grade)',
+    'SELECT ''Index idx_grade already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'class' 
+  AND INDEX_NAME = 'idx_major';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE class ADD INDEX idx_major (major)',
+    'SELECT ''Index idx_major already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 5. 课表表
@@ -169,6 +577,8 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     start_period TINYINT NOT NULL COMMENT '开始节次（1-12）',
     end_period TINYINT NOT NULL COMMENT '结束节次（1-12）',
     classroom VARCHAR(100) NOT NULL COMMENT '教室',
+    teacher_name VARCHAR(100) COMMENT '任课老师',
+    course_type VARCHAR(50) COMMENT '课程类型（通识、专业课等）',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_weekday (weekday),
@@ -177,13 +587,11 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     CONSTRAINT chk_period_range CHECK (end_period >= start_period)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课表表';
 
--- 修改已存在的course_schedule表的字段类型和字段
+-- 修改已存在的course_schedule表的字段类型和添加缺失字段
 ALTER TABLE course_schedule MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
-
--- 修改weekday字段为VARCHAR类型（汉字星期）
 ALTER TABLE course_schedule MODIFY COLUMN weekday VARCHAR(20) NOT NULL COMMENT '星期几（汉字：星期一至星期日）';
 
--- 添加course_no字段
+-- 添加缺失字段（使用存储过程检查是否存在）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -198,7 +606,6 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加order_no字段
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -213,7 +620,6 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加week_range字段
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -228,7 +634,6 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加start_period字段
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -243,7 +648,6 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加end_period字段
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -258,7 +662,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 删除teacher_no字段（如果存在）
+-- 删除teacher_no字段（如果存在，根据规范要求移除）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -273,7 +677,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 删除class_name字段（如果存在）
+-- 删除class_name字段（如果存在，根据规范要求移除）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -288,7 +692,6 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加expected_count字段（如果不存在）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -299,6 +702,92 @@ WHERE TABLE_SCHEMA = DATABASE()
 SET @sql = IF(@col_exists = 0, 
     'ALTER TABLE course_schedule ADD COLUMN expected_count INT COMMENT ''预到人数''',
     'SELECT ''Column expected_count already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'teacher_name';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN teacher_name VARCHAR(100) COMMENT ''任课老师''',
+    'SELECT ''Column teacher_name already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'course_type';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN course_type VARCHAR(50) COMMENT ''课程类型（通识、专业课等）''',
+    'SELECT ''Column course_type already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND INDEX_NAME = 'idx_weekday';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE course_schedule ADD INDEX idx_weekday (weekday)',
+    'SELECT ''Index idx_weekday already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加约束（使用存储过程检查是否存在）
+SET @constraint_exists = 0;
+SELECT COUNT(*) INTO @constraint_exists 
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND CONSTRAINT_NAME = 'chk_start_period';
+
+SET @sql = IF(@constraint_exists = 0, 
+    'ALTER TABLE course_schedule ADD CONSTRAINT chk_start_period CHECK (start_period >= 1 AND start_period <= 12)',
+    'SELECT ''Constraint chk_start_period already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @constraint_exists = 0;
+SELECT COUNT(*) INTO @constraint_exists 
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND CONSTRAINT_NAME = 'chk_end_period';
+
+SET @sql = IF(@constraint_exists = 0, 
+    'ALTER TABLE course_schedule ADD CONSTRAINT chk_end_period CHECK (end_period >= 1 AND end_period <= 12)',
+    'SELECT ''Constraint chk_end_period already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @constraint_exists = 0;
+SELECT COUNT(*) INTO @constraint_exists 
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND CONSTRAINT_NAME = 'chk_period_range';
+
+SET @sql = IF(@constraint_exists = 0, 
+    'ALTER TABLE course_schedule ADD CONSTRAINT chk_period_range CHECK (end_period >= start_period)',
+    'SELECT ''Constraint chk_period_range already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -325,7 +814,7 @@ SET @col_list = '';
 SELECT GROUP_CONCAT(COLUMN_NAME) INTO @col_list
 FROM INFORMATION_SCHEMA.COLUMNS 
 WHERE TABLE_SCHEMA = DATABASE() 
-  AND TABLE_NAME = 'course'
+  AND TABLE_NAME = 'course' 
   AND COLUMN_NAME NOT IN ('id', 'course_id', 'class_id', 'create_time', 'update_time', 'is_delete');
 
 -- 删除不需要的字段
@@ -336,7 +825,7 @@ SELECT GROUP_CONCAT(
 ) INTO @drop_cols
 FROM INFORMATION_SCHEMA.COLUMNS 
 WHERE TABLE_SCHEMA = DATABASE() 
-  AND TABLE_NAME = 'course'
+  AND TABLE_NAME = 'course' 
   AND COLUMN_NAME NOT IN ('id', 'course_id', 'class_id', 'create_time', 'update_time', 'is_delete', 'is_deleted');
 
 SET @sql = IF(@drop_cols IS NOT NULL AND @drop_cols != '', 
@@ -391,12 +880,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 注意：如果表中有数据，需要手动填充course_id和class_id的值
--- 然后再修改为NOT NULL
--- ALTER TABLE course MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
--- ALTER TABLE course MODIFY COLUMN class_id VARCHAR(64) NOT NULL COMMENT '班级ID';
-
--- 添加索引
+-- 添加索引（使用存储过程检查是否存在）
 SET @idx_exists = 0;
 SELECT COUNT(*) INTO @idx_exists 
 FROM INFORMATION_SCHEMA.STATISTICS 
@@ -451,9 +935,96 @@ CREATE TABLE IF NOT EXISTS attendance (
     INDEX idx_check_time (check_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='考勤记录表';
 
--- 修改已存在的attendance表的字段类型
+-- 修改已存在的attendance表的字段类型和添加缺失字段
 ALTER TABLE attendance MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 ALTER TABLE attendance MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
+ALTER TABLE attendance MODIFY COLUMN attendance_rate DECIMAL(5,2) COMMENT '出勤率（%）';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'attendance' 
+  AND COLUMN_NAME = 'image_url';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE attendance ADD COLUMN image_url VARCHAR(255) COMMENT ''抓取的图片URL''',
+    'SELECT ''Column image_url already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'attendance' 
+  AND COLUMN_NAME = 'check_type';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE attendance ADD COLUMN check_type INT COMMENT ''考勤类型：1-自动，2-手动''',
+    'SELECT ''Column check_type already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'attendance' 
+  AND COLUMN_NAME = 'status';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE attendance ADD COLUMN status INT COMMENT ''状态：1-正常，2-异常''',
+    'SELECT ''Column status already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'attendance' 
+  AND COLUMN_NAME = 'remark';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE attendance ADD COLUMN remark VARCHAR(500) COMMENT ''备注''',
+    'SELECT ''Column remark already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'attendance' 
+  AND INDEX_NAME = 'idx_course_id';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE attendance ADD INDEX idx_course_id (course_id)',
+    'SELECT ''Index idx_course_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'attendance' 
+  AND INDEX_NAME = 'idx_check_time';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE attendance ADD INDEX idx_check_time (check_time)',
+    'SELECT ''Index idx_check_time already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 7. 预警记录表
@@ -478,12 +1049,12 @@ CREATE TABLE IF NOT EXISTS alert (
     INDEX idx_alert_type (alert_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='预警记录表';
 
--- 修改已存在的alert表的字段类型
+-- 修改已存在的alert表的字段类型和添加缺失字段
 ALTER TABLE alert MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
 ALTER TABLE alert MODIFY COLUMN course_id VARCHAR(64) NOT NULL COMMENT '课程ID';
 ALTER TABLE alert MODIFY COLUMN attendance_id VARCHAR(64) COMMENT '考勤记录ID';
 
--- 添加class_id字段（如果不存在）
+-- 添加缺失字段（使用存储过程检查是否存在）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -498,7 +1069,6 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加read_status字段（如果不存在）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -509,6 +1079,49 @@ WHERE TABLE_SCHEMA = DATABASE()
 SET @sql = IF(@col_exists = 0, 
     'ALTER TABLE alert ADD COLUMN read_status INT COMMENT ''阅读状态：0-未读，1-已读''',
     'SELECT ''Column read_status already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'alert' 
+  AND INDEX_NAME = 'idx_course_id';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE alert ADD INDEX idx_course_id (course_id)',
+    'SELECT ''Index idx_course_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'alert' 
+  AND INDEX_NAME = 'idx_attendance_id';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE alert ADD INDEX idx_attendance_id (attendance_id)',
+    'SELECT ''Index idx_attendance_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'alert' 
+  AND INDEX_NAME = 'idx_alert_type';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE alert ADD INDEX idx_alert_type (alert_type)',
+    'SELECT ''Index idx_alert_type already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -530,8 +1143,80 @@ CREATE TABLE IF NOT EXISTS image_capture (
     INDEX idx_capture_time (capture_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='图片抓取记录表';
 
--- 修改已存在的image_capture表的id字段类型
+-- 修改已存在的image_capture表的字段类型和添加缺失字段
 ALTER TABLE image_capture MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'image_capture' 
+  AND COLUMN_NAME = 'person_count';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE image_capture ADD COLUMN person_count INT COMMENT ''识别人数''',
+    'SELECT ''Column person_count already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'image_capture' 
+  AND COLUMN_NAME = 'recognition_status';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE image_capture ADD COLUMN recognition_status INT COMMENT ''识别状态：0-未识别，1-识别成功，2-识别失败''',
+    'SELECT ''Column recognition_status already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'image_capture' 
+  AND COLUMN_NAME = 'error_message';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE image_capture ADD COLUMN error_message VARCHAR(500) COMMENT ''错误信息''',
+    'SELECT ''Column error_message already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'image_capture' 
+  AND INDEX_NAME = 'idx_classroom';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE image_capture ADD INDEX idx_classroom (classroom)',
+    'SELECT ''Index idx_classroom already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'image_capture' 
+  AND INDEX_NAME = 'idx_capture_time';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE image_capture ADD INDEX idx_capture_time (capture_time)',
+    'SELECT ''Index idx_capture_time already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ====================================
 -- 初始化数据
@@ -567,3 +1252,4 @@ ON DUPLICATE KEY UPDATE username = username;
 -- 9. 使用utf8mb4字符集，支持emoji和特殊字符
 -- 10. 本脚本使用ALTER TABLE语句，可以在已有数据库上运行，会自动修改现有表结构
 -- 11. 使用ON DUPLICATE KEY UPDATE确保初始化数据可以重复执行
+-- 12. 本脚本现在使用存储过程检查字段是否存在，以确保无论数据库中缺少哪个字段都能被补充完整

@@ -65,4 +65,16 @@ public class CourseScheduleExcelDTO implements Serializable {
      */
     @ExcelProperty(value = "WZSKBJ")
     private String classList;
+    
+    /**
+     * 任课老师
+     */
+    @ExcelProperty(value = "RKls")
+    private String teacherName;
+    
+    /**
+     * 课程类型（通识、专业课等）
+     */
+    @ExcelProperty(value = "KCLX")
+    private String courseType;
 }

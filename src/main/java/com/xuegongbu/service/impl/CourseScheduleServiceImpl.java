@@ -214,6 +214,10 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     courseSchedule.setClassroom(formattedClassroom);
                     courseSchedule.setExpectedCount(totalExpectedCount); // 设置预到人数为所有班级人数之和
                     
+                    // 设置任课老师和课程类型
+                    courseSchedule.setTeacherName(isBlank(dto.getTeacherName()) ? null : dto.getTeacherName().trim());
+                    courseSchedule.setCourseType(isBlank(dto.getCourseType()) ? null : dto.getCourseType().trim());
+                    
                     // 先保存课表获取ID
                     this.save(courseSchedule);
                     
@@ -364,6 +368,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         vo.setEndPeriod(courseSchedule.getEndPeriod());
         vo.setClassroom(courseSchedule.getClassroom());
         vo.setExpectedCount(courseSchedule.getExpectedCount());
+        vo.setTeacherName(courseSchedule.getTeacherName());
+        vo.setCourseType(courseSchedule.getCourseType());
         vo.setCreateTime(courseSchedule.getCreateTime());
         vo.setUpdateTime(courseSchedule.getUpdateTime());
         
@@ -528,11 +534,21 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             queryWrapper.like(CourseSchedule::getCourseName, queryDTO.getCourseName().trim());
         }
         
+        // 任课老师条件（模糊查询）
+        if (!isBlank(queryDTO.getTeacherName())) {
+            queryWrapper.like(CourseSchedule::getTeacherName, queryDTO.getTeacherName().trim());
+        }
+        
+        // 课程类型条件（精确查询）
+        if (!isBlank(queryDTO.getCourseType())) {
+            queryWrapper.eq(CourseSchedule::getCourseType, queryDTO.getCourseType().trim());
+        }
+        
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
         
-        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), pageNum, pageSize);
+        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, teacherName={}, courseType={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), queryDTO.getTeacherName(), queryDTO.getCourseType(), pageNum, pageSize);
         
         // 执行查询获取CourseSchedule分页结果
         Page<CourseSchedule> courseSchedulePage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
@@ -573,6 +589,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setEndPeriod("第2节");
             example.setClassroom("思学楼A101");
             example.setClassList("25计算机类-1班,25计算机类-2班");
+            example.setTeacherName("张老师");
+            example.setCourseType("专业课");
             templateData.add(example);
             
             // 写入Excel
