@@ -1,15 +1,23 @@
 package com.xuegongbu.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.Class;
+import com.xuegongbu.domain.College;
+import com.xuegongbu.domain.CollegeAdmin;
+import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.ClassExcelDTO;
 import com.xuegongbu.dto.ClassQueryDTO;
 import com.xuegongbu.mapper.ClassMapper;
+import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.ClassService;
+import com.xuegongbu.service.CollegeService;
+import com.xuegongbu.service.TeacherService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +32,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements ClassService {
+    @Autowired
+    private CollegeService collegeService;
+    @Autowired
+    private TeacherMapper teacherMapper;
+    @Autowired
+    private TeacherService teacherService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -155,20 +169,48 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
         int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
         Page<Class> page = new Page<>(pageNum, pageSize);
-        
+
         // 构建查询条件
         LambdaQueryWrapper<Class> queryWrapper = new LambdaQueryWrapper<>();
-        
+
+        List<String> teacherNos = new ArrayList<>();
+
+        // 辅导员工号条件和学院条件处理
+        if (!isBlank(queryDTO.getTeacherNo())) {
+            teacherNos.add(queryDTO.getTeacherNo().trim());
+        }else {
+            //教师使用登录用户工号
+            if(StpUtil.hasRole("teacher")){
+                teacherNos.add(StpUtil.getLoginIdAsString());
+            }else if(StpUtil.hasRole("college_admin")){
+                College college = (College) StpUtil.getSession().get("CollegeInfo");
+                if(college != null){
+                    teacherNos = teacherMapper.queryTeacherNoByCollegeName(college.getName());
+                }else {
+                    throw new com.xuegongbu.common.exception.BusinessException("当前用户需重新登录");
+                }
+            }else if(StpUtil.hasRole("admin")){
+                //学院条件不为空则查询对应学院的教师工号
+                if(!isBlank(queryDTO.getCollegeName())){
+                    teacherNos = teacherMapper.queryTeacherNoByCollegeName(queryDTO.getCollegeName());
+                }else {
+                    //查询所有教师工号
+                    List<Teacher> teachers = teacherService.list();
+                    teacherNos = teachers.stream()
+                            .map(Teacher::getTeacherNo)
+                            .collect(Collectors.toList());
+                }
+            }
+        }
+
+        queryWrapper.in(Class::getTeacherNo, teacherNos);
+
+
         // 班级名称条件（模糊查询）
         if (!isBlank(queryDTO.getClassName())) {
             queryWrapper.like(Class::getClassName, queryDTO.getClassName().trim());
         }
-        
-        // 辅导员工号条件
-        if (!isBlank(queryDTO.getTeacherNo())) {
-            queryWrapper.eq(Class::getTeacherNo, queryDTO.getTeacherNo().trim());
-        }
-        
+
         // 年级条件（多选）
         if (queryDTO.getGrades() != null && !queryDTO.getGrades().isEmpty()) {
             // 过滤掉空白字符串
