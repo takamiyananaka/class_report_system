@@ -8,6 +8,7 @@ import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.AttendanceQueryDTO;
+import com.xuegongbu.dto.AttendanceReportQueryDTO;
 import com.xuegongbu.mapper.AttendanceMapper;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseMapper;
@@ -15,6 +16,7 @@ import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.*;
 import com.xuegongbu.util.ClassTimeUtil;
 import com.xuegongbu.util.CountUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -235,6 +236,17 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             }
         }
         return attendanceRates;
+    }
+
+    @Override
+    public Page<Attendance> queryAttendanceReport(AttendanceReportQueryDTO queryDTO) {
+        return new Page<>();
+    }
+
+    @Override
+    public void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response) {
+        Page<Attendance> attendancePage = queryAttendanceReport(queryDTO);
+
     }
 
 
