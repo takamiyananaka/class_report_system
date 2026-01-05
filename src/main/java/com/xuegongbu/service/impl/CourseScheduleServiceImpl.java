@@ -90,155 +90,149 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             
             log.info("从Excel读取到 {} 条数据", excelDataList.size());
             
-            // 转换为CourseSchedule对象并保存
-            List<CourseSchedule> courseScheduleList = new ArrayList<>();
             int successCount = 0;
             int failCount = 0;
             List<String> errorMessages = new ArrayList<>();
             
+            // 逐行处理数据
             for (int i = 0; i < excelDataList.size(); i++) {
+                int rowNum = i + 2; // Excel行号从2开始（第1行是表头）
+                
                 try {
                     CourseScheduleExcelDTO dto = excelDataList.get(i);
-                    // 处理节次
-                    Integer startPeriod = extractNumberFromString(dto.getStartPeriod());
-                    Integer endPeriod = extractNumberFromString(dto.getEndPeriod());
-                    // 验证必填字段
+                    
+                    // 验证必填字段是否完整
+                    if (isBlank(dto.getCourseNo())) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        failCount++;
+                        continue;
+                    }
                     if (isBlank(dto.getCourseName())) {
-                        errorMessages.add(String.format("第%d行：课程名称不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (isBlank(dto.getWeekday())) {
-                        errorMessages.add(String.format("第%d行：星期几不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (!isValidWeekday(dto.getWeekday())) {
-                        errorMessages.add(String.format("第%d行：星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日，当前为："+dto.getWeekday(), i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (isBlank(dto.getWeekRange())) {
-                        errorMessages.add(String.format("第%d行：周次范围不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    if (isBlank(dto.getClassroom())) {
-                        errorMessages.add(String.format("第%d行：教室不能为空", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getOrderNo())) {
-                        errorMessages.add(String.format("第%d行：课序号不能为空", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getCourseNo())) {
-                        errorMessages.add(String.format("第%d行：课程号不能为空", i + 2));
+                    if (isBlank(dto.getWeekRange())) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
-                    //验证节次
+                    if (isBlank(dto.getWeekday())) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    if (!isValidWeekday(dto.getWeekday())) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    
+                    // 验证并转换节次
+                    Integer startPeriod = extractNumberFromString(dto.getStartPeriod());
+                    Integer endPeriod = extractNumberFromString(dto.getEndPeriod());
+                    
                     if (startPeriod == null || startPeriod < 1 || startPeriod > 12) {
-                        errorMessages.add(String.format("第%d行：开始节次格式错误，请填写1-12之间的数字", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
+                        continue;
                     }
                     if (endPeriod == null || endPeriod < 1 || endPeriod > 12) {
-                        errorMessages.add(String.format("第%d行：结束节次格式错误，请填写1-12之间的数字", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
+                        continue;
                     }
                     if (startPeriod > endPeriod) {
-                        errorMessages.add(String.format("第%d行：开始节次不能大于结束节次", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                         failCount++;
+                        continue;
                     }
                     
+                    if (isBlank(dto.getClassroom())) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    
+                    // 验证预到人数（必填）
+                    Integer expectedCount = extractNumberFromString(dto.getExpectedCount());
+                    if (expectedCount == null || expectedCount <= 0) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    
+                    // 创建课表对象
                     CourseSchedule courseSchedule = new CourseSchedule();
-
-                    // 验证并处理班级列表
-                    String[] classArray = null;
-                    if (dto.getClassList() != null && !dto.getClassList().trim().isEmpty()) {
-                        classArray = dto.getClassList().trim().split("[,，]"); // 支持中文逗号和英文逗号分隔
-                    }
-                    
-                    if (classArray == null || classArray.length == 0) {
-                        errorMessages.add(String.format("第%d行：上课班级不能为空", i + 2));
-                        failCount++;
-                        continue;
-                    }
-                    
-                    // 验证班级是否存在
-                    List<Class> classEntities = new ArrayList<>();
-                    int totalExpectedCount = 0;
-                    for (String className : classArray) {
-                        className = className.trim();
-                        if (className.isEmpty()) {
-                            continue;
-                        }
-                        
-                        LambdaQueryWrapper<Class> classQueryWrapper = new LambdaQueryWrapper<>();
-                        classQueryWrapper.eq(Class::getClassName, className);
-                        Class classEntity = classService.getOne(classQueryWrapper);
-                        
-                        if (classEntity == null) {
-                            errorMessages.add(String.format("第%d行：班级 '%s' 不存在", i + 2, className));
-                            failCount++;
-                            continue;
-                        }
-                        
-                        classEntities.add(classEntity);
-                        totalExpectedCount += classEntity.getCount();
-                    }
-                    
-                    if (classEntities.isEmpty()) {
-                        // 如果所有班级都不存在，则跳过此行
-                        continue;
-                    }
-                    
-                    // 设置课表基本信息
-                    courseSchedule.setCourseNo(isBlank(dto.getCourseNo()) ? null : dto.getCourseNo().trim());
-                    courseSchedule.setOrderNo(isBlank(dto.getOrderNo()) ? null : dto.getOrderNo().trim());
+                    courseSchedule.setCourseNo(dto.getCourseNo().trim());
                     courseSchedule.setCourseName(dto.getCourseName().trim());
-                    courseSchedule.setWeekday(dto.getWeekday().trim());
+                    courseSchedule.setOrderNo(dto.getOrderNo().trim());
                     courseSchedule.setWeekRange(dto.getWeekRange().trim());
-                    
-                    // 从字符串中提取数字设置开始节次
-
+                    courseSchedule.setWeekday(dto.getWeekday().trim());
                     courseSchedule.setStartPeriod(startPeriod);
-                    
-                    // 从字符串中提取数字设置结束节次
-
                     courseSchedule.setEndPeriod(endPeriod);
-                    
-                    // 处理教室格式，将类似"思学楼C506"转换为"成都校区/思学楼/思学楼C506"
-                    String formattedClassroom = formatClassroom(dto.getClassroom());
-                    courseSchedule.setClassroom(formattedClassroom);
-                    courseSchedule.setExpectedCount(totalExpectedCount); // 设置预到人数为所有班级人数之和
-                    
-                    // 设置任课老师和课程类型
+                    courseSchedule.setClassroom(dto.getClassroom().trim());
                     courseSchedule.setTeacherName(isBlank(dto.getTeacherName()) ? null : dto.getTeacherName().trim());
                     courseSchedule.setCourseType(isBlank(dto.getCourseType()) ? null : dto.getCourseType().trim());
+                    // 使用上传的预到人数，不进行计算
+                    courseSchedule.setExpectedCount(expectedCount);
                     
-                    // 先保存课表获取ID
+                    // 处理班级列表
+                    List<Class> successClasses = new ArrayList<>();
+                    List<String> failedClasses = new ArrayList<>();
+                    
+                    if (!isBlank(dto.getClassList())) {
+                        String[] classArray = dto.getClassList().trim().split(",");
+                        
+                        for (String className : classArray) {
+                            className = className.trim();
+                            if (className.isEmpty()) {
+                                continue;
+                            }
+                            
+                            // 查询班级是否存在
+                            LambdaQueryWrapper<Class> classQueryWrapper = new LambdaQueryWrapper<>();
+                            classQueryWrapper.eq(Class::getClassName, className);
+                            Class classEntity = classService.getOne(classQueryWrapper);
+                            
+                            if (classEntity == null) {
+                                failedClasses.add(className);
+                            } else {
+                                successClasses.add(classEntity);
+                            }
+                        }
+                    }
+                    
+                    // 保存课表
                     this.save(courseSchedule);
                     
                     // 保存课程与班级的关联关系
-                    for (Class classEntity : classEntities) {
+                    for (Class classEntity : successClasses) {
                         Course course = new Course();
-                        course.setCourseId(courseSchedule.getId()); // 使用课表ID作为课程ID
+                        course.setCourseId(courseSchedule.getId());
                         course.setClassId(classEntity.getId());
                         courseService.save(course);
                     }
                     
-                    successCount++; // 现在可以增加成功计数
+                    successCount++;
+                    
+                    // 如果有失败的班级，添加提示信息
+                    if (!failedClasses.isEmpty()) {
+                        String failedClassNames = String.join(",", failedClasses);
+                        errorMessages.add(String.format("第%d行：%s不存在，导入失败，其余班级正常导入", rowNum, failedClassNames));
+                    }
+                    
                 } catch (Exception e) {
-                    log.error("处理第{}行数据时出错: {}", i + 2, e.getMessage(), e);
-                    errorMessages.add(String.format("第%d行：%s", i + 2, e.getMessage()));
+                    log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);
+                    errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                     failCount++;
                 }
             }
-
-            // 由于每个课表都需要单独处理关联关系，所以不需要批量保存courseScheduleList
-            // 课表已经在循环中单独保存了
             
             log.info("导入完成，成功：{}条，失败：{}条", successCount, failCount);
             
@@ -326,13 +320,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         } else {
             return "成都校区/" + building + "/" + building;
         }
-    }
-    
-    /**
-     * 检查字符串是否为空
-     */
-    private boolean isBlank(String str) {
-        return str == null || str.trim().isEmpty();
     }
     
     /**
@@ -580,17 +567,18 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             // 创建模板数据
             List<CourseScheduleExcelDTO> templateData = new ArrayList<>();
             CourseScheduleExcelDTO example = new CourseScheduleExcelDTO();
-            example.setCourseName("高等数学");
             example.setCourseNo("MATH101");
+            example.setCourseName("高等数学");
             example.setOrderNo("01");
-            example.setWeekday("星期一"); // 星期一（汉字格式）
-            example.setWeekRange("3-16周"); // 周次范围
-            example.setStartPeriod("第1节");
-            example.setEndPeriod("第2节");
+            example.setWeekRange("3-16周");
+            example.setWeekday("星期一");
+            example.setStartPeriod("1");
+            example.setEndPeriod("2");
             example.setClassroom("思学楼A101");
             example.setClassList("25计算机类-1班,25计算机类-2班");
             example.setTeacherName("张老师");
             example.setCourseType("专业课");
+            example.setExpectedCount("90");
             templateData.add(example);
             
             // 写入Excel
