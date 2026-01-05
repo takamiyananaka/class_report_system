@@ -508,11 +508,22 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             queryWrapper.eq(CourseSchedule::getCourseType, queryDTO.getCourseType().trim());
         }
         
+        // 学年条件（精确查询）
+        if (!isBlank(queryDTO.getSchoolYear())) {
+            queryWrapper.eq(CourseSchedule::getSchoolYear, queryDTO.getSchoolYear().trim());
+        }
+        
+        // 学期条件（精确查询）
+        if (queryDTO.getSemester() != null) {
+            queryWrapper.eq(CourseSchedule::getSemester, queryDTO.getSemester());
+        }
+        
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
         
-        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, teacherName={}, courseType={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), queryDTO.getTeacherName(), queryDTO.getCourseType(), pageNum, pageSize);
+        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, teacherName={}, courseType={}, schoolYear={}, semester={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), queryDTO.getTeacherName(), queryDTO.getCourseType(), 
+                queryDTO.getSchoolYear(), queryDTO.getSemester(), pageNum, pageSize);
         
         // 执行查询获取CourseSchedule分页结果
         Page<CourseSchedule> courseSchedulePage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
