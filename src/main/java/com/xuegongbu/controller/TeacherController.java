@@ -1,6 +1,7 @@
 package com.xuegongbu.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -278,22 +279,19 @@ public class TeacherController {
     }
 
     /**
-     * 查询本学院的教师（分页）
+     * 查询教师（分页）
      */
     @PostMapping("/teachers/query")
-    @Operation(summary = "查询本学院的教师", description = "支持按教师工号、部门、真实姓名（模糊）、电话号码查询本学院的教师")
-    @SaCheckRole("college_admin")
+    @Operation(summary = "分页查询教师", description = "查询维度：学院，教师真名，工号")
+    @SaCheckRole(value = {"college_admin","admin"}, mode = SaMode.OR)
     public Result<Page<Teacher>> queryTeachers(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody TeacherQueryDTO queryDTO) {
-        String collegeNo = getCurrentCollegeNo();
-        log.info("学院{}查询教师请求，参数：{}", collegeNo, queryDTO);
-
-        // 创建新的查询DTO，添加college_no过滤条件，避免修改输入参数
-        TeacherQueryDTO internalQueryDTO = new TeacherQueryDTO();
-        BeanUtils.copyProperties(queryDTO, internalQueryDTO);
-        internalQueryDTO.setCollegeNo(collegeNo);
-
-        Page<Teacher> result = teacherService.queryPage(internalQueryDTO);
-        log.info("学院{}查询教师完成，共{}条记录，当前第{}页", collegeNo, result.getTotal(), result.getCurrent());
+        log.info("学院{}查询教师请求，参数：{}", queryDTO);
+        if(StpUtil.hasRole("college_admin")){
+            College college = (College) StpUtil.getSession().get("CollegeInfo");
+            queryDTO.setDepartment(college.getName());
+        }
+        Page<Teacher> result = teacherService.queryPage(queryDTO);
+        log.info("查询教师完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
         return Result.success(result);
     }
 

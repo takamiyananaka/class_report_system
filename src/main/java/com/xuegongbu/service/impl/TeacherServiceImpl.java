@@ -7,12 +7,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.College;
+import com.xuegongbu.domain.CollegeAdmin;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
 import com.xuegongbu.dto.TeacherExcelDTO;
 import com.xuegongbu.dto.TeacherQueryDTO;
 import com.xuegongbu.mapper.TeacherMapper;
+import com.xuegongbu.service.CollegeService;
 import com.xuegongbu.service.TeacherService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,8 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     // BCrypt密码加密器 - 用于验证数据库中BCrypt加密的密码
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private CollegeService collegeService;
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -98,26 +102,20 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         if (queryDTO.getTeacherNo() != null && !queryDTO.getTeacherNo().trim().isEmpty()) {
             queryWrapper.eq(Teacher::getTeacherNo, queryDTO.getTeacherNo().trim());
         }
-        
-        // 部门条件（精确查询）
-        if (queryDTO.getDepartment() != null && !queryDTO.getDepartment().trim().isEmpty()) {
-            queryWrapper.eq(Teacher::getDepartment, queryDTO.getDepartment().trim());
-        }
-        
+
         // 真实姓名条件（模糊查询）
         if (queryDTO.getRealName() != null && !queryDTO.getRealName().trim().isEmpty()) {
             queryWrapper.like(Teacher::getRealName, queryDTO.getRealName().trim());
         }
-        
-        // 电话号码条件（精确查询）
-        if (queryDTO.getPhone() != null && !queryDTO.getPhone().trim().isEmpty()) {
-            queryWrapper.eq(Teacher::getPhone, queryDTO.getPhone().trim());
+
+        //学院条件（精确查询）
+        if (queryDTO.getDepartment() != null && !queryDTO.getDepartment().trim().isEmpty()) {
+            LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
+            collegeQueryWrapper.eq(College::getName, queryDTO.getDepartment());
+            College college = collegeService.getOne(collegeQueryWrapper);
+            String collegeNo = college != null ? college.getCollegeNo() : null;
         }
-        
-        // 学院号条件（精确查询）
-        if (queryDTO.getCollegeNo() != null && !queryDTO.getCollegeNo().trim().isEmpty()) {
-            queryWrapper.eq(Teacher::getCollegeNo, queryDTO.getCollegeNo().trim());
-        }
+
         
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(Teacher::getCreateTime);
@@ -126,9 +124,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         
         // 移除密码字段
         result.getRecords().forEach(teacher -> teacher.setPassword(null));
-        
-        log.info("查询教师，条件：teacherNo={}, department={}, realName={}, phone={}, collegeNo={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getDepartment(), queryDTO.getRealName(), queryDTO.getPhone(), queryDTO.getCollegeNo(), pageNum, pageSize);
+        log.info("查询教师列表成功: {}", result);
         
         return result;
     }
