@@ -132,6 +132,61 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         return result;
     }
 
+    /**
+     * 添加单个教师
+     * @param teacherNo 教师工号
+     * @param realName 真实姓名
+     * @param collegeNo 学院号
+     * @param departmentName 部门名称
+     * @return 添加结果
+     */
+    @Override
+    public Result<Teacher> addSingleTeacher(String teacherNo, String realName, String collegeNo, String departmentName) {
+        try {
+            // 验证必填字段
+            if (teacherNo == null || teacherNo.trim().isEmpty()) {
+                return Result.error("教师工号不能为空");
+            }
+            if (realName == null || realName.trim().isEmpty()) {
+                return Result.error("真实姓名不能为空");
+            }
+            if (collegeNo == null || collegeNo.trim().isEmpty()) {
+                return Result.error("学院号不能为空");
+            }
+            
+            // 检查工号是否已存在
+            Teacher existingTeacher = lambdaQuery()
+                    .eq(Teacher::getTeacherNo, teacherNo.trim())
+                    .one();
+            
+            if (existingTeacher != null) {
+                return Result.error("教师工号已存在");
+            }
+            
+            // 创建教师对象
+            Teacher teacher = new Teacher();
+            teacher.setTeacherNo(teacherNo.trim());
+            teacher.setRealName(realName.trim());
+            teacher.setUsername(teacherNo.trim()); // 用户名为工号
+            teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
+            teacher.setCollegeNo(collegeNo.trim());
+            teacher.setDepartment(departmentName != null ? departmentName.trim() : null);
+            teacher.setPhone(null); // 手机号初始为空
+            teacher.setEmail(null); // 邮箱初始为空
+            teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
+            teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
+            teacher.setStatus(1); // 默认启用状态
+            
+            save(teacher);
+            
+            return Result.success(teacher);
+            
+        } catch (Exception e) {
+            log.error("添加教师失败", e);
+            return Result.error("添加教师失败: " + e.getMessage());
+        }
+    }
+
     @Override
     public Result<String> importTeachers(MultipartFile file, String collegeNo) {
         try {
@@ -145,54 +200,76 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                 return Result.error("Excel文件中没有数据");
             }
 
+            // 获取学院信息
             College college = (College) StpUtil.getSession().get("collegeInfo");
             if(college == null){
                 throw new com.xuegongbu.common.exception.BusinessException("当前用户非学院管理员");
             }
-            for (int i = 0; i < teacherExcelList.size(); i++) {
-                TeacherExcelDTO dto = teacherExcelList.get(i);
-                if (dto.getTeacherNo() == null || dto.getTeacherNo().trim().isEmpty()) {
-                    return Result.error("第" + (i + 2) + "行工号不能为空");
-                }
-                if (dto.getRealName() == null || dto.getRealName().trim().isEmpty()) {
-                    return Result.error("第" + (i + 2) + "行真实姓名不能为空");
-                }
-            }
-
-            // 批量导入教师
+            
             int successCount = 0;
-            int skipCount = 0;
-
-            for (TeacherExcelDTO dto : teacherExcelList) {
-                // 检查工号是否已存在
-                Teacher existingTeacher = lambdaQuery()
-                        .eq(Teacher::getTeacherNo, dto.getTeacherNo())
-                        .one();
-
-                if (existingTeacher != null) {
-                    skipCount++;
-                    continue; // 跳过已存在的教师
+            int failCount = 0;
+            List<String> errorMessages = new ArrayList<>();
+            
+            // 逐行处理数据
+            for (int i = 0; i < teacherExcelList.size(); i++) {
+                int rowNum = i + 2; // Excel行号从2开始（第1行是表头）
+                
+                try {
+                    TeacherExcelDTO dto = teacherExcelList.get(i);
+                    
+                    // 验证必填字段是否完整
+                    if (dto.getTeacherNo() == null || dto.getTeacherNo().trim().isEmpty()) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：工号不能为空", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    if (dto.getRealName() == null || dto.getRealName().trim().isEmpty()) {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：真实姓名不能为空", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    
+                    // 调用添加教师方法
+                    Result<Teacher> addResult = addSingleTeacher(
+                        dto.getTeacherNo(),
+                        dto.getRealName(),
+                        college.getCollegeNo(),
+                        college.getName()
+                    );
+                    
+                    if (addResult.getCode() == 0) {
+                        successCount++;
+                    } else {
+                        // 如果是工号已存在，则跳过（不算失败）
+                        if (addResult.getMessage().contains("已存在")) {
+                            log.info("第{}行：教师工号已存在，跳过", rowNum);
+                            // 不增加failCount，也不添加到错误消息
+                        } else {
+                            errorMessages.add(String.format("第%d行上传失败,请检查该行数据：%s", rowNum, addResult.getMessage()));
+                            failCount++;
+                        }
+                    }
+                    
+                } catch (Exception e) {
+                    log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);
+                    errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                    failCount++;
                 }
-
-                Teacher teacher = new Teacher();
-                teacher.setTeacherNo(dto.getTeacherNo());
-                teacher.setRealName(dto.getRealName());
-                teacher.setUsername(dto.getTeacherNo()); // 用户名为工号
-                teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
-                teacher.setCollegeNo(college.getCollegeNo()); // 学院号
-                teacher.setDepartment(college.getName()); // 所属部门为学院名
-                teacher.setPhone(null); // 手机号初始为空
-                teacher.setEmail(null); // 邮箱初始为空
-                teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
-                teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
-                teacher.setStatus(1); // 默认启用状态
-
-                save(teacher);
-                successCount++;
             }
 
-            log.info("学院{}批量导入教师完成，成功{}个，跳过{}个", collegeNo, successCount, skipCount);
-            return Result.success("批量导入完成，成功导入" + successCount + "个教师，跳过" + skipCount + "个已存在的教师");
+            log.info("学院{}批量导入教师完成，成功{}个，失败{}个", collegeNo, successCount, failCount);
+            
+            String message = String.format("批量导入完成，成功导入%d个教师", successCount);
+            if (failCount > 0) {
+                message += String.format("，失败%d个", failCount);
+            }
+            
+            if (!errorMessages.isEmpty()) {
+                // 如果有错误消息，将其附加到结果中
+                message += "。错误详情：" + String.join("；", errorMessages);
+            }
+            
+            return Result.success(message);
         } catch (IOException e) {
             log.error("批量导入教师时发生错误", e);
             return Result.error("文件读取失败：" + e.getMessage());

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.CourseScheduleAddRequest;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.dto.CourseScheduleVO;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,13 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      * @return 导入结果
      */
     Map<String, Object> importFromExcel(MultipartFile file);
+    
+    /**
+     * 添加单个课程
+     * @param request 课程信息（与Excel模板字段一致）
+     * @return 添加结果
+     */
+    Result<CourseSchedule> addCourseSchedule(CourseScheduleAddRequest request);
     
     /**
      * 分页查询课表

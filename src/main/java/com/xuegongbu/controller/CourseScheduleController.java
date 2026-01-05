@@ -6,6 +6,7 @@ import cn.dev33.satoken.annotation.SaMode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.CourseScheduleAddRequest;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.dto.CourseScheduleVO;
 import com.xuegongbu.dto.CourseScheduleWithClassIdQueryDTO;
@@ -150,6 +151,28 @@ public class CourseScheduleController {
         log.info("查询班级当前正在上的课的名字完成，结果：{}", result);
         return Result.success(result);
     }
+    /**
+     * 创建课表（新版，使用与Excel模板一致的字段）
+     */
+    @PostMapping("/addWithTemplate")
+    @Operation(summary = "创建课表（使用模板字段）", description = "使用与Excel批量导入模板完全一致的字段创建课表，ID自动生成")
+    @SaCheckRole("college_admin")
+    public Result<CourseSchedule> addCourseScheduleWithTemplate(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课程信息（与Excel模板字段一致）") 
+            @RequestBody CourseScheduleAddRequest request) {
+        log.info("创建课表（模板字段），课程信息：{}", request);
+        
+        Result<CourseSchedule> result = courseScheduleService.addCourseSchedule(request);
+        
+        if (result.getCode() == 0) {
+            log.info("创建课表完成，课表ID：{}", result.getData().getId());
+        } else {
+            log.error("创建课表失败：{}", result.getMessage());
+        }
+        
+        return result;
+    }
+
     /**
      * 创建课表
      */

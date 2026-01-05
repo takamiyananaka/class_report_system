@@ -21,5 +21,18 @@ public interface TeacherService extends IService<Teacher> {
      */
     com.baomidou.mybatisplus.extension.plugins.pagination.Page<Teacher> queryPage(com.xuegongbu.dto.TeacherQueryDTO queryDTO);
 
+    /**
+     * 批量导入教师
+     */
     Result<String> importTeachers(MultipartFile file, String collegeNo);
+    
+    /**
+     * 添加单个教师
+     * @param teacherNo 教师工号
+     * @param realName 真实姓名
+     * @param collegeNo 学院号
+     * @param departmentName 部门名称
+     * @return 添加结果
+     */
+    Result<Teacher> addSingleTeacher(String teacherNo, String realName, String collegeNo, String departmentName);
 }

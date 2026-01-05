@@ -4,6 +4,7 @@ import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.ClassExcelDTO;
 import com.xuegongbu.dto.ClassQueryDTO;
@@ -24,6 +25,55 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements ClassService {
+
+    /**
+     * 添加单个班级
+     * @param className 班级名称
+     * @param count 班级人数
+     * @param grade 年级
+     * @param major 专业
+     * @param teacherNo 辅导员工号
+     * @return 添加结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Class> addSingleClass(String className, Integer count, String grade, String major, String teacherNo) {
+        try {
+            // 验证必填字段
+            if (isBlank(className)) {
+                return Result.error("班级名称不能为空");
+            }
+            if (count == null || count <= 0) {
+                return Result.error("班级人数必须大于0");
+            }
+            if (isBlank(grade)) {
+                return Result.error("年级不能为空");
+            }
+            if (isBlank(major)) {
+                return Result.error("专业不能为空");
+            }
+            if (isBlank(teacherNo)) {
+                return Result.error("辅导员工号不能为空");
+            }
+            
+            // 创建班级对象
+            Class classEntity = new Class();
+            classEntity.setClassName(className.trim());
+            classEntity.setCount(count);
+            classEntity.setGrade(grade.trim());
+            classEntity.setMajor(major.trim());
+            classEntity.setTeacherNo(teacherNo.trim());
+            
+            // 保存班级
+            this.save(classEntity);
+            
+            return Result.success(classEntity);
+            
+        } catch (Exception e) {
+            log.error("添加班级失败", e);
+            return Result.error("添加班级失败: " + e.getMessage());
+        }
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -64,57 +114,60 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             
             log.info("从Excel读取到 {} 条数据", excelDataList.size());
             
-            // 转换为Class对象并保存
-            List<Class> classList = new ArrayList<>();
             int successCount = 0;
             int failCount = 0;
             List<String> errorMessages = new ArrayList<>();
             
+            // 逐行处理数据
             for (int i = 0; i < excelDataList.size(); i++) {
+                int rowNum = i + 2; // Excel行号从2开始（第1行是表头）
+                
                 try {
                     ClassExcelDTO dto = excelDataList.get(i);
                     
-                    // 验证必填字段
+                    // 验证必填字段是否完整
                     if (isBlank(dto.getClassName())) {
-                        errorMessages.add(String.format("第%d行：班级名称不能为空", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：班级名称不能为空", rowNum));
                         failCount++;
                         continue;
                     }
                     if (dto.getCount() == null || dto.getCount() <= 0) {
-                        errorMessages.add(String.format("第%d行：班级人数必须大于0", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：班级人数必须大于0", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getGrade())) {
-                        errorMessages.add(String.format("第%d行：年级不能为空", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：年级不能为空", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getMajor())) {
-                        errorMessages.add(String.format("第%d行：专业不能为空", i + 2));
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：专业不能为空", rowNum));
                         failCount++;
                         continue;
                     }
                     
-                    Class classEntity = new Class();
-                    classEntity.setClassName(dto.getClassName().trim());
-                    classEntity.setTeacherNo(teacherNo.trim()); // 使用传入的教师工号
-                    classEntity.setCount(dto.getCount());
-                    classEntity.setGrade(dto.getGrade().trim());
-                    classEntity.setMajor(dto.getMajor().trim());
+                    // 调用添加班级方法
+                    Result<Class> addResult = addSingleClass(
+                        dto.getClassName(),
+                        dto.getCount(),
+                        dto.getGrade(),
+                        dto.getMajor(),
+                        teacherNo
+                    );
                     
-                    classList.add(classEntity);
-                    successCount++;
+                    if (addResult.getCode() == 0) {
+                        successCount++;
+                    } else {
+                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据：%s", rowNum, addResult.getMessage()));
+                        failCount++;
+                    }
+                    
                 } catch (Exception e) {
-                    log.error("处理第{}行数据时出错: {}", i + 2, e.getMessage(), e);
-                    errorMessages.add(String.format("第%d行：%s", i + 2, e.getMessage()));
+                    log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);
+                    errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
                     failCount++;
                 }
-            }
-            
-            // 批量保存
-            if (!classList.isEmpty()) {
-                this.saveBatch(classList);
             }
             
             log.info("导入完成，成功：{}条，失败：{}条", successCount, failCount);
