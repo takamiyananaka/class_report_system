@@ -49,6 +49,7 @@ public class CourseScheduleController {
             @RequestPart("file") MultipartFile file) {
         try {
             log.info("开始导入课表，文件名：{}", file.getOriginalFilename());
+
             Map<String, Object> result = courseScheduleService.importFromExcel(file);
             log.info("课表导入完成：{}", result.get("message"));
             return Result.success(result);
