@@ -5,7 +5,6 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 
