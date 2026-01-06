@@ -130,6 +130,48 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     }
 
     @Override
+    public Result<String> addTeacher(Teacher teacher, String collegeNo) {
+        // 检查用户名是否已存在
+        Teacher existingTeacher = lambdaQuery()
+                .eq(Teacher::getUsername, teacher.getUsername())
+                .one();
+        if (existingTeacher != null) {
+            return Result.error("用户名已存在");
+        }
+
+        // 检查教师工号是否已存在
+        Teacher existingTeacherNo = lambdaQuery()
+                .eq(Teacher::getTeacherNo, teacher.getTeacherNo())
+                .one();
+        if (existingTeacherNo != null) {
+            return Result.error("教师工号已存在");
+        }
+
+        // 验证密码
+        if (teacher.getPassword() == null || teacher.getPassword().isEmpty()) {
+            return Result.error("密码不能为空，请设置初始密码");
+        }
+        if (teacher.getPassword().length() < 6) {
+            return Result.error("密码长度不能少于6位");
+        }
+
+        // 密码加密
+        teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
+
+        // 设置为指定学院
+        teacher.setCollegeNo(collegeNo);
+
+        // 默认状态为启用
+        if (teacher.getStatus() == null) {
+            teacher.setStatus(1);
+        }
+
+        save(teacher);
+        log.info("创建教师成功，ID：{}", teacher.getId());
+        return Result.success("创建成功");
+    }
+
+    @Override
     public Result<String> importTeachers(MultipartFile file, String collegeNo) {
         try {
             // 读取Excel文件
@@ -187,8 +229,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     teacher.setTeacherNo(dto.getTeacherNo().trim());
                     teacher.setRealName(dto.getRealName().trim());
                     teacher.setUsername(dto.getTeacherNo().trim()); // 用户名为工号
-                    teacher.setPassword(passwordEncoder.encode("123456")); // 初始密码为123456
-                    teacher.setCollegeNo(college.getCollegeNo().trim());
+                    teacher.setPassword("123456"); // 初始密码为123456（将由addTeacher加密）
                     teacher.setDepartment(college.getName() != null ? college.getName().trim() : null);
                     teacher.setPhone(null); // 手机号初始为空
                     teacher.setEmail(null); // 邮箱初始为空
@@ -196,9 +237,14 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
                     teacher.setStatus(1); // 默认启用状态
                     
-                    // 保存教师
-                    save(teacher);
-                    successCount++;
+                    // 使用统一的addTeacher方法
+                    Result<String> result = addTeacher(teacher, college.getCollegeNo().trim());
+                    if (result.getCode() == 200) {
+                        successCount++;
+                    } else {
+                        errorMessages.add(String.format("第%d行上传失败: %s", rowNum, result.getMessage()));
+                        failCount++;
+                    }
                     
                 } catch (Exception e) {
                     log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);

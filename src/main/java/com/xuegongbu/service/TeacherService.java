@@ -24,4 +24,12 @@ public interface TeacherService extends IService<Teacher> {
      * 批量导入教师
      */
     Result<String> importTeachers(MultipartFile file, String collegeNo);
+    
+    /**
+     * 添加单个教师
+     * @param teacher 教师信息
+     * @param collegeNo 学院编号（从前端传入）
+     * @return 操作结果
+     */
+    Result<String> addTeacher(Teacher teacher, String collegeNo);
 }
