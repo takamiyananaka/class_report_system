@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import cn.dev33.satoken.stp.StpUtil;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -38,47 +37,19 @@ public class ClassController {
     private TeacherService teacherService;
 
     /**
-     * 从当前登录用户获取教师工号
-     * @return 教师工号，如果获取失败返回null
-     */
-    private String getTeacherNoFromAuthentication() {
-        try {
-            // 从Sa-Token中获取当前用户信息
-            if (!StpUtil.isLogin()) {
-                return null;
-            }
-
-            Object loginId = StpUtil.getLoginId();
-            if (loginId instanceof String) {
-                return (String) loginId;
-            }
-        } catch (Exception e) {
-            log.error("无法解析当前登录教师工号: {}", e.getMessage());
-        }
-        
-        return null;
-    }
-
-    /**
      * Excel导入班级
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Excel导入班级", description = "通过上传Excel文件批量导入班级数据。辅导员工号自动从当前登录用户获取。Excel格式要求：第一行为表头，列顺序为：班级名称、班级人数、年级、专业")
+    @Operation(summary = "Excel导入班级", description = "通过上传Excel文件批量导入班级数据。辅导员工号从前端传入。Excel格式要求：第一行为表头，列顺序为：班级名称、班级人数、年级、专业")
     @SaCheckRole("admin")
     public Result<Map<String, Object>> importFromExcel(
             @Parameter(description = "Excel文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
-            @RequestPart("file") MultipartFile file) {
+            @RequestPart("file") MultipartFile file,
+            @Parameter(description = "辅导员工号", required = true)
+            @RequestParam("teacherNo") String teacherNo) {
         try {
-            log.info("开始导入班级，文件名：{}", file.getOriginalFilename());
-            
-            // 获取当前登录教师的工号
-            String teacherNo = getTeacherNoFromAuthentication();
-            if (teacherNo == null) {
-                return Result.error("无法获取当前登录用户信息或权限不足");
-            }
-            
-            log.info("当前登录教师工号: {}", teacherNo);
+            log.info("开始导入班级，文件名：{}，教师工号：{}", file.getOriginalFilename(), teacherNo);
             
             Map<String, Object> result = classService.importFromExcel(file, teacherNo);
             log.info("班级导入完成：{}", result.get("message"));
@@ -106,40 +77,23 @@ public class ClassController {
      * 创建班级
      */
     @PostMapping("/add")
-    @Operation(summary = "创建班级", description = "创建新班级，ID自动生成。辅导员工号自动从当前登录用户获取。")
+    @Operation(summary = "创建班级", description = "创建新班级，ID自动生成。辅导员工号从前端传入。")
     @SaCheckRole("admin")
-    public Result<Class> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class  classEntity) {
-        log.info("创建班级，班级信息：{}", classEntity);
+    public Result<Class> addClass(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级信息") @RequestBody Class classEntity,
+            @Parameter(description = "辅导员工号", required = true) @RequestParam("teacherNo") String teacherNo) {
+        log.info("创建班级，班级信息：{}，教师工号：{}", classEntity, teacherNo);
         
-        // 获取当前登录教师的工号
-        String teacherNo = getTeacherNoFromAuthentication();
-        if (teacherNo == null) {
-            return Result.error("无法获取当前登录用户信息或权限不足");
+        try {
+            Class result = classService.addClass(classEntity, teacherNo);
+            log.info("创建班级完成，班级ID：{}", result.getId());
+            return Result.success(result);
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("创建班级失败", e);
+            return Result.error("创建失败: " + e.getMessage());
         }
-        
-        log.info("当前登录教师工号: {}", teacherNo);
-        
-        // 验证必填字段
-        if (classEntity.getClassName() == null || classEntity.getClassName().trim().isEmpty()) {
-            return Result.error("班级名称不能为空");
-        }
-        if (classEntity.getCount() == null || classEntity.getCount() <= 0) {
-            return Result.error("班级人数必须大于0");
-        }
-        if (classEntity.getGrade() == null || classEntity.getGrade().trim().isEmpty()) {
-            return Result.error("年级不能为空");
-        }
-        if (classEntity.getMajor() == null || classEntity.getMajor().trim().isEmpty()) {
-            return Result.error("专业不能为空");
-        }
-        
-        // 自动设置辅导员工号从登录状态
-        classEntity.setTeacherNo(teacherNo);
-        
-        // ID会由MyBatis-Plus自动生成（雪花算法）
-        classService.save(classEntity);
-        log.info("创建班级完成，班级ID：{}", classEntity.getId());
-        return Result.success(classEntity);
     }
 
     /**
