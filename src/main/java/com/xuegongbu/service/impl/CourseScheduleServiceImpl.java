@@ -11,7 +11,7 @@ import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
-import com.xuegongbu.dto.CourseScheduleVO;
+import com.xuegongbu.vo.CourseScheduleVO;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.mapper.SemesterMapper;

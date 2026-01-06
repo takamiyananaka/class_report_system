@@ -1,4 +1,4 @@
-package com.xuegongbu.dto;
+package com.xuegongbu.vo;
 
 import com.xuegongbu.domain.CourseSchedule;
 import io.swagger.v3.oas.annotations.media.Schema;

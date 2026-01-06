@@ -1,27 +1,22 @@
 package com.xuegongbu.controller;
 
-import cn.dev33.satoken.annotation.SaCheckOr;
 import cn.dev33.satoken.annotation.SaCheckRole;
-import cn.dev33.satoken.annotation.SaMode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
-import com.xuegongbu.dto.CourseScheduleVO;
+import com.xuegongbu.vo.CourseScheduleVO;
 import com.xuegongbu.dto.CourseScheduleWithClassIdQueryDTO;
 import com.xuegongbu.service.CourseScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import cn.dev33.satoken.stp.StpUtil;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;

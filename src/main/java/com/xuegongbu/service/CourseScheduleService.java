@@ -5,8 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
-import com.xuegongbu.dto.CourseScheduleVO;
-import org.springframework.stereotype.Service;
+import com.xuegongbu.vo.CourseScheduleVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

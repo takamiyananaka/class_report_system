@@ -13,6 +13,7 @@ import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.ClassExcelDTO;
 import com.xuegongbu.dto.ClassQueryDTO;
 import com.xuegongbu.mapper.ClassMapper;
+import com.xuegongbu.mapper.CollegeMapper;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.ClassService;
 import com.xuegongbu.service.CollegeService;
@@ -39,6 +40,8 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     private TeacherMapper teacherMapper;
     @Autowired
     private TeacherService teacherService;
+    @Autowired
+    private CollegeMapper collegeMapper;
 
     @Override
     public Class addClass(Class classEntity, String teacherNo) {
@@ -233,7 +236,9 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                 }
             }
         }
-
+        if(!teacherNos.isEmpty()) {
+            return page;
+        }
         queryWrapper.in(Class::getTeacherNo, teacherNos);
 
 
