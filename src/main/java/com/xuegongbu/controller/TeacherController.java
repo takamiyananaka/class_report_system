@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -309,4 +310,23 @@ public class TeacherController {
                 .sheet("教师导入模板")
                 .doWrite(templateData);
     }
+
+    /**
+     * 设置老师的考勤阈值字段（以院为单位，若为学校管理员则前端传学院号，若为学院管理员则不用）
+     */
+    @PutMapping("/setAttendanceThreshold")
+    @Operation(summary = "设置老师考勤阈值", description = "设置老师考勤阈值,传学院号")
+    @SaCheckRole("college_admin")
+    public Result<String> setAttendanceThreshold(@Parameter String collegeNo, @Parameter BigDecimal threshold) {
+        log.info("设置老师考勤阈值,学院编号：{}", collegeNo);
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Teacher::getCollegeNo, collegeNo);
+        List<Teacher> teachers = teacherService.list(queryWrapper);
+        for (Teacher teacher : teachers) {
+            teacher.setAttendanceThreshold(threshold);
+            teacherService.updateById(teacher);
+        }
+        return Result.success("设置成功");
+    }
+
 }
