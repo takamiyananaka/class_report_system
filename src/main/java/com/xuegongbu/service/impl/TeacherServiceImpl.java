@@ -240,10 +240,11 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     
                     // 使用统一的addTeacher方法
                     Result<String> result = addTeacher(teacher, college.getCollegeNo().trim());
-                    if (ResultCode.SUCCESS.getCode().equals(result.getCode())) {
+                    if (result != null && ResultCode.SUCCESS.getCode().equals(result.getCode())) {
                         successCount++;
                     } else {
-                        errorMessages.add(String.format("第%d行上传失败: %s", rowNum, result.getMessage()));
+                        String errorMsg = result != null ? result.getMessage() : "未知错误";
+                        errorMessages.add(String.format("第%d行上传失败: %s", rowNum, errorMsg));
                         failCount++;
                     }
                     

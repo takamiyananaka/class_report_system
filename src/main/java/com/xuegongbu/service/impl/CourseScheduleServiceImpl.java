@@ -37,6 +37,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Service
 public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper, CourseSchedule> implements CourseScheduleService {
     
+    private static final java.util.Set<String> VALID_WEEKDAYS = java.util.Set.of(
+        "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"
+    );
+    
     @Autowired
     private ClassService classService;
     
@@ -89,10 +93,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         log.info("创建课表完成，课表ID：{}", courseSchedule.getId());
         return courseSchedule;
     }
-    
-    private static final java.util.Set<String> VALID_WEEKDAYS = java.util.Set.of(
-        "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"
-    );
     
     /**
      * 验证星期几格式是否正确
