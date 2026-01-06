@@ -90,6 +90,7 @@ public class CourseScheduleController {
      */
     @GetMapping("/downloadTemplate")
     @Operation(summary = "下载课表导入模板", description = "下载Excel格式的课表导入模板文件")
+    @SaCheckRole("admin")
     public void downloadTemplate(jakarta.servlet.http.HttpServletResponse response) {
         try {
             log.info("下载课表导入模板");
