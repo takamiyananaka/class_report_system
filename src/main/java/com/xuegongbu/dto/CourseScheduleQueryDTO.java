@@ -25,11 +25,8 @@ public class CourseScheduleQueryDTO {
     @Schema(description = "课程类型（通识、专业课等）", example = "专业课")
     private String courseType;
     
-    @Schema(description = "学年", example = "2024-2025")
-    private String schoolYear;
-    
-    @Schema(description = "学期（1-第一学期，2-第二学期）", example = "1")
-    private Integer semester;
+    @Schema(description = "学期名（例如：2024-2025学年春季学期）", example = "2024-2025学年春季学期")
+    private String semesterName;
 
     @Schema(description = "所属学院名称", example = "计算机与软件学院")
     private String collegeName;

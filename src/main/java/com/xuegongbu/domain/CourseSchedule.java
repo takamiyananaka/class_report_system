@@ -108,17 +108,11 @@ public class CourseSchedule implements Serializable {
     private String courseType;
 
     /**
-     * 学年（例如：2023-2024）
+     * 学期名，例如：2024-2025学年春季学期
      */
-    @Size(max = 20, message = "学年长度不能超过20")
-    @Schema(description = "学年（例如：2023-2024）")
-    private String schoolYear;
-
-    /**
-     * 学期（例如：1表示第一学期，2表示第二学期）
-     */
-    @Schema(description = "学期（1-第一学期，2-第二学期）")
-    private Integer semester;
+    @Size(max = 100, message = "学期名长度不能超过100")
+    @Schema(description = "学期名，例如：2024-2025学年春季学期")
+    private String semesterName;
 
     /**
     * 创建时间

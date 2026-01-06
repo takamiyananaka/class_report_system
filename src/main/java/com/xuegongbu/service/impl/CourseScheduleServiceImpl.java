@@ -14,6 +14,7 @@ import com.xuegongbu.dto.CourseScheduleQueryDTO;
 import com.xuegongbu.dto.CourseScheduleVO;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
+import com.xuegongbu.mapper.SemesterMapper;
 import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.*;
 import com.xuegongbu.util.ClassTimeUtil;
@@ -55,6 +56,10 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     private CollegeService collegeService;
     @Autowired
     private TeacherMapper teacherMapper;
+    @Autowired
+    private SemesterMapper semesterMapper;
+    @Autowired
+    private SemesterService semesterService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -185,10 +190,23 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     // 使用上传的预到人数，不进行计算
                     courseSchedule.setExpectedCount(expectedCount);
                     
-                    // 处理新增字段：学年和学期
-                    courseSchedule.setSchoolYear(isBlank(dto.getSchoolYear()) ? null : dto.getSchoolYear().trim());
-                    Integer semester = extractNumberFromString(dto.getSemester());
-                    courseSchedule.setSemester(semester);
+
+                    // 处理新增字段：学期名
+                    if (!isBlank(dto.getSemesterName())) {
+                        String semesterName = dto.getSemesterName().trim();
+                        LambdaQueryWrapper<Semester> semesterQueryWrapper = new LambdaQueryWrapper<>();
+                        semesterQueryWrapper.eq(Semester::getSemesterName, semesterName);
+                        Semester semester = semesterService.getOne(semesterQueryWrapper);
+                        // 验证学期是否存在
+                        if (semester == null) {
+                            errorMessages.add(String.format("第%d行上传失败，学期'%s'不存在", rowNum, semesterName));
+                            failCount++;
+                            continue;
+                        }
+                        courseSchedule.setSemesterName(semesterName);
+                    } else {
+                        courseSchedule.setSemesterName(null);
+                    }
                     
                     // 处理班级列表
                     List<Class> successClasses = new ArrayList<>();
@@ -365,6 +383,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         vo.setExpectedCount(courseSchedule.getExpectedCount());
         vo.setTeacherName(courseSchedule.getTeacherName());
         vo.setCourseType(courseSchedule.getCourseType());
+        vo.setSemesterName(courseSchedule.getSemesterName());
         vo.setCreateTime(courseSchedule.getCreateTime());
         vo.setUpdateTime(courseSchedule.getUpdateTime());
         
@@ -508,22 +527,17 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             queryWrapper.eq(CourseSchedule::getCourseType, queryDTO.getCourseType().trim());
         }
         
-        // 学年条件（精确查询）
-        if (!isBlank(queryDTO.getSchoolYear())) {
-            queryWrapper.eq(CourseSchedule::getSchoolYear, queryDTO.getSchoolYear().trim());
-        }
-        
-        // 学期条件（精确查询）
-        if (queryDTO.getSemester() != null) {
-            queryWrapper.eq(CourseSchedule::getSemester, queryDTO.getSemester());
+        // 学期名条件（模糊查询）
+        if (!isBlank(queryDTO.getSemesterName())) {
+            queryWrapper.like(CourseSchedule::getSemesterName, queryDTO.getSemesterName().trim());
         }
         
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
         
-        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, teacherName={}, courseType={}, schoolYear={}, semester={}, pageNum={}, pageSize={}", 
+        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, teacherName={}, courseType={}, semesterName={}, pageNum={}, pageSize={}", 
                 queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), queryDTO.getTeacherName(), queryDTO.getCourseType(), 
-                queryDTO.getSchoolYear(), queryDTO.getSemester(), pageNum, pageSize);
+                queryDTO.getSemesterName(), pageNum, pageSize);
         
         // 执行查询获取CourseSchedule分页结果
         Page<CourseSchedule> courseSchedulePage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
@@ -641,8 +655,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setTeacherName("张老师");
             example.setCourseType("专业课");
             example.setExpectedCount("90");
-            example.setSchoolYear("2024-2025");
-            example.setSemester("1");
+            example.setSemesterName("2025-2026学年春季学期");
             templateData.add(example);
             
             // 写入Excel

@@ -84,14 +84,8 @@ public class CourseScheduleExcelDTO implements Serializable {
     private String expectedCount;
     
     /**
-     * 学年（例如：2023-2024）
-     */
-    @ExcelProperty(value = "XN")
-    private String schoolYear;
-    
-    /**
-     * 学期（1-第一学期，2-第二学期）
+     * 学期名（例如：2024-2025学年春季学期）
      */
     @ExcelProperty(value = "XQ")
-    private String semester;
+    private String semesterName;
 }

@@ -579,11 +579,11 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     classroom VARCHAR(100) NOT NULL COMMENT '教室',
     teacher_name VARCHAR(100) COMMENT '任课老师',
     course_type VARCHAR(50) COMMENT '课程类型（通识、专业课等）',
-    school_year VARCHAR(20) COMMENT '学年（例如：2023-2024）',
-    semester INT COMMENT '学期（1-第一学期，2-第二学期）',
+    semester_name VARCHAR(100) COMMENT '学期名，例如：2024-2025学年春季学期',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_weekday (weekday),
+    INDEX idx_semester_name (semester_name),
     CONSTRAINT chk_start_period CHECK (start_period >= 1 AND start_period <= 12),
     CONSTRAINT chk_end_period CHECK (end_period >= 1 AND end_period <= 12),
     CONSTRAINT chk_period_range CHECK (end_period >= start_period)
@@ -736,7 +736,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加school_year字段
+-- 检查并删除旧的school_year字段（如果存在）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -744,14 +744,14 @@ WHERE TABLE_SCHEMA = DATABASE()
   AND TABLE_NAME = 'course_schedule' 
   AND COLUMN_NAME = 'school_year';
 
-SET @sql = IF(@col_exists = 0, 
-    'ALTER TABLE course_schedule ADD COLUMN school_year VARCHAR(20) COMMENT ''学年（例如：2023-2024）''',
-    'SELECT ''Column school_year already exists'' AS msg');
+SET @sql = IF(@col_exists > 0, 
+    'ALTER TABLE course_schedule DROP COLUMN school_year',
+    'SELECT ''Column school_year does not exist'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 添加semester字段
+-- 检查并删除旧的semester字段（如果存在）
 SET @col_exists = 0;
 SELECT COUNT(*) INTO @col_exists 
 FROM INFORMATION_SCHEMA.COLUMNS 
@@ -759,9 +759,24 @@ WHERE TABLE_SCHEMA = DATABASE()
   AND TABLE_NAME = 'course_schedule' 
   AND COLUMN_NAME = 'semester';
 
+SET @sql = IF(@col_exists > 0, 
+    'ALTER TABLE course_schedule DROP COLUMN semester',
+    'SELECT ''Column semester does not exist'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 检查并添加semester_name字段（如果不存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'semester_name';
+
 SET @sql = IF(@col_exists = 0, 
-    'ALTER TABLE course_schedule ADD COLUMN semester INT COMMENT ''学期（1-第一学期，2-第二学期）''',
-    'SELECT ''Column semester already exists'' AS msg');
+    'ALTER TABLE course_schedule ADD COLUMN semester_name VARCHAR(100) COMMENT ''学期名，例如：2024-2025学年春季学期''',
+    'SELECT ''Column semester_name already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -777,6 +792,20 @@ WHERE TABLE_SCHEMA = DATABASE()
 SET @sql = IF(@idx_exists = 0, 
     'ALTER TABLE course_schedule ADD INDEX idx_weekday (weekday)',
     'SELECT ''Index idx_weekday already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND INDEX_NAME = 'idx_semester_name';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE course_schedule ADD INDEX idx_semester_name (semester_name)',
+    'SELECT ''Index idx_semester_name already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -937,6 +966,82 @@ WHERE TABLE_SCHEMA = DATABASE()
 SET @sql = IF(@idx_exists = 0, 
     'ALTER TABLE course ADD INDEX idx_class_id (class_id)',
     'SELECT ''Index idx_class_id already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ====================================
+-- 7. 学期表
+-- ====================================
+CREATE TABLE IF NOT EXISTS semester (
+    id VARCHAR(64) PRIMARY KEY COMMENT '主键ID（字符串类型）',
+    semester_name VARCHAR(100) NOT NULL UNIQUE COMMENT '学期名，例如：2024-2025学年春季学期',
+    start_date DATE COMMENT '开始日期',
+    end_date DATE COMMENT '结束日期',
+    weeks INT COMMENT '周数',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
+    INDEX idx_semester_name (semester_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学期表';
+
+-- 修改已存在的semester表的字段类型和添加缺失字段
+ALTER TABLE semester MODIFY COLUMN id VARCHAR(64) COMMENT '主键ID（字符串类型）';
+
+-- 添加缺失字段（使用存储过程检查是否存在）
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'semester' 
+  AND COLUMN_NAME = 'start_date';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE semester ADD COLUMN start_date DATE COMMENT ''开始日期''',
+    'SELECT ''Column start_date already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'semester' 
+  AND COLUMN_NAME = 'end_date';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE semester ADD COLUMN end_date DATE COMMENT ''结束日期''',
+    'SELECT ''Column end_date already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'semester' 
+  AND COLUMN_NAME = 'weeks';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE semester ADD COLUMN weeks INT COMMENT ''周数''',
+    'SELECT ''Column weeks already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加索引（使用存储过程检查是否存在）
+SET @idx_exists = 0;
+SELECT COUNT(*) INTO @idx_exists 
+FROM INFORMATION_SCHEMA.STATISTICS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'semester' 
+  AND INDEX_NAME = 'idx_semester_name';
+
+SET @sql = IF(@idx_exists = 0, 
+    'ALTER TABLE semester ADD INDEX idx_semester_name (semester_name)',
+    'SELECT ''Index idx_semester_name already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -1265,10 +1370,25 @@ INSERT INTO teacher (id, username, password, real_name, teacher_no, phone, email
 VALUES ('1000000000000000002', 'teacher001', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '张老师', 'T001', '13900139000', 'teacher@example.com', '计算机学院', 1)
 ON DUPLICATE KEY UPDATE username = username;
 
+-- 插入默认学院（计算机与软件学院）
+INSERT INTO college (id, name, college_no, description) 
+VALUES ('1', '计算机与软件学院', '10001', '计算机与软件学院')
+ON DUPLICATE KEY UPDATE name = name;
+
 -- 插入测试学院管理员（用户名：collegeAdmin，密码：123456）
 INSERT INTO college_admin (id, username, password, real_name, phone, email, college_id)
 VALUES ('1000000000000000003', 'collegeAdmin', '$2a$10$IlQZy.G6fQqbVZ1dYtFW7.5VHVHEGG2Js1eH/ULU1kUxfd9E2.1kO', '学院管理员', '13700137000', 'collegeadmin@example.com', '1')
 ON DUPLICATE KEY UPDATE username = username;
+
+-- 插入默认学期（2025-2026秋季学期）
+INSERT INTO semester (id, semester_name, start_date, end_date, weeks)
+VALUES ('1', '2025-2026学年秋季学期', '2025-09-01', '2026-01-19', 20)
+ON DUPLICATE KEY UPDATE semester_name = semester_name;
+
+-- 为当前学期为null的course_schedule设置为默认学期
+UPDATE course_schedule 
+SET semester_name = '2025-2026学年秋季学期'
+WHERE semester_name IS NULL OR semester_name = '';
 
 -- ====================================
 -- 说明
