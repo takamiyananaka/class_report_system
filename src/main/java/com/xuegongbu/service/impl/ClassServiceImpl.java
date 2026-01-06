@@ -187,7 +187,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             if ("teacher".equals(role)) {
                 teacherNos.add(StpUtil.getLoginIdAsString());
             }else if ("college_admin".equals(role)) {
-                College college = (College) StpUtil.getSession().get("CollegeInfo");
+                College college = (College) StpUtil.getSession().get("collegeInfo");
                 if(college != null){
                     teacherNos = teacherMapper.queryTeacherNoByCollegeName(college.getName());
                 }else {
