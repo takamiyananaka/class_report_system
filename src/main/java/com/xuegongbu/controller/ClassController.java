@@ -94,7 +94,7 @@ public class ClassController {
      */
     @PostMapping("/query")  //
     @Operation(summary = "分页查询班级", description = "分页查询班级，支持多条件查询。可通过className（模糊）、teacherNo等参数进行过滤查询。不提供任何条件则查询全部")
-    @SaCheckRole("admin")
+    @SaCheckRole("teacher")
     public Result<Page<Class>> query(@RequestBody ClassQueryDTO queryDTO) {  //
         log.info("查询班级请求，参数：{}", queryDTO);
         Page<Class> result = classService.queryPage(queryDTO);
@@ -202,7 +202,7 @@ public class ClassController {
      */
     @GetMapping("/get")
     @Operation(summary = "查询班级详情", description = "根据班级名称查询班级详情")
-    @SaCheckRole("admin")
+    @SaCheckRole("teacher")
     public Result<Class> getClass(@Parameter(description = "班级名称", required = true) @RequestParam(value = "className", required = true) String className) {
         log.info("查询班级详情，班级名称：{}", className);
         
@@ -224,7 +224,7 @@ public class ClassController {
      */
     @GetMapping("/get/{id}")
     @Operation(summary = "根据ID查询班级详情", description = "根据班级ID查询班级详情")
-    @SaCheckRole("admin")
+    @SaCheckRole("teacher")
     public Result<Class> getClassById(@Parameter(description = "班级ID") @PathVariable String id) {
         log.info("根据ID查询班级详情，班级ID：{}", id);
         
