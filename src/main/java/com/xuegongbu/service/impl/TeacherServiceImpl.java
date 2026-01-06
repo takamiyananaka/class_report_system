@@ -108,12 +108,20 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             queryWrapper.like(Teacher::getRealName, queryDTO.getRealName().trim());
         }
 
+        Object roleObj = StpUtil.getSession().get("role");
+        String role = roleObj != null ? roleObj.toString() : null;
+        if("college_admin".equals(role)){
+            College college = (College) StpUtil.getSession().get("collegeInfo");
+            queryWrapper.eq(Teacher::getCollegeNo, college.getCollegeNo());
+        }
+
         //学院条件（精确查询）
         if (queryDTO.getDepartment() != null && !queryDTO.getDepartment().trim().isEmpty()) {
             LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
             collegeQueryWrapper.eq(College::getName, queryDTO.getDepartment());
             College college = collegeService.getOne(collegeQueryWrapper);
             String collegeNo = college != null ? college.getCollegeNo() : null;
+            queryWrapper.eq(Teacher::getCollegeNo, collegeNo);
         }
 
         

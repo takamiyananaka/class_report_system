@@ -179,17 +179,21 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         if (!isBlank(queryDTO.getTeacherNo())) {
             teacherNos.add(queryDTO.getTeacherNo().trim());
         }else {
-            //教师使用登录用户工号
-            if(StpUtil.hasRole("teacher")){
+            // 从Session中获取用户角色
+            Object roleObj = StpUtil.getSession().get("role");
+            String role = roleObj != null ? roleObj.toString() : null;
+            
+            // 根据角色确定教师工号列表
+            if ("teacher".equals(role)) {
                 teacherNos.add(StpUtil.getLoginIdAsString());
-            }else if(StpUtil.hasRole("college_admin")){
+            }else if ("college_admin".equals(role)) {
                 College college = (College) StpUtil.getSession().get("CollegeInfo");
                 if(college != null){
                     teacherNos = teacherMapper.queryTeacherNoByCollegeName(college.getName());
                 }else {
                     throw new com.xuegongbu.common.exception.BusinessException("当前用户需重新登录");
                 }
-            }else if(StpUtil.hasRole("admin")){
+            }else if ("admin".equals(role)) {
                 //学院条件不为空则查询对应学院的教师工号
                 if(!isBlank(queryDTO.getCollegeName())){
                     teacherNos = teacherMapper.queryTeacherNoByCollegeName(queryDTO.getCollegeName());
