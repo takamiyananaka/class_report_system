@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.Result;
+import com.xuegongbu.common.ResultCode;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.College;
 import com.xuegongbu.domain.CollegeAdmin;
@@ -239,7 +240,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     
                     // 使用统一的addTeacher方法
                     Result<String> result = addTeacher(teacher, college.getCollegeNo().trim());
-                    if (result.getCode() == 200) {
+                    if (ResultCode.SUCCESS.getCode().equals(result.getCode())) {
                         successCount++;
                     } else {
                         errorMessages.add(String.format("第%d行上传失败: %s", rowNum, result.getMessage()));

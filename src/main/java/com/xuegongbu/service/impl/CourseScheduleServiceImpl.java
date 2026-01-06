@@ -90,22 +90,17 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         return courseSchedule;
     }
     
+    private static final java.util.Set<String> VALID_WEEKDAYS = java.util.Set.of(
+        "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"
+    );
+    
     /**
      * 验证星期几格式是否正确
      * @param weekday 星期几（汉字格式）
      * @return 是否有效
      */
     private boolean isValidWeekday(String weekday) {
-        if (weekday == null) {
-            return false;
-        }
-        String[] validWeekdays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
-        for (String validWeekday : validWeekdays) {
-            if (validWeekday.equals(weekday.trim())) {
-                return true;
-            }
-        }
-        return false;
+        return weekday != null && VALID_WEEKDAYS.contains(weekday.trim());
     }
     
     @Override
