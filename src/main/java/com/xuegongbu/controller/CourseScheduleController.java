@@ -134,48 +134,28 @@ public class CourseScheduleController {
      * 创建课表
      */
     @PostMapping("/add")
-    @Operation(summary = "创建课表", description = "教师创建新课表，教师工号从登录状态获取，ID自动生成")
+    @Operation(summary = "创建课表", description = "教师创建新课表，ID自动生成")
     @SaCheckRole("admin")
     public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("创建课表，课表信息：{}", courseSchedule);
 
-        // 验证必填字段
-        if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
-            return Result.error("课程名称不能为空");
+        try {
+            CourseSchedule result = courseScheduleService.addCourseSchedule(courseSchedule);
+            log.info("创建课表完成，课表ID：{}", result.getId());
+            return Result.success(result);
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("创建课表失败", e);
+            return Result.error("创建失败: " + e.getMessage());
         }
-        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday().trim().isEmpty()) {
-            return Result.error("星期几不能为空");
-        }
-        if (!isValidWeekday(courseSchedule.getWeekday())) {
-            return Result.error("星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日");
-        }
-        if (courseSchedule.getWeekRange() == null || courseSchedule.getWeekRange().trim().isEmpty()) {
-            return Result.error("周次范围不能为空");
-        }
-        if (courseSchedule.getStartPeriod() == null || courseSchedule.getStartPeriod() < 1 || courseSchedule.getStartPeriod() > 12) {
-            return Result.error("开始节次必须是1-12之间的数字");
-        }
-        if (courseSchedule.getEndPeriod() == null || courseSchedule.getEndPeriod() < 1 || courseSchedule.getEndPeriod() > 12) {
-            return Result.error("结束节次必须是1-12之间的数字");
-        }
-        if (courseSchedule.getEndPeriod() < courseSchedule.getStartPeriod()) {
-            return Result.error("结束节次必须大于或等于开始节次");
-        }
-        if (courseSchedule.getClassroom() == null || courseSchedule.getClassroom().trim().isEmpty()) {
-            return Result.error("教室不能为空");
-        }
-        
-        // ID会由MyBatis-Plus自动生成（雪花算法）
-        courseScheduleService.save(courseSchedule);
-        log.info("创建课表完成，课表ID：{}", courseSchedule.getId());
-        return Result.success(courseSchedule);
     }
 
     /**
      * 更新课表
      */
     @PutMapping("/update")
-    @Operation(summary = "更新课表", description = "教师更新课表信息，通过课程名称和班级名称定位，只能更新自己的课表")
+    @Operation(summary = "更新课表", description = "教师更新课表信息，通过课程名称定位，只能更新自己的课表")
     @SaCheckRole("admin")
     public Result<String> updateCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
         log.info("更新课表，课程名称：{}，课表信息：{}", 
@@ -183,12 +163,6 @@ public class CourseScheduleController {
         
         if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
             return Result.error("课程名称不能为空");
-        }
-        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday().trim().isEmpty()) {
-            return Result.error("星期几不能为空");
-        }
-        if (!isValidWeekday(courseSchedule.getWeekday())) {
-            return Result.error("星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日");
         }
 
         // 根据课程名称查询课表（班级信息现在通过关联表获取）
@@ -325,24 +299,6 @@ public class CourseScheduleController {
         courseScheduleService.removeById(id);
         log.info("删除课表完成");
         return Result.success("删除成功");
-    }
-
-    /**
-     * 验证星期几格式是否正确
-     * @param weekday 星期几（汉字格式）
-     * @return 是否有效
-     */
-    private boolean isValidWeekday(String weekday) {
-        if (weekday == null) {
-            return false;
-        }
-        String[] validWeekdays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
-        for (String validWeekday : validWeekdays) {
-            if (validWeekday.equals(weekday.trim())) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 

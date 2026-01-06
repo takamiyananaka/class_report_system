@@ -41,6 +41,34 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     private TeacherService teacherService;
 
     @Override
+    public Class addClass(Class classEntity, String teacherNo) {
+        // 验证必填字段
+        if (classEntity.getClassName() == null || classEntity.getClassName().trim().isEmpty()) {
+            throw new IllegalArgumentException("班级名称不能为空");
+        }
+        if (classEntity.getCount() == null || classEntity.getCount() <= 0) {
+            throw new IllegalArgumentException("班级人数必须大于0");
+        }
+        if (classEntity.getGrade() == null || classEntity.getGrade().trim().isEmpty()) {
+            throw new IllegalArgumentException("年级不能为空");
+        }
+        if (classEntity.getMajor() == null || classEntity.getMajor().trim().isEmpty()) {
+            throw new IllegalArgumentException("专业不能为空");
+        }
+        if (teacherNo == null || teacherNo.trim().isEmpty()) {
+            throw new IllegalArgumentException("辅导员工号不能为空");
+        }
+        
+        // 设置辅导员工号
+        classEntity.setTeacherNo(teacherNo.trim());
+        
+        // ID会由MyBatis-Plus自动生成（雪花算法）
+        this.save(classEntity);
+        log.info("创建班级完成，班级ID：{}", classEntity.getId());
+        return classEntity;
+    }
+    
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
         Map<String, Object> result = new HashMap<>();
@@ -112,16 +140,15 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                         continue;
                     }
                     
-                    // 创建班级对象
+                    // 创建班级对象并使用统一的添加方法
                     Class classEntity = new Class();
                     classEntity.setClassName(dto.getClassName().trim());
                     classEntity.setCount(dto.getCount());
                     classEntity.setGrade(dto.getGrade().trim());
                     classEntity.setMajor(dto.getMajor().trim());
-                    classEntity.setTeacherNo(teacherNo.trim());
                     
-                    // 保存班级
-                    this.save(classEntity);
+                    // 使用统一的addClass方法
+                    addClass(classEntity, teacherNo);
                     successCount++;
                     
                 } catch (Exception e) {

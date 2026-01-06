@@ -23,6 +23,13 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
     Map<String, Object> importFromExcel(MultipartFile file);
     
     /**
+     * 添加单个课表
+     * @param courseSchedule 课表信息
+     * @return 添加的课表对象
+     */
+    CourseSchedule addCourseSchedule(CourseSchedule courseSchedule);
+    
+    /**
      * 分页查询课表
      * @param queryDTO 查询条件
      * @return 分页结果

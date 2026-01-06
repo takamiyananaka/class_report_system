@@ -38,6 +38,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Service
 public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper, CourseSchedule> implements CourseScheduleService {
     
+    private static final java.util.Set<String> VALID_WEEKDAYS = java.util.Set.of(
+        "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"
+    );
+    
     @Autowired
     private ClassService classService;
     
@@ -61,6 +65,49 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     @Autowired
     private SemesterService semesterService;
 
+    @Override
+    public CourseSchedule addCourseSchedule(CourseSchedule courseSchedule) {
+        // 验证必填字段
+        if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
+            throw new IllegalArgumentException("课程名称不能为空");
+        }
+        if (courseSchedule.getWeekday() == null || courseSchedule.getWeekday().trim().isEmpty()) {
+            throw new IllegalArgumentException("星期几不能为空");
+        }
+        if (!isValidWeekday(courseSchedule.getWeekday())) {
+            throw new IllegalArgumentException("星期几格式不正确，应为：星期一、星期二、星期三、星期四、星期五、星期六、星期日");
+        }
+        if (courseSchedule.getWeekRange() == null || courseSchedule.getWeekRange().trim().isEmpty()) {
+            throw new IllegalArgumentException("周次范围不能为空");
+        }
+        if (courseSchedule.getStartPeriod() == null || courseSchedule.getStartPeriod() < 1 || courseSchedule.getStartPeriod() > 12) {
+            throw new IllegalArgumentException("开始节次必须是1-12之间的数字");
+        }
+        if (courseSchedule.getEndPeriod() == null || courseSchedule.getEndPeriod() < 1 || courseSchedule.getEndPeriod() > 12) {
+            throw new IllegalArgumentException("结束节次必须是1-12之间的数字");
+        }
+        if (courseSchedule.getEndPeriod() < courseSchedule.getStartPeriod()) {
+            throw new IllegalArgumentException("结束节次必须大于或等于开始节次");
+        }
+        if (courseSchedule.getClassroom() == null || courseSchedule.getClassroom().trim().isEmpty()) {
+            throw new IllegalArgumentException("教室不能为空");
+        }
+        
+        // ID会由MyBatis-Plus自动生成（雪花算法）
+        this.save(courseSchedule);
+        log.info("创建课表完成，课表ID：{}", courseSchedule.getId());
+        return courseSchedule;
+    }
+    
+    /**
+     * 验证星期几格式是否正确
+     * @param weekday 星期几（汉字格式）
+     * @return 是否有效
+     */
+    private boolean isValidWeekday(String weekday) {
+        return weekday != null && VALID_WEEKDAYS.contains(weekday.trim());
+    }
+    
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> importFromExcel(MultipartFile file) {
@@ -234,8 +281,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         }
                     }
                     
-                    // 保存课表
-                    this.save(courseSchedule);
+                    // 使用统一的addCourseSchedule方法
+                    addCourseSchedule(courseSchedule);
                     
                     // 保存课程与班级的关联关系
                     for (Class classEntity : successClasses) {
@@ -346,24 +393,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         } else {
             return "成都校区/" + building + "/" + building;
         }
-    }
-    
-    /**
-     * 验证星期几格式是否正确
-     * @param weekday 星期几（汉字格式）
-     * @return 是否有效
-     */
-    private boolean isValidWeekday(String weekday) {
-        if (weekday == null) {
-            return false;
-        }
-        String[] validWeekdays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
-        for (String validWeekday : validWeekdays) {
-            if (validWeekday.equals(weekday.trim())) {
-                return true;
-            }
-        }
-        return false;
     }
     
     /**
