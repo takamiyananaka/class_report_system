@@ -41,7 +41,7 @@ public class CollegeAdminController {
     /**
      * 查询所有学院管理员
      */
-    @GetMapping("/list")
+    @GetMapping("/collegeAdmins")
     @Operation(summary = "查询所有学院管理员", description = "管理员查询所有学院管理员列表")
     @SaCheckRole("admin")
     public Result<List<CollegeAdminVO>> listCollegeAdmins() {
@@ -62,39 +62,9 @@ public class CollegeAdminController {
     }
 
     /**
-     * 分页查询学院管理员
-     */
-    @GetMapping("/page")
-    @Operation(summary = "分页查询学院管理员", description = "管理员分页查询学院管理员列表")
-    @SaCheckRole("admin")
-    public Result<Page<CollegeAdminVO>> pageCollegeAdmins(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int pageSize) {
-        log.info("管理员分页查询学院管理员，页码：{}，每页大小：{}", pageNum, pageSize);
-        Page<CollegeAdmin> page = new Page<>(pageNum, pageSize);
-        Page<CollegeAdmin> resultPage = collegeAdminService.page(page);
-        
-        Page<CollegeAdminVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
-        List<CollegeAdminVO> voList = resultPage.getRecords().stream().map(collegeAdmin -> {
-            CollegeAdminVO vo = new CollegeAdminVO();
-            BeanUtils.copyProperties(collegeAdmin, vo);
-            // 获取学院名称
-            College college = collegeService.getById(collegeAdmin.getCollegeId());
-            if (college != null) {
-                vo.setCollegeName(college.getName());
-            }
-            return vo;
-        }).collect(Collectors.toList());
-        voPage.setRecords(voList);
-        
-        log.info("查询到{}个学院管理员", voList.size());
-        return Result.success(voPage);
-    }
-
-    /**
      * 根据ID查询学院管理员
      */
-    @GetMapping("/{id}")
+    @GetMapping("/collegeAdmins/{id}")
     @Operation(summary = "根据ID查询学院管理员", description = "管理员根据ID查询学院管理员详情")
     @SaCheckRole("admin")
     public Result<CollegeAdminVO> getCollegeAdmin(@Parameter(description = "学院管理员ID") @PathVariable String id) {
@@ -116,7 +86,7 @@ public class CollegeAdminController {
     /**
      * 创建学院管理员
      */
-    @PostMapping
+    @PostMapping("/collegeAdmins")
     @Operation(summary = "创建学院管理员", description = "管理员创建新学院管理员，密码必须至少6位字符")
     @SaCheckRole("admin")
     public Result<String> createCollegeAdmin(
@@ -165,7 +135,7 @@ public class CollegeAdminController {
     /**
      * 更新学院管理员
      */
-    @PutMapping("/{id}")
+    @PutMapping("/collegeAdmins/{id}")
     @Operation(summary = "更新学院管理员", description = "管理员更新学院管理员信息，如提供新密码则必须至少6位字符")
     @SaCheckRole("admin")
     public Result<String> updateCollegeAdmin(
@@ -222,7 +192,7 @@ public class CollegeAdminController {
     /**
      * 删除学院管理员
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/collegeAdmins/{id}")
     @Operation(summary = "删除学院管理员", description = "管理员删除学院管理员")
     @SaCheckRole("admin")
     public Result<String> deleteCollegeAdmin(@Parameter(description = "学院管理员ID") @PathVariable String id) {
