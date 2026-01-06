@@ -185,6 +185,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     // 使用上传的预到人数，不进行计算
                     courseSchedule.setExpectedCount(expectedCount);
                     
+                    // 处理新增字段：学年和学期
+                    courseSchedule.setSchoolYear(isBlank(dto.getSchoolYear()) ? null : dto.getSchoolYear().trim());
+                    Integer semester = extractNumberFromString(dto.getSemester());
+                    courseSchedule.setSemester(semester);
+                    
                     // 处理班级列表
                     List<Class> successClasses = new ArrayList<>();
                     List<String> failedClasses = new ArrayList<>();
@@ -503,11 +508,22 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             queryWrapper.eq(CourseSchedule::getCourseType, queryDTO.getCourseType().trim());
         }
         
+        // 学年条件（精确查询）
+        if (!isBlank(queryDTO.getSchoolYear())) {
+            queryWrapper.eq(CourseSchedule::getSchoolYear, queryDTO.getSchoolYear().trim());
+        }
+        
+        // 学期条件（精确查询）
+        if (queryDTO.getSemester() != null) {
+            queryWrapper.eq(CourseSchedule::getSemester, queryDTO.getSemester());
+        }
+        
         // 按创建时间倒序排序
         queryWrapper.orderByDesc(CourseSchedule::getCreateTime);
         
-        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, teacherName={}, courseType={}, pageNum={}, pageSize={}", 
-                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), queryDTO.getTeacherName(), queryDTO.getCourseType(), pageNum, pageSize);
+        log.info("查询课表，条件：teacherNo={}, className={}, courseName={}, teacherName={}, courseType={}, schoolYear={}, semester={}, pageNum={}, pageSize={}", 
+                queryDTO.getTeacherNo(), queryDTO.getClassName(), queryDTO.getCourseName(), queryDTO.getTeacherName(), queryDTO.getCourseType(), 
+                queryDTO.getSchoolYear(), queryDTO.getSemester(), pageNum, pageSize);
         
         // 执行查询获取CourseSchedule分页结果
         Page<CourseSchedule> courseSchedulePage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
@@ -625,6 +641,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setTeacherName("张老师");
             example.setCourseType("专业课");
             example.setExpectedCount("90");
+            example.setSchoolYear("2024-2025");
+            example.setSemester("1");
             templateData.add(example);
             
             // 写入Excel

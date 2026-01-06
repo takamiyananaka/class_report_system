@@ -579,6 +579,8 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     classroom VARCHAR(100) NOT NULL COMMENT '教室',
     teacher_name VARCHAR(100) COMMENT '任课老师',
     course_type VARCHAR(50) COMMENT '课程类型（通识、专业课等）',
+    school_year VARCHAR(20) COMMENT '学年（例如：2023-2024）',
+    semester INT COMMENT '学期（1-第一学期，2-第二学期）',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_weekday (weekday),
@@ -730,6 +732,36 @@ WHERE TABLE_SCHEMA = DATABASE()
 SET @sql = IF(@col_exists = 0, 
     'ALTER TABLE course_schedule ADD COLUMN course_type VARCHAR(50) COMMENT ''课程类型（通识、专业课等）''',
     'SELECT ''Column course_type already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加school_year字段
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'school_year';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN school_year VARCHAR(20) COMMENT ''学年（例如：2023-2024）''',
+    'SELECT ''Column school_year already exists'' AS msg');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 添加semester字段
+SET @col_exists = 0;
+SELECT COUNT(*) INTO @col_exists 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+  AND TABLE_NAME = 'course_schedule' 
+  AND COLUMN_NAME = 'semester';
+
+SET @sql = IF(@col_exists = 0, 
+    'ALTER TABLE course_schedule ADD COLUMN semester INT COMMENT ''学期（1-第一学期，2-第二学期）''',
+    'SELECT ''Column semester already exists'' AS msg');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
