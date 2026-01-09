@@ -55,10 +55,10 @@ public class AttendanceController {
     /**
      * 统计·报表查询考勤记录，维度：学院，班级（辅导员，班级名称），任课老师，课程类型，时间（学年，学期，月，周，日），
      */
-    @GetMapping("/queryAttendanceReport")
-    @Operation(summary = "统计·报表查询考勤记录", description = "统计·报表查询考勤记录，维度：学院，班级（辅导员，班级名称），课序号，课程类型，时间范围（具体日期范围），学年，学期，三级角色统一用考勤报表页面查询")
+    @PostMapping("/queryAttendanceReport")
+    @Operation(summary = "统计·报表查询考勤记录", description = "统计·报表查询考勤记录，维度：学院，班级（辅导员，班级名称），课序号，课程类型，时间范围（具体日期范围），学期，三级角色统一用考勤报表页面查询")
     @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
-    public Result<Page<Attendance>> queryAttendanceReport(AttendanceReportQueryDTO queryDTO){
+    public Result<Page<Attendance>> queryAttendanceReport(@RequestBody AttendanceReportQueryDTO queryDTO){
         log.info("统计·报表查询考勤记录，参数：{}", queryDTO);
         Page<Attendance> attendancePage = attendanceService.queryAttendanceReport(queryDTO);
         log.info("统计·报表查询考勤记录完成，共{}条记录", attendancePage.getTotal());
@@ -68,10 +68,10 @@ public class AttendanceController {
     /**
      * 报表生成接口（excel）
      */
-    @GetMapping("/exportAttendanceReport")
+    @PostMapping("/exportAttendanceReport")
     @Operation(summary = "报表生成接口（excel）", description = "报表生成接口（excel）,与查询共用查询条件，根据该查询条件对应的考勤记录生成报表")
     @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
-    public Result<String> exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response){
+    public Result<String> exportAttendanceReport(@RequestBody AttendanceReportQueryDTO queryDTO, HttpServletResponse response){
         log.info("报表生成接口（excel），参数：{}", queryDTO);
         attendanceService.exportAttendanceReport(queryDTO, response);
         log.info("报表生成接口（excel）完成");

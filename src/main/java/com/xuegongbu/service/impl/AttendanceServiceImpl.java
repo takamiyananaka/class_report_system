@@ -1,12 +1,13 @@
 package com.xuegongbu.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.exception.BusinessException;
-import com.xuegongbu.domain.Attendance;
+import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
-import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.AttendanceReportQueryDTO;
 import com.xuegongbu.mapper.AttendanceMapper;
@@ -18,6 +19,7 @@ import com.xuegongbu.util.ClassTimeUtil;
 import com.xuegongbu.util.CountUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +48,12 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     private AlertService alertService;
     @Autowired
     private CourseMapper courseMapper;
+    @Autowired
+    private CollegeService collegeService;
+    @Autowired
+    private TeacherService teacherService;
+    @Autowired
+    private ClassService classService;
 
 
     /**
@@ -240,7 +248,123 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
     @Override
     public Page<Attendance> queryAttendanceReport(AttendanceReportQueryDTO queryDTO) {
-        return new Page<>();
+        int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
+        int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
+        Page<Attendance> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<Attendance> attendanceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<CourseSchedule> courseScheduleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        Object objRole = StpUtil.getSession().get("role");
+        if (!queryDTO.getCollegeNames().isEmpty()&&objRole.equals("admin")) {
+            LambdaQueryWrapper<College> collegeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+
+            List<String> collegeNames = queryDTO.getCollegeNames();
+            int flag = 0 ;
+            for (int i = 0; i < collegeNames.size(); i++) {
+                String collegeName = collegeNames.get(i);
+                if (!StringUtil.isBlank(collegeName)) {
+                    if (flag == 0) {
+                        flag = 1;
+                        collegeLambdaQueryWrapper.like(College::getName, collegeName.trim());
+                    } else {
+                        collegeLambdaQueryWrapper.or().like(College::getName, collegeName.trim());
+                    }
+                }
+            }
+            List<College> colleges = collegeService.list(collegeLambdaQueryWrapper);
+            if (!colleges.isEmpty()) {
+                LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                teacherLambdaQueryWrapper.in(Teacher::getCollegeNo, colleges.stream().map(College::getCollegeNo).toArray());
+                List<Teacher> teachers = teacherService.list(teacherLambdaQueryWrapper);
+                if (!teachers.isEmpty()) {
+                    classLambdaQueryWrapper.in(Class::getTeacherNo, teachers.stream().map(Teacher::getTeacherNo).toArray());
+                }else {
+                    return new Page<>();
+                }
+            }else {
+                return new Page<>();
+            }
+        }
+        if (!queryDTO.getTeacherNos().isEmpty()){
+            classLambdaQueryWrapper.in(Class::getTeacherNo, queryDTO.getTeacherNos());
+        }else {
+            if(objRole.equals("college_admin")){
+                College college = (College) StpUtil.getSession().get("collegeInfo");
+                LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                teacherLambdaQueryWrapper.eq(Teacher::getCollegeNo, college.getCollegeNo());
+                List<Teacher> teachers = teacherService.list(teacherLambdaQueryWrapper);
+                if (!teachers.isEmpty()) {
+                    classLambdaQueryWrapper.in(Class::getTeacherNo, teachers.stream().map(Teacher::getTeacherNo).toArray());
+                }else {
+                    return new Page<>();
+                }
+            }else if(objRole.equals("teacher")){
+                classLambdaQueryWrapper.eq(Class::getTeacherNo, StpUtil.getLoginIdAsString());
+            }
+        }
+
+        if (!queryDTO.getClassNames().isEmpty()){
+            List<String> classNames = queryDTO.getClassNames();
+            int flag = 0 ;
+            for (int i = 0; i < classNames.size(); i++) {
+                String className = classNames.get(i);
+                if (!StringUtil.isBlank(className)) {
+                    if (flag == 0) {
+                        flag = 1;
+                        classLambdaQueryWrapper.like(Class::getClassName, className.trim());
+                    } else {
+                        classLambdaQueryWrapper.or().like(Class::getClassName, className.trim());
+                    }
+                }
+            }
+        }
+
+        List<Class> classes = classMapper.selectList(classLambdaQueryWrapper);
+        if (!classes.isEmpty()){
+            LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            courseLambdaQueryWrapper.in(Course::getClassId, classes.stream().map(Class::getId).toArray());
+            List<Course> courses = courseMapper.selectList(courseLambdaQueryWrapper);
+            if (!courses.isEmpty()){
+                courseScheduleLambdaQueryWrapper.in(CourseSchedule::getId, courses.stream().map(Course::getCourseId).toArray());
+            }
+        }else {
+            return new Page<>();
+        }
+
+        if (!queryDTO.getOrderNos().isEmpty()){
+            List<String> orderNos = queryDTO.getOrderNos();
+            int flag = 0 ;
+            for (int i = 0; i < orderNos.size(); i++) {
+                String orderNo = orderNos.get(i);
+                if (!StringUtil.isBlank(orderNo)) {
+                    if (flag == 0) {
+                        flag = 1;
+                        courseScheduleLambdaQueryWrapper.like(CourseSchedule::getOrderNo, orderNo.trim());
+                    } else {
+                        courseScheduleLambdaQueryWrapper.or().like(CourseSchedule::getOrderNo, orderNo.trim());
+                    }
+                }
+            }
+        }
+        if (!queryDTO.getCourseTypes().isEmpty()){
+            courseScheduleLambdaQueryWrapper.in(CourseSchedule::getCourseType, queryDTO.getCourseTypes());
+        }
+        if (!queryDTO.getSemester().isEmpty()){
+            courseScheduleLambdaQueryWrapper.in(CourseSchedule::getSemesterName, queryDTO.getSemester());
+        }
+        List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(courseScheduleLambdaQueryWrapper);
+        if (!courseSchedules.isEmpty()){
+            attendanceLambdaQueryWrapper.in(Attendance::getCourseId, courseSchedules.stream().map(CourseSchedule::getId).toArray());
+        }else {
+            return new Page<>();
+        }
+
+        if (queryDTO.getStartDate() != null && queryDTO.getEndDate() != null){
+            attendanceLambdaQueryWrapper.ge(Attendance::getCheckTime, queryDTO.getStartDate().atStartOfDay())
+                    .le(Attendance::getCheckTime, queryDTO.getEndDate().plusDays(1).atStartOfDay());
+        }
+
+        return page(page, attendanceLambdaQueryWrapper);
     }
 
     @Override
@@ -248,7 +372,6 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         queryDTO.setPageNum(1);
         queryDTO.setPageSize(Integer.MAX_VALUE);
         Page<Attendance> attendancePage = queryAttendanceReport(queryDTO);
-
     }
 
 
