@@ -1,17 +1,16 @@
 package com.xuegongbu.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
-import cn.dev33.satoken.annotation.SaMode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.ClassQueryDTO;
 import com.xuegongbu.service.ClassService;
 import com.xuegongbu.service.TeacherService;
+import com.xuegongbu.vo.ClassVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.http.MediaType;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -66,9 +64,9 @@ public class ClassController {
     @PostMapping("/query")  //
     @Operation(summary = "分页查询班级", description = "分页查询班级，支持多条件查询。可通过className（模糊）、teacherNo等参数进行过滤查询。不提供任何条件则查询全部")
     @SaCheckRole("teacher")
-    public Result<Page<Class>> query(@RequestBody ClassQueryDTO queryDTO) {  //
+    public Result<Page<ClassVO>> query(@RequestBody ClassQueryDTO queryDTO) {  //
         log.info("查询班级请求，参数：{}", queryDTO);
-        Page<Class> result = classService.queryPage(queryDTO);
+        Page<ClassVO> result = classService.queryPage(queryDTO);
         log.info("查询班级完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());
         return Result.success(result);
     }

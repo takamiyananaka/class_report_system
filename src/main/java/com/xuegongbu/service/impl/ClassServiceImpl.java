@@ -5,11 +5,8 @@ import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.xuegongbu.common.Result;
+import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
-import com.xuegongbu.domain.College;
-import com.xuegongbu.domain.CollegeAdmin;
-import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.ClassExcelDTO;
 import com.xuegongbu.dto.ClassQueryDTO;
 import com.xuegongbu.mapper.ClassMapper;
@@ -18,6 +15,7 @@ import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.ClassService;
 import com.xuegongbu.service.CollegeService;
 import com.xuegongbu.service.TeacherService;
+import com.xuegongbu.vo.ClassVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -194,11 +192,11 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     }
     
     @Override
-    public Page<Class> queryPage(ClassQueryDTO queryDTO) {
+    public Page<ClassVO> queryPage(ClassQueryDTO queryDTO) {
         // 设置分页参数
         int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
         int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
-        Page<Class> page = new Page<>(pageNum, pageSize);
+        Page<ClassVO> voPage = new Page<>(pageNum, pageSize);
 
         // 构建查询条件
         LambdaQueryWrapper<Class> queryWrapper = new LambdaQueryWrapper<>();
@@ -237,7 +235,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             }
         }
         if(!teacherNos.isEmpty()) {
-            return page;
+            return voPage;
         }
         queryWrapper.in(Class::getTeacherNo, teacherNos);
 
@@ -276,8 +274,17 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         
         log.info("查询班级，条件：className={}, teacherNo={}, grades={}, majors={}, pageNum={}, pageSize={}", 
                 queryDTO.getClassName(), queryDTO.getTeacherNo(), queryDTO.getGrades(), queryDTO.getMajors(), pageNum, pageSize);
-        
-        return this.page(page, queryWrapper);
+        Page<Class> ClassPage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
+        // 转换为VO分页结果
+
+        voPage.setCurrent(ClassPage.getCurrent());
+        voPage.setSize(ClassPage.getSize());
+        voPage.setTotal(ClassPage.getTotal());
+        List<ClassVO> voList = ClassPage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     @Override
@@ -308,5 +315,30 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             log.error("生成班级导入模板失败", e);
             throw new com.xuegongbu.common.exception.BusinessException("生成班级导入模板失败: " + e.getMessage());
         }
+    }
+
+    private ClassVO convertToVO(Class clazz) {
+        ClassVO vo = new ClassVO();
+        vo.setId(clazz.getId());
+        vo.setClassName(clazz.getClassName());
+        vo.setTeacherNo(clazz.getTeacherNo());
+        vo.setCount(clazz.getCount());
+        vo.setGrade(clazz.getGrade());
+        vo.setMajor(clazz.getMajor());
+
+
+        // 查询并设置关联的老师信息
+        LambdaQueryWrapper<Teacher> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Teacher::getTeacherNo, clazz.getTeacherNo());
+        Teacher teacher = teacherMapper.selectOne(queryWrapper);
+        vo.setTeacherName(teacher != null ? teacher.getRealName(): null);
+
+        LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
+        if (teacher != null) {
+            collegeQueryWrapper.eq(College::getCollegeNo, teacher.getCollegeNo());
+        }
+        College college = collegeMapper.selectOne(collegeQueryWrapper);
+        vo.setCollegeName(college != null ? college.getName(): null);
+        return vo;
     }
 }

@@ -2,9 +2,9 @@ package com.xuegongbu.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.ClassQueryDTO;
+import com.xuegongbu.vo.ClassVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -29,10 +29,11 @@ public interface ClassService extends IService<Class> {
     
     /**
      * 分页查询班级
+     *
      * @param queryDTO 查询条件
      * @return 分页结果
      */
-    Page<Class> queryPage(ClassQueryDTO queryDTO);
+    Page<ClassVO> queryPage(ClassQueryDTO queryDTO);
     
     /**
      * 下载班级导入模板
