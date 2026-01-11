@@ -234,7 +234,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                 }
             }
         }
-        if(!teacherNos.isEmpty()) {
+        if(teacherNos.isEmpty()) {
             return voPage;
         }
         queryWrapper.in(Class::getTeacherNo, teacherNos);
@@ -276,7 +276,6 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                 queryDTO.getClassName(), queryDTO.getTeacherNo(), queryDTO.getGrades(), queryDTO.getMajors(), pageNum, pageSize);
         Page<Class> ClassPage = this.page(new Page<>(pageNum, pageSize), queryWrapper);
         // 转换为VO分页结果
-
         voPage.setCurrent(ClassPage.getCurrent());
         voPage.setSize(ClassPage.getSize());
         voPage.setTotal(ClassPage.getTotal());
