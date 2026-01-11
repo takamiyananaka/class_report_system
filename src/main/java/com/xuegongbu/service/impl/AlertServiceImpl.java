@@ -1,5 +1,6 @@
 package com.xuegongbu.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +36,8 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
     @Autowired
     private TeacherMapper teacherMapper;
 
+    @Autowired
+    private CourseMapper courseMapper;
     /**
      * 分页查询教师关联的预警记录（支持日期查询）
      * @param teacherNo 教师工号
@@ -129,9 +133,15 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
                 
 
                 // 查询课程关联的所有班级
-                QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
-                classQueryWrapper.eq("course_id", course.getId());
-                List<Class> classList = classMapper.selectList(classQueryWrapper);
+                LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                courseLambdaQueryWrapper.eq(Course::getCourseId, course.getId());
+                List<Course> courseList = courseMapper.selectList(courseLambdaQueryWrapper);
+                List<String> classIds = courseList.stream()
+                        .map(Course::getClassId)
+                        .collect(Collectors.toList());
+                LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                classLambdaQueryWrapper.in(Class::getId, classIds);
+                List<Class> classList = classMapper.selectList(classLambdaQueryWrapper);
                 
                 // 为每个班级创建一个预警记录
                 for (Class cls : classList) {
@@ -160,8 +170,8 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
                     save(classAlert);
                     
                     // 检查教师是否开启邮件通知
-                    Integer enableEmailNotification = teacher.getEnableEmailNotification();
-                    if (enableEmailNotification != null && enableEmailNotification == 1) {
+                    Boolean enableEmailNotification = teacher.getEnableEmailNotification();
+                    if (enableEmailNotification != null && enableEmailNotification) {
                         // 发送邮件通知
                         mailService.sendAlertNotification(classAlert, teacher);
                     } else {
