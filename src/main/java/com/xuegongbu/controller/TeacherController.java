@@ -132,8 +132,8 @@ public class TeacherController {
     @SaCheckRole("college_admin")
     public Result<String> updateTeacher(
             @Parameter(description = "教师ID") @PathVariable String id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request,
-            @Parameter(description = "学院编号", required = true) @RequestParam("collegeNo") String collegeNo) {
+            @io.swagger.v3.oas.annotations.parameters. RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
+        String collegeNo = teacherService.getById(id).getCollegeNo();
         log.info("学院{}更新教师，ID：{}", collegeNo, id);
 
         Teacher teacher = teacherService.getById(id);
