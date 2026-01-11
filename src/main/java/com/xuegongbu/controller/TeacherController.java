@@ -179,9 +179,6 @@ public class TeacherController {
         if(StringUtil.isNullOrEmpty(request.getEmail())){
             teacher.setEmail(request.getEmail());
         }
-        if(StringUtil.isNullOrEmpty(request.getDepartment())) {
-            teacher.setDepartment(request.getDepartment());
-        }
         if (request.getAttendanceThreshold() != null) {
             teacher.setAttendanceThreshold(request.getAttendanceThreshold());
         }
