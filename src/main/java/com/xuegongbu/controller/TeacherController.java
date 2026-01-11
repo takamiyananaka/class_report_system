@@ -18,6 +18,7 @@ import com.xuegongbu.mapper.CollegeAdminMapper;
 import com.xuegongbu.mapper.CollegeMapper;
 import com.xuegongbu.service.TeacherService;
 import com.xuegongbu.vo.TeacherVO;
+import io.netty.util.internal.StringUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -163,14 +164,27 @@ public class TeacherController {
             return Result.error("教师工号已被其他教师使用");
         }
 
-        // 更新字段
-        teacher.setUsername(request.getUsername());
-        teacher.setRealName(request.getRealName());
-        teacher.setTeacherNo(request.getTeacherNo());
-        teacher.setPhone(request.getPhone());
-        teacher.setEmail(request.getEmail());
-        teacher.setDepartment(request.getDepartment());
-        teacher.setAttendanceThreshold(request.getAttendanceThreshold());
+        if (!StringUtil.isNullOrEmpty(request.getUsername())) {
+            teacher.setUsername(request.getUsername());
+        }
+        if (StringUtil.isNullOrEmpty(request.getRealName())) {
+            teacher.setRealName(request.getRealName());
+        }
+        if (StringUtil.isNullOrEmpty(request.getTeacherNo())) {
+            teacher.setTeacherNo(request.getTeacherNo());
+        }
+        if (StringUtil.isNullOrEmpty(request.getPhone())){
+            teacher.setPhone(request.getPhone());
+        }
+        if(StringUtil.isNullOrEmpty(request.getEmail())){
+            teacher.setEmail(request.getEmail());
+        }
+        if(StringUtil.isNullOrEmpty(request.getDepartment())) {
+            teacher.setDepartment(request.getDepartment());
+        }
+        if (request.getAttendanceThreshold() != null) {
+            teacher.setAttendanceThreshold(request.getAttendanceThreshold());
+        }
         // 如果提供了新密码，则更新密码
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             // 验证密码长度
@@ -241,7 +255,7 @@ public class TeacherController {
     @PutMapping("/profile")
     @Operation(summary = "教师自己的个人信息修改", description = "教师自己的个人信息修改")
     @SaCheckRole("teacher")
-    public Result<String> updateProfile(@io.swagger.v3.oas.annotations.parameters.RequestBody (description = "教师只能修改用户名，密码，邮箱通知") @RequestBody Teacher teacher) {
+    public Result<String> updateProfile(@io.swagger.v3.oas.annotations.parameters.RequestBody (description = "教师只能修改用户名，密码，邮箱通知，电话，邮箱") @RequestBody TeacherRequest teacherRequest) {
         // 获取当前登录用户的教师工号
         String teacherNo = StpUtil.getLoginIdAsString();
         Teacher existingTeacher = teacherService.lambdaQuery()
@@ -251,16 +265,29 @@ public class TeacherController {
         if (existingTeacher == null) {
                     return Result.error("教师不存在");
                 }
+        Teacher teacher = new Teacher();
         teacher.setId(existingTeacher.getId());
         teacher.setTeacherNo(teacherNo);
 
         // 如果提供了新密码，则更新密码
-        if (teacher.getPassword() != null && !teacher.getPassword().isEmpty()){
+        if (teacherRequest.getPassword() != null && !teacherRequest.getPassword().isEmpty()){
             // 验证密码长度
             if (teacher.getPassword().length() < 6) {
                 return Result.error("密码长度不能少于6位");
             }
-            teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
+            teacher.setPassword(passwordEncoder.encode(teacherRequest.getPassword()));
+        }
+        if(!StringUtil.isNullOrEmpty(teacherRequest.getEmail())){
+            teacher.setEmail(teacherRequest.getEmail());
+        }
+        if(!StringUtil.isNullOrEmpty(teacherRequest.getPhone())){
+            teacher.setPhone(teacherRequest.getPhone());
+        }
+        if(StringUtil.isNullOrEmpty(teacherRequest.getUsername())){
+            teacher.setUsername(teacherRequest.getUsername());
+        }
+        if(teacherRequest.getEnableEmailNotification() != null){
+            teacher.setEnableEmailNotification(teacherRequest.getEnableEmailNotification());
         }
         teacherService.updateById(teacher);
         log.info("教师{}修改个人信息成功", teacherNo);
