@@ -54,6 +54,7 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         StpUtil.login(admin.getId(),"admin");
         StpUtil.getSession().set("role", "admin");
         String token = StpUtil.getTokenValue();
+        StpUtil.getSession().set("userInfo",admin);
 
         // 构造用户信息（不包含密码）
         Map<String, Object> userInfo = new HashMap<>();
@@ -63,7 +64,6 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         userInfo.put("phone", admin.getPhone());
         userInfo.put("email", admin.getEmail());
         userInfo.put("role", "admin");
-        StpUtil.getSession().set("userInfo", userInfo);
         log.info("管理员登录成功: {}", admin.getUsername());
         return new LoginResponse(token, userInfo);
     }

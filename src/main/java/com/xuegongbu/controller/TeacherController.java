@@ -5,6 +5,7 @@ import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.College;
@@ -250,9 +251,9 @@ public class TeacherController {
         if (existingTeacher == null) {
                     return Result.error("教师不存在");
                 }
-
-        teacher.setTeacherNo(teacherNo);
         teacher.setId(existingTeacher.getId());
+        teacher.setTeacherNo(teacherNo);
+
         // 如果提供了新密码，则更新密码
         if (teacher.getPassword() != null && !teacher.getPassword().isEmpty()){
             // 验证密码长度
@@ -261,7 +262,6 @@ public class TeacherController {
             }
             teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
         }
-        teacherService.updateById(teacher);
         log.info("教师{}修改个人信息成功", teacherNo);
         return Result.success("修改成功");
     }
