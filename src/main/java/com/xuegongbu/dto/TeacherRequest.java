@@ -41,5 +41,5 @@ public class TeacherRequest {
      * 是否开启邮件通知：0-否，1-是
      */
     @Schema(description = "是否开启邮件通知：0-否，1-是")
-    private Integer enableEmailNotification;
+    private Boolean enableEmailNotification;
 }

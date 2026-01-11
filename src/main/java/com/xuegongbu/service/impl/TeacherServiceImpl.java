@@ -240,7 +240,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     teacher.setDepartment(college.getName() != null ? college.getName().trim() : null);
                     teacher.setPhone(null); // 手机号初始为空
                     teacher.setEmail(null); // 邮箱初始为空
-                    teacher.setEnableEmailNotification(1); // 邮箱通知默认开启
+                    teacher.setEnableEmailNotification(Boolean.valueOf("1")); // 邮箱通知默认开启
                     teacher.setAttendanceThreshold(java.math.BigDecimal.valueOf(0.90)); // 考勤阈值默认0.90
                     teacher.setStatus(1); // 默认启用状态
                     
