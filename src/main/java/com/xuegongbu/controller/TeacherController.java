@@ -167,16 +167,16 @@ public class TeacherController {
         if (!StringUtil.isNullOrEmpty(request.getUsername())) {
             teacher.setUsername(request.getUsername());
         }
-        if (StringUtil.isNullOrEmpty(request.getRealName())) {
+        if (!StringUtil.isNullOrEmpty(request.getRealName())) {
             teacher.setRealName(request.getRealName());
         }
-        if (StringUtil.isNullOrEmpty(request.getTeacherNo())) {
+        if (!StringUtil.isNullOrEmpty(request.getTeacherNo())) {
             teacher.setTeacherNo(request.getTeacherNo());
         }
-        if (StringUtil.isNullOrEmpty(request.getPhone())){
+        if (!StringUtil.isNullOrEmpty(request.getPhone())){
             teacher.setPhone(request.getPhone());
         }
-        if(StringUtil.isNullOrEmpty(request.getEmail())){
+        if(!StringUtil.isNullOrEmpty(request.getEmail())){
             teacher.setEmail(request.getEmail());
         }
         if (request.getAttendanceThreshold() != null) {
