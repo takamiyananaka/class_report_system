@@ -241,7 +241,7 @@ public class TeacherController {
     @PutMapping("/profile")
     @Operation(summary = "教师自己的个人信息修改", description = "教师自己的个人信息修改")
     @SaCheckRole("teacher")
-    public Result<String> updateProfile(@RequestBody Teacher teacher) {
+    public Result<String> updateProfile(@io.swagger.v3.oas.annotations.parameters.RequestBody (description = "教师只能修改用户名，密码，邮箱通知") @RequestBody Teacher teacher) {
         // 获取当前登录用户的教师工号
         String teacherNo = StpUtil.getLoginIdAsString();
         Teacher existingTeacher = teacherService.lambdaQuery()
@@ -262,6 +262,7 @@ public class TeacherController {
             }
             teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
         }
+        teacherService.updateById(teacher);
         log.info("教师{}修改个人信息成功", teacherNo);
         return Result.success("修改成功");
     }
