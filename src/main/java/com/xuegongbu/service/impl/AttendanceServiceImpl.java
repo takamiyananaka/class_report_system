@@ -1,6 +1,8 @@
 package com.xuegongbu.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,6 +12,7 @@ import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.AttendanceReportQueryDTO;
+import com.xuegongbu.dto.AttendanceSummaryExcelDTO;
 import com.xuegongbu.mapper.AttendanceMapper;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseMapper;
@@ -17,6 +20,7 @@ import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.*;
 import com.xuegongbu.util.ClassTimeUtil;
 import com.xuegongbu.util.CountUtil;
+import com.xuegongbu.vo.AttendanceVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.util.StringUtil;
@@ -28,9 +32,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -54,6 +57,8 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     private TeacherService teacherService;
     @Autowired
     private ClassService classService;
+    @Autowired
+    private CourseScheduleService courseScheduleService;
 
 
     /**
@@ -247,10 +252,10 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     }
 
     @Override
-    public Page<Attendance> queryAttendanceReport(AttendanceReportQueryDTO queryDTO) {
+    public Page<AttendanceVO> queryAttendanceReport(AttendanceReportQueryDTO queryDTO) {
         int pageNum = queryDTO.getPageNum() != null && queryDTO.getPageNum() > 0 ? queryDTO.getPageNum() : 1;
         int pageSize = queryDTO.getPageSize() != null && queryDTO.getPageSize() > 0 ? queryDTO.getPageSize() : 10;
-        Page<Attendance> page = new Page<>(pageNum, pageSize);
+        Page<AttendanceVO> voPage = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<Attendance> attendanceLambdaQueryWrapper = new LambdaQueryWrapper<>();
         LambdaQueryWrapper<CourseSchedule> courseScheduleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -364,16 +369,311 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                     .le(Attendance::getCheckTime, queryDTO.getEndDate().plusDays(1).atStartOfDay());
         }
 
-        return page(page, attendanceLambdaQueryWrapper);
+        Page<Attendance>  page = this.page(new Page<>(pageNum, pageSize), attendanceLambdaQueryWrapper);
+
+        voPage.setCurrent(page.getCurrent());
+        voPage.setSize(page.getSize());
+        voPage.setTotal(page.getTotal());
+
+        List<AttendanceVO> voList =page.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+
+        voPage.setRecords(voList);
+
+        return voPage;
+    }
+
+    private AttendanceVO convertToVO(Attendance attendance) {
+        AttendanceVO vo = new AttendanceVO();
+        vo.setId(attendance.getId());
+        vo.setCourseId(attendance.getCourseId());
+        vo.setCheckTime(attendance.getCheckTime());
+        vo.setActualCount(attendance.getActualCount());
+        vo.setExpectedCount(attendance.getExpectedCount());
+        vo.setAttendanceRate(attendance.getAttendanceRate());
+        vo.setImageUrl(attendance.getImageUrl());
+        vo.setCheckType(attendance.getCheckType());
+        vo.setStatus(attendance.getStatus());
+        vo.setRemark(attendance.getRemark());
+        LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        courseLambdaQueryWrapper.eq(Course::getCourseId, attendance.getCourseId());
+        List<Course> courses = courseMapper.selectList(courseLambdaQueryWrapper);
+        List<String> classIds = courses.stream()
+                .map(Course::getClassId)
+                .collect(Collectors.toList());
+        if(!classIds.isEmpty()){
+            LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            classLambdaQueryWrapper.in(Class::getId, classIds);
+            List<Class> classes = classMapper.selectList(classLambdaQueryWrapper);
+            List<String> classNames = classes.stream()
+                    .map(Class::getClassName)
+                    .collect(Collectors.toList());
+            vo.setClassNames(classNames);
+        }
+        CourseSchedule courseSchedule = courseScheduleService.getById(attendance.getCourseId());
+        vo.setCourseName(courseSchedule.getCourseName());
+        vo.setOrderNo(courseSchedule.getOrderNo());
+        vo.setCourseNo(courseSchedule.getCourseNo());
+        vo.setTeacherName(courseSchedule.getTeacherName());
+        vo.setCourseType(courseSchedule.getCourseType());
+        vo.setSemesterName(courseSchedule.getSemesterName());
+        return vo;
+
     }
 
     @Override
     public void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response) {
         queryDTO.setPageNum(1);
         queryDTO.setPageSize(Integer.MAX_VALUE);
-        Page<Attendance> attendancePage = queryAttendanceReport(queryDTO);
+        Page<AttendanceVO> attendancePage = queryAttendanceReport(queryDTO);
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+
+            String fileName = "考勤报表_" + System.currentTimeMillis() + ".xlsx";
+            response.setHeader("Content-disposition", "attachment;filename=" + fileName);
+
+            // 使用EasyExcel创建多Sheet工作簿
+            com.alibaba.excel.ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build();
+
+            // Sheet 1: 元数据信息
+            writeMetadataSheet(excelWriter,attendancePage);
+
+            // Sheet 2: 任课老师考勤率汇总
+            writeTeacherAttendanceSheet(excelWriter,attendancePage);
+
+            // Sheet 3: 课程考勤率汇总
+            writeCourseAttendanceSheet(excelWriter,attendancePage);
+
+            // Sheet 4: 辅导员老师考勤率汇总
+            writeCounselorAttendanceSheet(excelWriter,attendancePage);
+
+            // Sheet 5: 学院考勤率汇总
+            writeCollegeAttendanceSheet(excelWriter,attendancePage);
+
+            // Sheet 6: 班级考勤率汇总
+            writeClassAttendanceSheet(excelWriter,attendancePage);
+
+            // 结束写入
+            excelWriter.finish();
+        } catch (Exception e) {
+            log.error("导出多Sheet考勤报表失败", e);
+            throw new BusinessException("导出多Sheet考勤报表失败: " + e.getMessage());
+        }
     }
 
+    
+    private void writeMetadataSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        // 准备元数据信息
+        List<List<String>> head = new ArrayList<>();
+        head.add(Arrays.asList("筛选条件", "值"));
+
+        List<List<Object>> data = new ArrayList<>();
+
+        WriteSheet sheet = EasyExcel.writerSheet("元数据").head(head).build();
+        excelWriter.write(data, sheet);
+    }
+    
+    private void writeTeacherAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        // 获取符合条件的考勤记录，按任课老师分组统计
+        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+            // 按课程ID分组，获取课程信息和对应的教师
+            Map<String, List<Attendance>> groupedByCourse = attendancePage.getRecords().stream()
+                .collect(Collectors.groupingBy(Attendance::getCourseId));
+            
+            for (Map.Entry<String, List<Attendance>> entry : groupedByCourse.entrySet()) {
+                String courseId = entry.getKey();
+                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
+                if (courseSchedule != null) {
+                    // 计算该课程的平均考勤率
+                    List<Attendance> courseAttendances = entry.getValue();
+                    double avgRate = courseAttendances.stream()
+                        .filter(attendance -> attendance.getAttendanceRate() != null)
+                        .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
+                        .average()
+                        .orElse(0.0);
+                    
+                    AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
+                    summary.setIdentifier(courseSchedule.getId());
+                    summary.setName(courseSchedule.getCourseName() + "(" + courseSchedule.getTeacherName() + ")");
+                    summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
+                    summaryList.add(summary);
+                }
+            }
+        }
+        
+        WriteSheet sheet = EasyExcel.writerSheet("任课老师考勤率").head(AttendanceSummaryExcelDTO.class).build();
+        excelWriter.write(summaryList, sheet);
+    }
+    
+    private void writeCourseAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        // 获取符合条件的考勤记录，按课程分组统计
+        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+        
+        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+            // 按课程ID分组
+            Map<String, List<Attendance>> groupedByCourse = attendancePage.getRecords().stream()
+                .collect(Collectors.groupingBy(Attendance::getCourseId));
+            
+            for (Map.Entry<String, List<Attendance>> entry : groupedByCourse.entrySet()) {
+                String courseId = entry.getKey();
+                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
+                if (courseSchedule != null) {
+                    // 计算该课程的平均考勤率
+                    List<Attendance> courseAttendances = entry.getValue();
+                    double avgRate = courseAttendances.stream()
+                        .filter(attendance -> attendance.getAttendanceRate() != null)
+                        .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
+                        .average()
+                        .orElse(0.0);
+                    
+                    AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
+                    summary.setIdentifier(courseId);
+                    summary.setName(courseSchedule.getCourseName());
+                    summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
+                    summaryList.add(summary);
+                }
+            }
+        }
+        
+        WriteSheet sheet = EasyExcel.writerSheet("课程考勤率").head(AttendanceSummaryExcelDTO.class).build();
+        excelWriter.write(summaryList, sheet);
+    }
+    
+    private void writeCounselorAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        //按班级分组统计（通过班级关联到辅导员）
+        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+            // 获取所有涉及的班级ID
+            Set<String> classIds = new HashSet<>();
+            for (Attendance attendance : attendancePage.getRecords()) {
+                String courseId = attendance.getCourseId();
+                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
+                if (courseSchedule != null) {
+                    // 假设课程与班级有关联
+                    List<String> classIdsFromCourse = courseMapper.selectClassIdsByCourseId(courseId);
+                    classIds.addAll(classIdsFromCourse);
+                }
+            }
+            
+            // 对每个班级计算平均考勤率
+            for (String classId : classIds) {
+                Class clazz = classMapper.selectById(classId);
+                if (clazz != null) {
+                    // 查找该班级相关的考勤记录并计算平均考勤率
+                    double avgRate = attendancePage.getRecords().stream()
+                        .filter(attendance -> {
+                            String courseId = attendance.getCourseId();
+                            CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
+                            if (courseSchedule != null) {
+                                List<String> classIdsFromCourse = courseMapper.selectClassIdsByCourseId(courseId);
+                                return classIdsFromCourse.contains(classId);
+                            }
+                            return false;
+                        })
+                        .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
+                        .average()
+                        .orElse(0.0);
+                    
+                    AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
+                    summary.setIdentifier(clazz.getId());
+                    summary.setName(clazz.getClassName());
+                    summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
+                    summaryList.add(summary);
+                }
+            }
+        }
+        
+        WriteSheet sheet = EasyExcel.writerSheet("辅导员考勤率").head(AttendanceSummaryExcelDTO.class).build();
+        excelWriter.write(summaryList, sheet);
+    }
+    
+    private void writeCollegeAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        // 按学院分组统计
+        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+            // 按学院分组统计考勤率
+            Map<String, List<Attendance>> groupedByCollege = new HashMap<>();
+            
+            for (Attendance attendance : attendancePage.getRecords()) {
+                String courseId = attendance.getCourseId();
+                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
+                if (courseSchedule != null) {
+                    // 获取课程所属的班级，进而获取学院信息
+                    List<String> classIds = courseMapper.selectClassIdsByCourseId(courseId);
+                    for (String classId : classIds) {
+                        Class clazz = classMapper.selectById(classId);
+
+                    }
+                }
+            }
+            
+            // 计算每个学院的平均考勤率
+            for (Map.Entry<String, List<Attendance>> entry : groupedByCollege.entrySet()) {
+                String collegeNo = entry.getKey();
+                List<Attendance> collegeAttendances = entry.getValue();
+                double avgRate = collegeAttendances.stream()
+                    .filter(attendance -> attendance.getAttendanceRate() != null)
+                    .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
+                    .average()
+                    .orElse(0.0);
+                
+                College college = collegeService.getById(collegeNo);
+                AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
+                summary.setIdentifier(collegeNo);
+                summary.setName(college != null ? college.getName() : "未知学院");
+                summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
+                summaryList.add(summary);
+            }
+        }
+        
+        WriteSheet sheet = EasyExcel.writerSheet("学院考勤率").head(AttendanceSummaryExcelDTO.class).build();
+        excelWriter.write(summaryList, sheet);
+    }
+    
+    private void writeClassAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        // 获取符合条件的考勤记录，按班级分组统计
+        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+            // 按班级分组统计考勤率
+            Map<String, List<Attendance>> groupedByClass = new HashMap<>();
+            
+            for (Attendance attendance : attendancePage.getRecords()) {
+                String courseId = attendance.getCourseId();
+                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
+                if (courseSchedule != null) {
+                    // 获取课程所属的班级
+                    List<String> classIds = courseMapper.selectClassIdsByCourseId(courseId);
+                    for (String classId : classIds) {
+                        groupedByClass.computeIfAbsent(classId, k -> new ArrayList<>()).add(attendance);
+                    }
+                }
+            }
+            
+            // 计算每个班级的平均考勤率
+            for (Map.Entry<String, List<Attendance>> entry : groupedByClass.entrySet()) {
+                String classId = entry.getKey();
+                List<Attendance> classAttendances = entry.getValue();
+                double avgRate = classAttendances.stream()
+                    .filter(attendance -> attendance.getAttendanceRate() != null)
+                    .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
+                    .average()
+                    .orElse(0.0);
+                
+                Class clazz = classMapper.selectById(classId);
+                AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
+                summary.setIdentifier(classId);
+                summary.setName(clazz != null ? clazz.getClassName() : "未知班级");
+                summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
+                summaryList.add(summary);
+            }
+        }
+        
+        WriteSheet sheet = EasyExcel.writerSheet("班级考勤率").head(AttendanceSummaryExcelDTO.class).build();
+        excelWriter.write(summaryList, sheet);
+    }
 
     /**
      * 根据当前时间获取对应的课程节次

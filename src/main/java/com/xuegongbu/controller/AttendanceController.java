@@ -7,6 +7,7 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.AttendanceReportQueryDTO;
+import com.xuegongbu.vo.AttendanceVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,9 +59,9 @@ public class AttendanceController {
     @PostMapping("/queryAttendanceReport")
     @Operation(summary = "统计·报表查询考勤记录", description = "统计·报表查询考勤记录，维度：学院，班级（辅导员，班级名称），课序号，课程类型，时间范围（具体日期范围），学期，三级角色统一用考勤报表页面查询")
     @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
-    public Result<Page<Attendance>> queryAttendanceReport(@RequestBody AttendanceReportQueryDTO queryDTO){
+    public Result<Page<AttendanceVO>> queryAttendanceReport(@RequestBody AttendanceReportQueryDTO queryDTO){
         log.info("统计·报表查询考勤记录，参数：{}", queryDTO);
-        Page<Attendance> attendancePage = attendanceService.queryAttendanceReport(queryDTO);
+        Page<AttendanceVO> attendancePage = attendanceService.queryAttendanceReport(queryDTO);
         log.info("统计·报表查询考勤记录完成，共{}条记录", attendancePage.getTotal());
         return Result.success(attendancePage);
     }

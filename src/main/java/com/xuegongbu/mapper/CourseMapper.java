@@ -12,4 +12,7 @@ public interface CourseMapper extends BaseMapper<Course> {
 
     @Select("SELECT course_id FROM course WHERE class_id = #{id}")
     List<String> selectCourseIdsByClassId(String id);
+
+    @Select("SELECT class_id FROM course WHERE course_id = #{courseId}")
+    List<String> selectClassIdsByCourseId(String courseId);
 }

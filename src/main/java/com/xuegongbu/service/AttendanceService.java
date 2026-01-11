@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.AttendanceReportQueryDTO;
+import com.xuegongbu.vo.AttendanceVO;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
@@ -23,7 +24,8 @@ public interface AttendanceService extends IService<Attendance> {
 
     List<Double> queryAttendanceRateByClass(String id);
 
-    Page<Attendance> queryAttendanceReport(AttendanceReportQueryDTO queryDTO);
+    Page<AttendanceVO> queryAttendanceReport(AttendanceReportQueryDTO queryDTO);
 
     void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response);
+
 }
