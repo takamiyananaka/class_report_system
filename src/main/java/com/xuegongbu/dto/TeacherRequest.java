@@ -30,6 +30,8 @@ public class TeacherRequest {
 
     private Integer status;
 
+    private String department;
+
     /**
      * 考勤预警阈值
      */

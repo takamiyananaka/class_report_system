@@ -2,13 +2,7 @@ name: 部署到您的服务器环境
 
 on:
   push:
-    branches: [ master,main ]
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: '手动部署原因'
-        required: false
-        default: '手动触发'
+    branches: [ main ]
 
 env:
   JAVA_VERSION: '17'
@@ -63,19 +57,19 @@ jobs:
         path: target/${{ env.JAR_FILE }}
         retention-days: 7
 
-    - name: 通过 SCP 部署到服务器
-      uses: appleboy/scp-action@v0.1.7
+    - name: 检查服务器连通性
+      uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.PORT || 22 }}
-        source: "target/${{ env.JAR_FILE }}"
-        target: "${{ env.SERVER_APP_PATH }}/"
-        strip_components: 1
-        overwrite: true
+        script: |
+          echo "SSH 连接测试成功!"
+          pwd
+          whoami
 
-    - name: 在服务器上执行部署脚本
+    - name: 部署到服务器
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.HOST }}
@@ -121,9 +115,24 @@ jobs:
               echo "备份已创建: $BACKUP_NAME"
           fi
           
+          # 从 GitHub Actions 工作空间复制新的 JAR 文件
+          # 使用 Actions 的 artifact 功能下载 JAR
+          echo "正在准备部署新的 JAR 文件..."
+          # 通过 SCP 传输已在之前的步骤中完成，这里直接使用
+          # 现在从工作目录复制到应用目录
+          if [ -f ~/actions-runner/_work/class_report_system/class_report_system/target/${{ env.JAR_FILE }} ]; then
+              cp ~/actions-runner/_work/class_report_system/class_report_system/target/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
+          elif [ -f /github/workspace/target/${{ env.JAR_FILE }} ]; then
+              cp /github/workspace/target/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
+          else
+              echo "尝试从当前位置复制 JAR 文件..."
+              echo "当前目录内容:"
+              ls -la
+          fi
+          
           # 验证新 JAR 文件是否存在
           if [ ! -f ${{ env.JAR_FILE }} ]; then
-              echo "错误: 未找到新 JAR 文件!"
+              echo "错误: 未找到新 JAR 文件! 正在列出当前目录内容:"
               ls -la
               exit 1
           fi

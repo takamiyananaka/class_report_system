@@ -167,11 +167,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
         // 设置为指定学院
         teacher.setCollegeNo(collegeNo);
-        LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
-        collegeQueryWrapper.eq(College::getCollegeNo, collegeNo);
-        College college = collegeService.getOne(collegeQueryWrapper);
-        teacher.setDepartment(college.getName());
-
         // 默认状态为启用
         if (teacher.getStatus() == null) {
             teacher.setStatus(1);

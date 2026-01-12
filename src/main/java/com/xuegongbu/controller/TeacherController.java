@@ -112,8 +112,11 @@ public class TeacherController {
     @Operation(summary = "创建本学院的教师", description = "学院创建本学院的新教师，密码必须至少6位字符，学院编号从前端传入")
     @SaCheckRole("college_admin")
     public Result<String> createTeacher(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request,
-            @Parameter(description = "学院编号", required = true) @RequestParam("collegeNo") String collegeNo) {
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
+        if(request.getDepartment() ==  null){
+            return Result.error("学院不能为空");
+        }
+        String collegeNo = collegeMapper.selectOne(new LambdaQueryWrapper<College>().eq(College::getName, request.getDepartment())).getCollegeNo();
         log.info("创建教师，用户名：{}，学院编号：{}", request.getUsername(), collegeNo);
 
         // 创建教师对象
@@ -141,10 +144,6 @@ public class TeacherController {
             return Result.error("教师不存在");
         }
 
-        // 检查教师是否属于本学院
-        if (!collegeNo.equals(teacher.getCollegeNo())) {
-            return Result.error("无权限修改该教师信息");
-        }
 
         // 检查用户名是否被其他教师使用
         Teacher existingTeacher = teacherService.lambdaQuery()
@@ -163,7 +162,15 @@ public class TeacherController {
         if (existingTeacherNo != null) {
             return Result.error("教师工号已被其他教师使用");
         }
+        if(!StringUtil.isNullOrEmpty(request.getDepartment())&&StpUtil.hasRole("admin")){
+            College college = collegeMapper.selectOne(new LambdaQueryWrapper<College>().eq(College::getName, request.getDepartment()));
+            if(college == null){
+                return Result.error("学院不存在");
+            }
+            teacher.setCollegeNo(college.getCollegeNo());
+            teacher.setDepartment(college.getName());
 
+        }
         if (!StringUtil.isNullOrEmpty(request.getUsername())) {
             teacher.setUsername(request.getUsername());
         }
