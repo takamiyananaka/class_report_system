@@ -298,18 +298,17 @@ public class TeacherController {
      * 批量导入教师
      */
     @PostMapping("/import")
-    @Operation(summary = "批量导入教师", description = "批量导入教师，需要提供工号和真实姓名，其他字段使用默认值，学院编号从前端传入")
+    @Operation(summary = "批量导入教师", description = "批量导入教师，需要提供工号、真实姓名和学院名，其他字段使用默认值")
     @SaCheckRole("college_admin")
     public Result<String> importTeachers(
-            @RequestParam("file") MultipartFile file,
-            @Parameter(description = "学院编号", required = true) @RequestParam("collegeNo") String collegeNo) {
-        log.info("批量导入教师，学院编号：{}", collegeNo);
+            @RequestParam("file") MultipartFile file) {
+        log.info("批量导入教师");
 
         if (file.isEmpty()) {
             return Result.error("上传的文件不能为空");
         }
 
-        return teacherService.importTeachers(file, collegeNo);
+        return teacherService.importTeachers(file);
     }
 
     /**
