@@ -213,8 +213,8 @@ public class TeacherController {
     @Operation(summary = "删除本学院的教师", description = "学院删除本学院的教师，学院编号从前端传入")
     @SaCheckRole("college_admin")
     public Result<String> deleteTeacher(
-            @Parameter(description = "教师ID") @PathVariable String id,
-            @Parameter(description = "学院编号", required = true) @RequestParam("collegeNo") String collegeNo) {
+            @Parameter(description = "教师ID") @PathVariable String id) {
+        String collegeNo = teacherService.getById(id).getCollegeNo();
         log.info("学院{}删除教师，ID：{}", collegeNo, id);
 
         Teacher teacher = teacherService.getById(id);
