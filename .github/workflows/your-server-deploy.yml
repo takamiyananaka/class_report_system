@@ -1,8 +1,9 @@
+
 name: 部署到您的服务器环境
 
 on:
   push:
-    branches: [ main,master ]
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       reason:
@@ -174,3 +175,4 @@ jobs:
               echo "构建失败，请检查 Maven 依赖项和配置。"
               exit 1
           fi
+          
