@@ -2,8 +2,13 @@ name: 部署到您的服务器环境
 
 on:
   push:
-    branches: [ main ]
-
+    branches: [ main,master ]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: '手动部署原因'
+        required: false
+        default: '手动触发'
 env:
   JAVA_VERSION: '17'
   PROJECT_NAME: class_report_system
