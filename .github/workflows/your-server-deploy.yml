@@ -62,18 +62,6 @@ jobs:
         path: target/${{ env.JAR_FILE }}
         retention-days: 7
 
-    - name: 检查服务器连通性
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.PORT || 22 }}
-        script: |
-          echo "SSH 连接测试成功!"
-          pwd
-          whoami
-
     - name: 部署到服务器
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -91,6 +79,25 @@ jobs:
           echo "JAVA_HOME: $JAVA_HOME"
           $JAVA_HOME/bin/java -version
           echo "当前日期: $(date)"
+          
+          # 启动 keychain 并加载 SSH 密钥（按您的脚本）
+          /usr/bin/keychain --nogui ~/.ssh/id_ed25519_new
+          # 加载 keychain 生成的环境变量
+          source ~/.keychain/$HOSTNAME-sh
+          
+          # 验证 SSH 密钥是否正确加载
+          echo "正在检查 SSH 密钥..."
+          if [ -f ~/.ssh/id_ed25519_new ]; then
+            echo "SSH 私钥存在"
+            chmod 600 ~/.ssh/id_ed25519_new
+          else
+            echo "错误: SSH 私钥不存在 ~/.ssh/id_ed25519_new"
+            exit 1
+          fi
+          
+          # 测试 SSH 连接
+          echo "测试 SSH 连接..."
+          ssh -T -o ConnectTimeout=10 -o BatchMode=yes git@github.com || echo "SSH 连接测试完成"
           
           # 进入项目目录
           cd ${{ env.SERVER_APP_PATH }}
@@ -121,19 +128,8 @@ jobs:
           fi
           
           # 从 GitHub Actions 工作空间复制新的 JAR 文件
-          # 使用 Actions 的 artifact 功能下载 JAR
+          # 使用 GitHub Actions 的 artifact 机制传输文件
           echo "正在准备部署新的 JAR 文件..."
-          # 通过 SCP 传输已在之前的步骤中完成，这里直接使用
-          # 现在从工作目录复制到应用目录
-          if [ -f ~/actions-runner/_work/class_report_system/class_report_system/target/${{ env.JAR_FILE }} ]; then
-              cp ~/actions-runner/_work/class_report_system/class_report_system/target/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
-          elif [ -f /github/workspace/target/${{ env.JAR_FILE }} ]; then
-              cp /github/workspace/target/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
-          else
-              echo "尝试从当前位置复制 JAR 文件..."
-              echo "当前目录内容:"
-              ls -la
-          fi
           
           # 验证新 JAR 文件是否存在
           if [ ! -f ${{ env.JAR_FILE }} ]; then
