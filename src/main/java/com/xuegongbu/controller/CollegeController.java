@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.session.SaSession;
@@ -58,6 +59,19 @@ public class CollegeController {
         }).collect(Collectors.toList());
         log.info("查询到{}个学院", collegeVOList.size());
         return Result.success(collegeVOList);
+    }
+
+    /**
+     * 获取学院号和学院名map
+     */
+    @GetMapping("/collegesMap")
+    @Operation(summary = "获取学院号和学院名map", description = "管理员获取学院号和学院名map")
+    @SaCheckRole("teacher")
+    public Result<Map<String, String>> getCollegesMap() {
+        log.info("管理员获取学院号和学院名map");
+        List<College> colleges = collegeService.list();
+        Map<String, String> collegeMap = colleges.stream().collect(Collectors.toMap(College::getCollegeNo, College::getName));
+        return Result.success(collegeMap);
     }
 
     /**

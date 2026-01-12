@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -294,6 +295,25 @@ public class CourseScheduleController {
         courseScheduleService.removeById(id);
         log.info("删除课表完成");
         return Result.success("删除成功");
+    }
+
+    /**
+     * 获取所有课序号
+     */
+    @GetMapping("/getAllClassNumbers")
+    @Operation(summary = "获取所有课序号", description = "获取所有课序号")
+    public Result<List<String>> getAllClassNumbers() {
+        log.info("获取所有课序号");
+        List<CourseSchedule> courseSchedules = courseScheduleService.list();
+
+        List<String> OrderNos = courseSchedules.stream()
+                .map(CourseSchedule::getOrderNo)
+                .filter(orderNo -> orderNo != null && !orderNo.trim().isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        log.info("获取所有课序号完成");
+        return Result.success(OrderNos);
     }
 }
 
