@@ -195,6 +195,15 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                 return Result.error("Excel文件中没有数据");
             }
             
+            // 预加载所有学院信息到Map，避免N+1查询问题
+            List<College> allColleges = collegeService.list();
+            Map<String, College> collegeMap = new HashMap<>();
+            for (College college : allColleges) {
+                if (college.getName() != null) {
+                    collegeMap.put(college.getName().trim(), college);
+                }
+            }
+            
             int successCount = 0;
             int failCount = 0;
             List<String> errorMessages = new ArrayList<>();
@@ -223,16 +232,14 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                         continue;
                     }
                     
-                    // 通过学院名查询学院信息
-                    LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
-                    collegeQueryWrapper.eq(College::getName, dto.getDepartment().trim());
-                    College college = collegeService.getOne(collegeQueryWrapper);
+                    // 通过学院名从预加载的Map中查询学院信息
+                    College college = collegeMap.get(dto.getDepartment().trim());
                     
                     // 如果学院名有误，查询不到学院ID
                     if (college == null) {
                         errorMessages.add(String.format("第%d行导入失败，学院名有误", rowNum));
                         failCount++;
-                        log.warn("第{}行：学院名'{}'查询不到对应学院，跳过该行", rowNum, dto.getDepartment().trim());
+                        log.warn("第{}行: 学院名'{}'查询不到对应学院，跳过该行", rowNum, dto.getDepartment().trim());
                         continue;
                     }
                     
@@ -264,7 +271,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     Result<String> result = addTeacher(teacher, college.getCollegeNo().trim());
                     if (result != null && ResultCode.SUCCESS.getCode().equals(result.getCode())) {
                         successCount++;
-                        log.info("第{}行：成功导入教师，工号：{}，姓名：{}，学院：{}", 
+                        log.debug("第{}行: 成功导入教师，工号：{}，姓名：{}，学院：{}", 
                                 rowNum, dto.getTeacherNo().trim(), dto.getRealName().trim(), dto.getDepartment().trim());
                     } else {
                         String errorMsg = result != null ? result.getMessage() : "未知错误";
