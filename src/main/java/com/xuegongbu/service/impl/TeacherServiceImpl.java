@@ -183,7 +183,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     }
 
     @Override
-    public Result<String> importTeachers(MultipartFile file, String collegeNo) {
+    public Result<String> importTeachers(MultipartFile file) {
         try {
             // 读取Excel文件
             List<TeacherExcelDTO> teacherExcelList = EasyExcel.read(file.getInputStream())
@@ -194,11 +194,14 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             if (teacherExcelList.isEmpty()) {
                 return Result.error("Excel文件中没有数据");
             }
-
-            // 获取学院信息
-            College college = (College) StpUtil.getSession().get("collegeInfo");
-            if(college == null){
-                throw new com.xuegongbu.common.exception.BusinessException("当前用户非学院管理员");
+            
+            // 预加载所有学院信息到Map，避免N+1查询问题
+            List<College> allColleges = collegeService.list();
+            Map<String, College> collegeMap = new HashMap<>();
+            for (College college : allColleges) {
+                if (college.getName() != null) {
+                    collegeMap.put(college.getName().trim(), college);
+                }
             }
             
             int successCount = 0;
@@ -214,13 +217,29 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     
                     // 验证必填字段是否完整
                     if (dto.getTeacherNo() == null || dto.getTeacherNo().trim().isEmpty()) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行导入失败，工号为空", rowNum));
                         failCount++;
                         continue;
                     }
                     if (dto.getRealName() == null || dto.getRealName().trim().isEmpty()) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行导入失败，真实姓名为空", rowNum));
                         failCount++;
+                        continue;
+                    }
+                    if (dto.getDepartment() == null || dto.getDepartment().trim().isEmpty()) {
+                        errorMessages.add(String.format("第%d行导入失败，学院名为空", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    
+                    // 通过学院名从预加载的Map中查询学院信息
+                    College college = collegeMap.get(dto.getDepartment().trim());
+                    
+                    // 如果学院名有误，查询不到学院ID
+                    if (college == null) {
+                        errorMessages.add(String.format("第%d行导入失败，学院名有误", rowNum));
+                        failCount++;
+                        log.warn("第{}行: 学院名'{}'查询不到对应学院，跳过该行", rowNum, dto.getDepartment().trim());
                         continue;
                     }
                     
@@ -252,20 +271,22 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     Result<String> result = addTeacher(teacher, college.getCollegeNo().trim());
                     if (result != null && ResultCode.SUCCESS.getCode().equals(result.getCode())) {
                         successCount++;
+                        log.debug("第{}行: 成功导入教师，工号：{}，姓名：{}，学院：{}", 
+                                rowNum, dto.getTeacherNo().trim(), dto.getRealName().trim(), dto.getDepartment().trim());
                     } else {
                         String errorMsg = result != null ? result.getMessage() : "未知错误";
-                        errorMessages.add(String.format("第%d行上传失败: %s", rowNum, errorMsg));
+                        errorMessages.add(String.format("第%d行导入失败: %s", rowNum, errorMsg));
                         failCount++;
                     }
                     
                 } catch (Exception e) {
                     log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);
-                    errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                    errorMessages.add(String.format("第%d行导入失败，数据格式错误", rowNum));
                     failCount++;
                 }
             }
 
-            log.info("学院{}批量导入教师完成，成功{}个，失败{}个", collegeNo, successCount, failCount);
+            log.info("批量导入教师完成，成功{}个，失败{}个", successCount, failCount);
             
             String message = String.format("批量导入完成，成功导入%d个教师", successCount);
             if (failCount > 0) {

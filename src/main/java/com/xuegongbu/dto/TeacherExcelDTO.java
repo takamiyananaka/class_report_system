@@ -19,4 +19,8 @@ public class TeacherExcelDTO {
     @ExcelProperty(value = "真实姓名", index = 1)
     @NotBlank(message = "真实姓名不能为空")
     private String realName;
+
+    @ExcelProperty(value = "学院名", index = 2)
+    @NotBlank(message = "学院名不能为空")
+    private String department;
 }
