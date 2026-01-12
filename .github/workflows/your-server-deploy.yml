@@ -1,0 +1,169 @@
+name: 部署到您的服务器环境
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: '手动部署原因'
+        required: false
+        default: '手动触发'
+
+env:
+  JAVA_VERSION: '17'
+  PROJECT_NAME: class_report_system
+  JAR_FILE: class_report_system-0.0.1-SNAPSHOT.jar
+  SERVER_APP_PATH: /www/app/class_report_system
+  JAVA_HOME_PATH: /www/server/java/jdk-17.0.8
+  SERVER_PORT: 8080
+
+jobs:
+  deploy:
+    name: 构建和部署到您的服务器
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 拉取代码
+      uses: actions/checkout@v4
+
+    - name: 设置 JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 缓存 Maven 依赖
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+
+    - name: 使用 Maven 构建 JAR
+      run: |
+        echo "正在构建 JAR 文件..."
+        ./mvnw clean package -DskipTests
+        echo "构建完成时间: $(date)"
+        
+    - name: 验证 JAR 存在并检查大小
+      run: |
+        if [ ! -f target/${{ env.JAR_FILE }} ]; then
+          echo "错误: 未找到 JAR 文件!"
+          ls -la target/
+          exit 1
+        fi
+        echo "JAR 文件大小: $(du -h target/${{ env.JAR_FILE }} | cut -f1)"
+        echo "JAR 文件创建成功!"
+
+    - name: 上传 JAR 构件
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PROJECT_NAME }}-jar
+        path: target/${{ env.JAR_FILE }}
+        retention-days: 7
+
+    - name: 通过 SCP 部署到服务器
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.PORT || 22 }}
+        source: "target/${{ env.JAR_FILE }}"
+        target: "${{ env.SERVER_APP_PATH }}/"
+        strip_components: 1
+        overwrite: true
+
+    - name: 在服务器上执行部署脚本
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.PORT || 22 }}
+        script: |
+          #!/bin/bash
+          # 按照您的服务器设置设置环境变量
+          export JAVA_HOME=${{ env.JAVA_HOME_PATH }}
+          export PATH=$JAVA_HOME/bin:$PATH
+          
+          # 验证环境
+          echo "JAVA_HOME: $JAVA_HOME"
+          $JAVA_HOME/bin/java -version
+          echo "当前日期: $(date)"
+          
+          # 进入项目目录
+          cd ${{ env.SERVER_APP_PATH }}
+          
+          # 从仓库拉取最新代码（按您的脚本）
+          echo "正在从仓库拉取最新代码..."
+          git pull origin master
+          
+          # 使用与您的脚本相同的方法停止旧进程
+          echo "正在停止端口 ${{ env.SERVER_PORT }} 上的旧进程..."
+          PID=$(lsof -t -i:${{ env.SERVER_PORT }})
+          if [ -n "$PID" ]; then
+              kill -9 $PID
+              echo "旧进程 (PID: $PID) 已终止"
+          else
+              echo "端口 ${{ env.SERVER_PORT }} 上未找到进程"
+          fi
+          
+          # 等待片刻让端口释放
+          sleep 5
+          
+          # 备份当前版本（如果存在）
+          if [ -f ${{ env.JAR_FILE }} ]; then
+              echo "正在创建当前版本的备份..."
+              BACKUP_NAME="${{ env.JAR_FILE }}.$(date +%Y%m%d_%H%M%S).backup"
+              cp ${{ env.JAR_FILE }} $BACKUP_NAME
+              echo "备份已创建: $BACKUP_NAME"
+          fi
+          
+          # 验证新 JAR 文件是否存在
+          if [ ! -f ${{ env.JAR_FILE }} ]; then
+              echo "错误: 未找到新 JAR 文件!"
+              ls -la
+              exit 1
+          fi
+          
+          # 构建并运行应用程序（按您的脚本）
+          echo "正在使用 Maven 构建应用程序..."
+          if mvn clean install; then
+              echo "构建成功，正在启动应用程序..."
+              
+              # 使用生产配置文件启动应用程序
+              nohup $JAVA_HOME/bin/java -jar -Dspring.profiles.active=prod ${{ env.JAR_FILE }} > app.log 2>&1 &
+              
+              # 等待应用程序启动
+              sleep 15
+              
+              # 检查应用程序是否正在运行
+              NEW_PID=$(lsof -t -i:${{ env.SERVER_PORT }})
+              if [ -n "$NEW_PID" ]; then
+                  echo "${{ env.PROJECT_NAME }} 部署成功!"
+                  echo "应用程序正在运行，PID: $NEW_PID"
+                  
+                  # 显示最近的日志条目
+                  echo "=== 最近的应用程序日志 ==="
+                  tail -30 app.log
+                  
+                  # 显示应用程序状态
+                  echo "=== 应用程序状态 ==="
+                  ps aux | grep $NEW_PID | grep -v grep
+              else
+                  echo "启动应用程序失败!"
+                  echo "正在检查日志..."
+                  if [ -f app.log ]; then
+                      echo "app.log 的最后 30 行:"
+                      tail -30 app.log
+                  else
+                      echo "未找到日志文件"
+                  fi
+                  exit 1
+              fi
+          else
+              echo "构建失败，请检查 Maven 依赖项和配置。"
+              exit 1
+          fi
