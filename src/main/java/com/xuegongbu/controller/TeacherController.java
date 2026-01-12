@@ -179,6 +179,9 @@ public class TeacherController {
         if(!StringUtil.isNullOrEmpty(request.getEmail())){
             teacher.setEmail(request.getEmail());
         }
+        if(request.getEnableEmailNotification() !=null){
+            teacher.setEnableEmailNotification(request.getEnableEmailNotification());
+        }
         if (request.getAttendanceThreshold() != null) {
             teacher.setAttendanceThreshold(request.getAttendanceThreshold());
         }
