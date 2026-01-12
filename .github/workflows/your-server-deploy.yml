@@ -62,23 +62,7 @@ jobs:
         path: target/${{ env.JAR_FILE }}
         retention-days: 7
 
-    - name: 准备 JAR 文件用于部署
-      run: |
-        # 将 JAR 文件复制到便于传输的位置
-        cp target/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
-
-    - name: 上传 JAR 文件到服务器
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.PORT || 22 }}
-        source: "${{ env.JAR_FILE }}"
-        target: "/tmp/"
-        overwrite: true
-
-    - name: 部署到服务器
+    - name: 通过SSH执行完整的部署脚本
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.HOST }}
@@ -96,24 +80,23 @@ jobs:
           $JAVA_HOME/bin/java -version
           echo "当前日期: $(date)"
           
-          # 启动 keychain 并加载 SSH 密钥（按您的脚本）
-          /usr/bin/keychain --nogui ~/.ssh/id_ed25519_new
-          # 加载 keychain 生成的环境变量
-          source ~/.keychain/$HOSTNAME-sh
+          # 创建临时目录（如果不存在）
+          mkdir -p /tmp/deployment
           
-          # 验证 SSH 密钥是否正确加载
-          echo "正在检查 SSH 密钥..."
-          if [ -f ~/.ssh/id_ed25519_new ]; then
-            echo "SSH 私钥存在"
-            chmod 600 ~/.ssh/id_ed25519_new
-          else
-            echo "警告: SSH 私钥不存在 ~/.ssh/id_ed25519_new"
-          fi
+          # 进入临时目录
+          cd /tmp/deployment
+          
+          # 清理之前的临时文件
+          rm -f ${{ env.JAR_FILE }}
+          
+          # 下载最新的JAR文件（从GitHub或其他位置）
+          # 或者我们可以先将文件传送到这里再部署
+          echo "正在准备部署文件..."
           
           # 进入项目目录
           cd ${{ env.SERVER_APP_PATH }}
           
-          # 从仓库拉取最新代码（按您的脚本）
+          # 从仓库拉取最新代码
           echo "正在从仓库拉取最新代码..."
           git pull origin master
           
@@ -138,18 +121,7 @@ jobs:
               echo "备份已创建: $BACKUP_NAME"
           fi
           
-          # 从临时目录移动新的 JAR 文件到应用目录
-          echo "正在移动新的 JAR 文件..."
-          mv /tmp/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
-          
-          # 验证新 JAR 文件是否存在
-          if [ ! -f ${{ env.JAR_FILE }} ]; then
-              echo "错误: 未找到新 JAR 文件! 正在列出当前目录内容:"
-              ls -la
-              exit 1
-          fi
-          
-          # 构建并运行应用程序（按您的脚本）
+          # 使用Maven重新构建（确保依赖是最新的）
           echo "正在使用 Maven 构建应用程序..."
           if mvn clean install; then
               echo "构建成功，正在启动应用程序..."
