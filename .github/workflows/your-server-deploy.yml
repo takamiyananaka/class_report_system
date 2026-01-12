@@ -62,6 +62,22 @@ jobs:
         path: target/${{ env.JAR_FILE }}
         retention-days: 7
 
+    - name: 准备 JAR 文件用于部署
+      run: |
+        # 将 JAR 文件复制到便于传输的位置
+        cp target/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
+
+    - name: 上传 JAR 文件到服务器
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.PORT || 22 }}
+        source: "${{ env.JAR_FILE }}"
+        target: "/tmp/"
+        overwrite: true
+
     - name: 部署到服务器
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -91,13 +107,8 @@ jobs:
             echo "SSH 私钥存在"
             chmod 600 ~/.ssh/id_ed25519_new
           else
-            echo "错误: SSH 私钥不存在 ~/.ssh/id_ed25519_new"
-            exit 1
+            echo "警告: SSH 私钥不存在 ~/.ssh/id_ed25519_new"
           fi
-          
-          # 测试 SSH 连接
-          echo "测试 SSH 连接..."
-          ssh -T -o ConnectTimeout=10 -o BatchMode=yes git@github.com || echo "SSH 连接测试完成"
           
           # 进入项目目录
           cd ${{ env.SERVER_APP_PATH }}
@@ -127,9 +138,9 @@ jobs:
               echo "备份已创建: $BACKUP_NAME"
           fi
           
-          # 从 GitHub Actions 工作空间复制新的 JAR 文件
-          # 使用 GitHub Actions 的 artifact 机制传输文件
-          echo "正在准备部署新的 JAR 文件..."
+          # 从临时目录移动新的 JAR 文件到应用目录
+          echo "正在移动新的 JAR 文件..."
+          mv /tmp/${{ env.JAR_FILE }} ./${{ env.JAR_FILE }}
           
           # 验证新 JAR 文件是否存在
           if [ ! -f ${{ env.JAR_FILE }} ]; then
