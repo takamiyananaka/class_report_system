@@ -240,7 +240,7 @@ public class TeacherController {
     @SaCheckRole(value = {"college_admin","admin"}, mode = SaMode.OR)
     public Result<Page<Teacher>> queryTeachers(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "查询条件") @RequestBody TeacherQueryDTO queryDTO) {
         log.info("学院{}查询教师请求，参数：{}", queryDTO);
-        if(StpUtil.hasRole("college_admin")){
+        if(StpUtil.getSession().get("role").equals("college_admin")){
             College college = (College) StpUtil.getSession().get("collegeInfo");
             queryDTO.setDepartment(college.getName());
         }
