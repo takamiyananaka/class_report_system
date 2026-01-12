@@ -62,6 +62,20 @@ jobs:
         path: target/${{ env.JAR_FILE }}
         retention-days: 7
 
+    - name: 初始化SSH环境（替代keychain）
+      run: |
+        # 1. 启动ssh-agent（相当于keychain的密钥管理功能）
+        eval $(ssh-agent -s)
+        # 2. 加载私钥（去除Windows回车符，避免格式错误）
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+        # 3. 配置服务器主机指纹（避免首次连接的指纹验证弹窗）
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+        # 4. 验证私钥是否加载成功
+        ssh-add -l
+
     - name: 通过SSH执行完整的部署脚本
       uses: appleboy/ssh-action@v1.0.0
       with:
