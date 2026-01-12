@@ -431,7 +431,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setCharacterEncoding("utf-8");
 
-            String fileName = "考勤报表_" + System.currentTimeMillis() + ".xlsx";
+            String fileName = "AttendanceReport_" + System.currentTimeMillis() + ".xlsx";
             response.setHeader("Content-disposition", "attachment;filename=" + fileName);
 
             // 使用EasyExcel创建多Sheet工作簿
