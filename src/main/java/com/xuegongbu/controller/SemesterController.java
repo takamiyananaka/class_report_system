@@ -42,6 +42,17 @@ public class SemesterController {
     }
 
     /**
+     * 获取所有学期名
+     */
+    @GetMapping("/names")
+    @Operation(summary = "获取所有学期名", description = "获取所有学期名")
+    public Result<List<String>> names() {
+        log.info("获取所有学期名");
+        List<String> names = semesterService.list().stream().map(Semester::getSemesterName).toList();
+        return Result.success(names);
+    }
+
+    /**
      * 添加学期
      */
     @PostMapping("/add")
