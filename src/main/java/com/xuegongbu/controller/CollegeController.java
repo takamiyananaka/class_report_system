@@ -61,18 +61,7 @@ public class CollegeController {
         return Result.success(collegeVOList);
     }
 
-    /**
-     * 获取学院号和学院名map
-     */
-    @GetMapping("/collegesMap")
-    @Operation(summary = "获取学院号和学院名map", description = "管理员获取学院号和学院名map")
-    @SaCheckRole("teacher")
-    public Result<Map<String, String>> getCollegesMap() {
-        log.info("管理员获取学院号和学院名map");
-        List<College> colleges = collegeService.list();
-        Map<String, String> collegeMap = colleges.stream().collect(Collectors.toMap(College::getCollegeNo, College::getName));
-        return Result.success(collegeMap);
-    }
+    
 
     /**
      * 根据ID查询学院
