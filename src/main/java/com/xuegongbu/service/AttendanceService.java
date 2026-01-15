@@ -3,6 +3,7 @@ package com.xuegongbu.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.domain.Attendance;
+import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.AttendanceReportQueryDTO;
 import com.xuegongbu.vo.AttendanceVO;
@@ -12,6 +13,8 @@ import java.util.List;
 
 
 public interface AttendanceService extends IService<Attendance> {
+
+
 
     Page<Attendance> queryAllAttendanceByCourseId(AttendanceQueryDTO queryDTO);
 

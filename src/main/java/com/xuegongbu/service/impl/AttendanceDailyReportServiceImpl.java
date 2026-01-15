@@ -1,0 +1,103 @@
+package com.xuegongbu.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuegongbu.domain.Attendance;
+import com.xuegongbu.domain.AttendanceDailyReport;
+import com.xuegongbu.domain.Course;
+import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.mapper.AttendanceDailyReportMapper;
+import com.xuegongbu.service.AttendanceDailyReportService;
+import com.xuegongbu.service.CourseService;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 班级每日考勤报表 Service 实现类
+ */
+@Service
+public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDailyReportMapper, AttendanceDailyReport> implements AttendanceDailyReportService {
+    private final CourseService courseService;
+
+    public AttendanceDailyReportServiceImpl(CourseService courseService) {
+        this.courseService = courseService;
+    }
+
+    @Override
+    public void updateReport(Attendance attendance, CourseSchedule course) {
+        //更新班级日报表
+        LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        courseLambdaQueryWrapper.eq(Course::getCourseId, course.getId());
+        List< Course> courses = courseService.list(courseLambdaQueryWrapper);
+        List<String> classIds = courses.stream()
+                .map(Course::getClassId)
+                .collect(Collectors.toList());
+        for (String classId : classIds) {
+            LambdaQueryWrapper<AttendanceDailyReport> attendanceDailyReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            attendanceDailyReportLambdaQueryWrapper.eq(AttendanceDailyReport::getClassId, classId);
+            AttendanceDailyReport attendanceDailyReport = this.getOne(attendanceDailyReportLambdaQueryWrapper);
+            if (attendanceDailyReport == null) { 
+                attendanceDailyReport = new AttendanceDailyReport();
+                attendanceDailyReport.setClassId(classId);
+                attendanceDailyReport.setReportDate(attendance.getCheckTime().toLocalDate());
+                attendanceDailyReport.setAttendanceRecordCount(1);
+                attendanceDailyReport.setTotalExpectedCount(course.getExpectedCount());
+                attendanceDailyReport.setTotalActualCount(attendance.getActualCount());
+                attendanceDailyReport.setAverageAttendanceRate(attendance.getAttendanceRate());
+                this.save(attendanceDailyReport);
+            }else {
+                attendanceDailyReport.setAttendanceRecordCount(attendanceDailyReport.getAttendanceRecordCount() + 1);
+                attendanceDailyReport.setTotalExpectedCount(attendanceDailyReport.getTotalExpectedCount() + course.getExpectedCount());
+                attendanceDailyReport.setTotalActualCount(attendanceDailyReport.getTotalActualCount() + attendance.getActualCount());
+                // 防止除零错误：当总期望数量为0时，出勤率设为0
+                if (attendanceDailyReport.getTotalExpectedCount() != 0) {
+                    // 将整数转换为BigDecimal进行除法运算
+                    BigDecimal totalActual = new BigDecimal(attendanceDailyReport.getTotalActualCount());
+                    BigDecimal totalExpected = new BigDecimal(attendanceDailyReport.getTotalExpectedCount());
+                    attendanceDailyReport.setAverageAttendanceRate(totalActual.divide(totalExpected, 2, BigDecimal.ROUND_HALF_UP));
+                } else {
+                    attendanceDailyReport.setAverageAttendanceRate(BigDecimal.ZERO);
+                }
+            }
+        }
+    }
+    
+    @Override
+    public List<AttendanceDailyReport> getReportsByClassIdAndType(String classId, int periodType) {
+        LambdaQueryWrapper<AttendanceDailyReport> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 根据班级ID过滤
+        queryWrapper.eq(AttendanceDailyReport::getClassId, classId);
+        
+        // 根据查询类型设置日期范围
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate; // 默认为当天
+        
+        switch (periodType) {
+            case 1: // 按日
+                queryWrapper.eq(AttendanceDailyReport::getReportDate, startDate);
+                break;
+            case 2: // 按周：往前推6天，总共7天
+                startDate = endDate.minusDays(6);
+                queryWrapper.between(AttendanceDailyReport::getReportDate, startDate, endDate);
+                break;
+            case 3: // 按月：往前推29天，总共30天
+                startDate = endDate.minusDays(29);
+                queryWrapper.between(AttendanceDailyReport::getReportDate, startDate, endDate);
+                break;
+            default:
+                // 如果没有指定查询类型，默认查询当天
+                queryWrapper.eq(AttendanceDailyReport::getReportDate, startDate);
+                break;
+        }
+        
+        // 按日期升序排列
+        queryWrapper.orderByAsc(AttendanceDailyReport::getReportDate);
+        
+        return this.list(queryWrapper);
+    }
+}

@@ -59,6 +59,10 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     private ClassService classService;
     @Autowired
     private CourseScheduleService courseScheduleService;
+    @Autowired
+    private AttendanceDailyReportService attendanceDailyReportService;
+    @Autowired
+    private AttendanceCourseReportService attendanceCourseReportService;
 
 
     /**
@@ -154,7 +158,9 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
         // 检查是否需要生成预警记录
         alertService.checkAndGenerateAlert(attendance, course);
-
+        //调用考勤报表更新方法
+       attendanceDailyReportService.updateReport(attendance,course);
+       attendanceCourseReportService.updateReport(attendance,course);
         return attendance;
     }
 
@@ -290,8 +296,27 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 return new Page<>();
             }
         }
-        if (!queryDTO.getTeacherNos().isEmpty()){
-            classLambdaQueryWrapper.in(Class::getTeacherNo, queryDTO.getTeacherNos());
+        if (!queryDTO.getCourseTeachers().isEmpty()){
+            List<String> teacherNames = queryDTO.getCourseTeachers();
+            LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            int flag = 0 ;
+            for (int i = 0; i < teacherNames.size(); i++) {
+                String teacherName = teacherNames.get(i);
+                if (!StringUtil.isBlank(teacherName)) {
+                    if (flag == 0) {
+                        flag = 1;
+                        teacherLambdaQueryWrapper.like(Teacher::getRealName, teacherName.trim());
+                    } else {
+                        teacherLambdaQueryWrapper.or().like(Teacher::getRealName, teacherName.trim());
+                    }
+                }
+            }
+            List<Teacher> teachers = teacherService.list(teacherLambdaQueryWrapper);
+            if (!teachers.isEmpty()) {
+                classLambdaQueryWrapper.in(Class::getTeacherNo, teachers.stream().map(Teacher::getTeacherNo).toArray());
+            }else {
+                return new Page<>();
+            }
         }else {
             if(objRole.equals("college_admin")){
                 College college = (College) StpUtil.getSession().get("collegeInfo");
@@ -334,6 +359,21 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             }
         }else {
             return new Page<>();
+        }
+        if(!queryDTO.getCourseTeachers().isEmpty()){
+            List<String> courseTeachers = queryDTO.getCourseTeachers();
+            int flag = 0 ;
+            for (int i = 0; i < courseTeachers.size(); i++) {
+                String courseTeacher = courseTeachers.get(i);
+                if (!StringUtil.isBlank(courseTeacher)) {
+                    if (flag == 0) {
+                        flag = 1;
+                        courseScheduleLambdaQueryWrapper.like(CourseSchedule::getTeacherName, courseTeacher.trim());
+                    } else {
+                        courseScheduleLambdaQueryWrapper.or().like(CourseSchedule::getTeacherName, courseTeacher.trim());
+                    }
+                }
+            }
         }
 
         if (!queryDTO.getOrderNos().isEmpty()){
@@ -421,6 +461,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         return vo;
 
     }
+    
 
     @Override
     public void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response) {

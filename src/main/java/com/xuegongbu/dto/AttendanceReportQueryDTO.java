@@ -12,8 +12,11 @@ public class AttendanceReportQueryDTO {
     @Schema(description = "学院名称列表,模糊查询")
     List<String> collegeNames;
 
-    @Schema(description = "教师工号列表")
-    List<String> teacherNos;
+    @Schema(description = "教师名字列表,模糊查询")
+    List<String> teacherNames;
+
+    @Schema(description = "任课老师列表，模糊查询")
+    List<String> courseTeachers;
 
     @Schema(description = "课序号列表,模糊查询")
     List<String> orderNos;
