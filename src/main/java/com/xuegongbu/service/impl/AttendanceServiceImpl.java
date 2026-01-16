@@ -266,7 +266,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         LambdaQueryWrapper<CourseSchedule> courseScheduleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
         Object objRole = StpUtil.getSession().get("role");
-        if (!queryDTO.getCollegeNames().isEmpty()&&objRole.equals("admin")) {
+        if (queryDTO.getCollegeNames()!=null&&!queryDTO.getCollegeNames().isEmpty()&&objRole.equals("admin")) {
             LambdaQueryWrapper<College> collegeLambdaQueryWrapper = new LambdaQueryWrapper<>();
 
             List<String> collegeNames = queryDTO.getCollegeNames();
@@ -296,7 +296,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 return new Page<>();
             }
         }
-        if (!queryDTO.getCourseTeachers().isEmpty()){
+        if (queryDTO.getCourseTeachers()!=null&&!queryDTO.getCourseTeachers().isEmpty()){
             List<String> teacherNames = queryDTO.getCourseTeachers();
             LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
             int flag = 0 ;
@@ -333,7 +333,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             }
         }
 
-        if (!queryDTO.getClassNames().isEmpty()){
+        if (queryDTO.getClassNames()!=null&&!queryDTO.getClassNames().isEmpty()){
             List<String> classNames = queryDTO.getClassNames();
             int flag = 0 ;
             for (int i = 0; i < classNames.size(); i++) {
@@ -360,7 +360,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         }else {
             return new Page<>();
         }
-        if(!queryDTO.getCourseTeachers().isEmpty()){
+        if(queryDTO.getCourseTeachers()!=null&&!queryDTO.getCourseTeachers().isEmpty()){
             List<String> courseTeachers = queryDTO.getCourseTeachers();
             int flag = 0 ;
             for (int i = 0; i < courseTeachers.size(); i++) {
@@ -376,7 +376,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             }
         }
 
-        if (!queryDTO.getOrderNos().isEmpty()){
+        if (queryDTO.getOrderNos()!=null&&!queryDTO.getOrderNos().isEmpty()){
             List<String> orderNos = queryDTO.getOrderNos();
             int flag = 0 ;
             for (int i = 0; i < orderNos.size(); i++) {
@@ -391,10 +391,10 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 }
             }
         }
-        if (!queryDTO.getCourseTypes().isEmpty()){
+        if (queryDTO.getCourseTypes()!=null&&!queryDTO.getCourseTypes().isEmpty()){
             courseScheduleLambdaQueryWrapper.in(CourseSchedule::getCourseType, queryDTO.getCourseTypes());
         }
-        if (!queryDTO.getSemester().isEmpty()){
+        if (queryDTO.getSemester()!=null&&!queryDTO.getSemester().isEmpty()){
             courseScheduleLambdaQueryWrapper.in(CourseSchedule::getSemesterName, queryDTO.getSemester());
         }
         List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(courseScheduleLambdaQueryWrapper);
@@ -461,7 +461,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         return vo;
 
     }
-    
+
 
     @Override
     public void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response) {
