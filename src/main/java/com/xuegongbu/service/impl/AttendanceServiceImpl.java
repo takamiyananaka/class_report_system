@@ -505,6 +505,9 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
     @Override
     public List<AttendanceChartVO> queryAttendanceChartByClass(AttendanceChartWithClassDTO queryDTO) {
+        if(queryDTO.getGranularity()==4&&(queryDTO.getSemesterName()==null||queryDTO.getSemesterName().isEmpty())){
+            throw new BusinessException("请选择学期");
+        }
         List<AttendanceChartVO> attendanceChartVOList = new ArrayList<>();
         LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
         LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -564,6 +567,9 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
     @Override
     public List<AttendanceChartVO> queryAttendanceChartByCourse(AttendanceChartWithCourseDTO queryDTO) {
+        if(queryDTO.getGranularity()==4&&(queryDTO.getSemesterName()==null||queryDTO.getSemesterName().isEmpty())){
+            throw new BusinessException("请选择学期");
+        }
         List<AttendanceChartVO> attendanceChartVOList = new ArrayList<>();
         LambdaQueryWrapper<CourseSchedule> courseScheduleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         LambdaQueryWrapper<AttendanceCourseReport> attendanceCourseReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
