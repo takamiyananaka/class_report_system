@@ -76,6 +76,12 @@ public class AttendanceCourseReport implements Serializable {
     private Integer totalActualCount;
 
     /**
+     * 学期名称
+     */
+    @Schema(description = "学期名称")
+    private String semesterName;
+
+    /**
      * 创建时间
      */
     @Schema(description = "创建时间")

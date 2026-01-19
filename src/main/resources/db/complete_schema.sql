@@ -1403,12 +1403,14 @@ CREATE TABLE IF NOT EXISTS attendance_daily_report (
     alert_rate DECIMAL(5,2) COMMENT '预警率（%）',
     total_expected_count INT DEFAULT 0 COMMENT '总预到人数',
     total_actual_count INT DEFAULT 0 COMMENT '总实到人数',
+    semester_name VARCHAR(100) COMMENT '学期名称',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_class_date (class_id, report_date),
     INDEX idx_class_id (class_id),
     INDEX idx_report_date (report_date),
-    INDEX idx_create_time (create_time)
+    INDEX idx_create_time (create_time),
+    INDEX idx_semester_name (semester_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='班级每日考勤报表表';
 
 -- ====================================
@@ -1424,12 +1426,14 @@ CREATE TABLE IF NOT EXISTS attendance_course_report (
     alert_rate DECIMAL(5,2) COMMENT '预警率（%）',
     total_expected_count INT DEFAULT 0 COMMENT '总预到人数',
     total_actual_count INT DEFAULT 0 COMMENT '总实到人数',
+    semester_name VARCHAR(100) COMMENT '学期名称',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_order_date (order_no, report_date),
     INDEX idx_order_no (order_no),
     INDEX idx_report_date (report_date),
-    INDEX idx_create_time (create_time)
+    INDEX idx_create_time (create_time),
+    INDEX idx_semester_name (semester_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程考勤报表表';
 
 -- ====================================

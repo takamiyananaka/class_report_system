@@ -10,9 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
-import com.xuegongbu.dto.AttendanceQueryDTO;
-import com.xuegongbu.dto.AttendanceReportQueryDTO;
-import com.xuegongbu.dto.AttendanceSummaryExcelDTO;
+import com.xuegongbu.dto.*;
 import com.xuegongbu.mapper.AttendanceMapper;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseMapper;
@@ -20,6 +18,7 @@ import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.*;
 import com.xuegongbu.util.ClassTimeUtil;
 import com.xuegongbu.util.CountUtil;
+import com.xuegongbu.vo.AttendanceChartVO;
 import com.xuegongbu.vo.AttendanceVO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -504,7 +503,17 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         }
     }
 
-    
+    @Override
+    public List<AttendanceChartVO> queryAttendanceChartByClass(AttendanceChartWithClassDTO queryDTO) {
+        return List.of();
+    }
+
+    @Override
+    public List<AttendanceChartVO> queryAttendanceChartByCourse(AttendanceChartWithCourseDTO queryDTO) {
+        return List.of();
+    }
+
+
     private void writeMetadataSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
         // 准备元数据信息
         List<List<String>> head = new ArrayList<>();

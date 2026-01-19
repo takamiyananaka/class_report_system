@@ -25,4 +25,11 @@ public interface AttendanceCourseReportService extends IService<AttendanceCourse
      * @return 考勤报表列表
      */
     List<AttendanceCourseReport> getReportsByOrderNoAndType(String orderNo, int periodType);
+
+    /**
+     * 根据图表查询参数获取课程考勤报表数据
+     * @param queryDTO 图表查询参数
+     * @return 考勤报表列表
+     */
+    
 }

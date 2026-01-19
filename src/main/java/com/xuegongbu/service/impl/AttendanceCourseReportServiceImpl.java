@@ -4,16 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.AttendanceCourseReport;
-import com.xuegongbu.domain.Course;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.mapper.AttendanceCourseReportMapper;
+import com.xuegongbu.mapper.CourseScheduleMapper;
 import com.xuegongbu.service.AttendanceCourseReportService;
 import com.xuegongbu.service.CourseService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 课程考勤报表 Service 实现类
@@ -21,6 +23,9 @@ import java.util.List;
 @Service
 public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCourseReportMapper, AttendanceCourseReport> implements AttendanceCourseReportService {
     private final CourseService courseService;
+    
+    @Autowired
+    private CourseScheduleMapper courseScheduleMapper;
 
     public AttendanceCourseReportServiceImpl(CourseService courseService) {
         this.courseService = courseService;
@@ -40,6 +45,7 @@ public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCou
             attendanceCourseReport.setTotalExpectedCount(course.getExpectedCount());
             attendanceCourseReport.setTotalActualCount(attendance.getActualCount());
             attendanceCourseReport.setAverageAttendanceRate(attendance.getAttendanceRate());
+            attendanceCourseReport.setSemesterName(course.getSemesterName()); // 设置学期名称
             this.save(attendanceCourseReport);
         } else {
             attendanceCourseReport.setAttendanceRecordCount(attendanceCourseReport.getAttendanceRecordCount() + 1);
@@ -54,6 +60,7 @@ public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCou
             } else {
                 attendanceCourseReport.setAverageAttendanceRate(BigDecimal.ZERO);
             }
+            attendanceCourseReport.setSemesterName(course.getSemesterName()); // 更新学期名称
         }
     }
 
@@ -91,4 +98,5 @@ public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCou
 
         return this.list(queryWrapper);
     }
+
 }

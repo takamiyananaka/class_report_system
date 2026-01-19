@@ -4,11 +4,19 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.AttendanceDailyReport;
+import com.xuegongbu.domain.Class;
 import com.xuegongbu.domain.Course;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.mapper.AttendanceDailyReportMapper;
+import com.xuegongbu.mapper.ClassMapper;
+import com.xuegongbu.mapper.CollegeMapper;
+import com.xuegongbu.mapper.TeacherMapper;
 import com.xuegongbu.service.AttendanceDailyReportService;
+import com.xuegongbu.service.ClassService;
+import com.xuegongbu.service.CollegeService;
 import com.xuegongbu.service.CourseService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +30,21 @@ import java.util.stream.Collectors;
 @Service
 public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDailyReportMapper, AttendanceDailyReport> implements AttendanceDailyReportService {
     private final CourseService courseService;
+    
+    @Autowired
+    private ClassService classService;
+    
+    @Autowired
+    private CollegeService collegeService;
+    
+    @Autowired
+    private ClassMapper classMapper;
+    
+    @Autowired
+    private CollegeMapper collegeMapper;
+    
+    @Autowired
+    private TeacherMapper teacherMapper;
 
     public AttendanceDailyReportServiceImpl(CourseService courseService) {
         this.courseService = courseService;
@@ -48,6 +71,7 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
                 attendanceDailyReport.setTotalExpectedCount(course.getExpectedCount());
                 attendanceDailyReport.setTotalActualCount(attendance.getActualCount());
                 attendanceDailyReport.setAverageAttendanceRate(attendance.getAttendanceRate());
+                attendanceDailyReport.setSemesterName(course.getSemesterName()); // 设置学期名称
                 this.save(attendanceDailyReport);
             }else {
                 attendanceDailyReport.setAttendanceRecordCount(attendanceDailyReport.getAttendanceRecordCount() + 1);
@@ -62,6 +86,7 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
                 } else {
                     attendanceDailyReport.setAverageAttendanceRate(BigDecimal.ZERO);
                 }
+                attendanceDailyReport.setSemesterName(course.getSemesterName()); // 更新学期名称
             }
         }
     }
@@ -100,4 +125,5 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
         
         return this.list(queryWrapper);
     }
+
 }

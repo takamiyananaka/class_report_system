@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.dto.AttendanceChartWithClassDTO;
+import com.xuegongbu.dto.AttendanceChartWithCourseDTO;
 import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.AttendanceReportQueryDTO;
+import com.xuegongbu.vo.AttendanceChartVO;
 import com.xuegongbu.vo.AttendanceVO;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -31,4 +34,7 @@ public interface AttendanceService extends IService<Attendance> {
 
     void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response);
 
+    List<AttendanceChartVO> queryAttendanceChartByClass(AttendanceChartWithClassDTO queryDTO);
+
+    List<AttendanceChartVO> queryAttendanceChartByCourse(AttendanceChartWithCourseDTO queryDTO);
 }

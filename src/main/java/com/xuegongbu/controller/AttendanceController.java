@@ -5,8 +5,11 @@ import cn.dev33.satoken.annotation.SaMode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.Attendance;
+import com.xuegongbu.dto.AttendanceChartWithClassDTO;
+import com.xuegongbu.dto.AttendanceChartWithCourseDTO;
 import com.xuegongbu.dto.AttendanceQueryDTO;
 import com.xuegongbu.dto.AttendanceReportQueryDTO;
+import com.xuegongbu.vo.AttendanceChartVO;
 import com.xuegongbu.vo.AttendanceVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -105,6 +108,30 @@ public class AttendanceController {
         return Result.success(attendance);
     }
 
+    /**
+     * 图表生成接口（按班级）
+     */
+    @GetMapping("/queryAttendanceChartByClass")
+    @Operation(summary = "图表生成接口（按班级）", description = "图表生成接口（按班级）")
+    @SaCheckRole("teacher")
+    public Result<List<AttendanceChartVO>> queryAttendanceChartByClass(@RequestBody AttendanceChartWithClassDTO queryDTO) {
+        log.info("图表生成接口（按班级）,参数：{}", queryDTO);
+        List<AttendanceChartVO> attendanceChartVOList = attendanceService.queryAttendanceChartByClass(queryDTO);
+        log.info("图表生成接口（按班级）完成");
+        return Result.success(attendanceChartVOList);
+    }
+    /**
+     * 图表生成接口（按课程）
+     */
+    @GetMapping("/queryAttendanceChartByCourse")
+    @Operation(summary = "图表生成接口（按课程）", description = "图表生成接口（按课程）")
+    @SaCheckRole("teacher")
+    public Result<List<AttendanceChartVO>> queryAttendanceChartByCourse(@RequestBody AttendanceChartWithCourseDTO queryDTO) {
+        log.info("图表生成接口（按课程）,参数：{}", queryDTO);
+        List<AttendanceChartVO> attendanceChartVOList = attendanceService.queryAttendanceChartByCourse(queryDTO);
+        log.info("图表生成接口（按课程）完成");
+        return Result.success(attendanceChartVOList);
+    }
 
     /**
      * 批量删除考勤记录
@@ -114,7 +141,6 @@ public class AttendanceController {
     @SaCheckRole(value = {"admin"}, mode = SaMode.OR)
     public Result<String> deleteAttendanceBatch(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "考勤ID列表") @RequestBody List<String> ids) {
         log.info("批量删除考勤记录，考勤ID列表：{}", ids);
-
         attendanceService.removeByIds(ids);
         log.info("批量删除考勤记录完成");
         return Result.success("批量删除成功");
