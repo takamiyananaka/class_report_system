@@ -332,11 +332,12 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         Teacher teacher = teacherMapper.selectOne(queryWrapper);
         vo.setTeacherName(teacher != null ? teacher.getRealName(): null);
 
-        LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
-        if (teacher != null) {
+        College college = null;
+        if (teacher != null && teacher.getCollegeNo() != null) {
+            LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
             collegeQueryWrapper.eq(College::getCollegeNo, teacher.getCollegeNo());
+            college = collegeMapper.selectOne(collegeQueryWrapper);
         }
-        College college = collegeMapper.selectOne(collegeQueryWrapper);
         vo.setCollegeName(college != null ? college.getName(): null);
         return vo;
     }

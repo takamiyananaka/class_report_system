@@ -31,5 +31,5 @@ public interface AttendanceCourseReportService extends IService<AttendanceCourse
      * @param queryDTO 图表查询参数
      * @return 考勤报表列表
      */
-    
+
 }
