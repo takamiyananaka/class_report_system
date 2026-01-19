@@ -539,14 +539,25 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             semesterName = queryDTO.getSemesterName();
         }
        List<AttendanceDailyReport> attendanceDailyReports= attendanceDailyReportService.getAttendanceChartByClassIdAndType(classIds, queryDTO.getGranularity(),semesterName);
-        attendanceChartVOList = attendanceDailyReports.stream()
-                .map(attendanceDailyReport -> {
+        // 将同一天的数据整合到一个点
+        Map<LocalDate, List<AttendanceDailyReport>> groupedByDate = attendanceDailyReports.stream()
+                .collect(Collectors.groupingBy(AttendanceDailyReport::getReportDate));
+        
+        attendanceChartVOList = groupedByDate.entrySet().stream()
+                .map(entry -> {
                     AttendanceChartVO attendanceChartVO = new AttendanceChartVO();
-                    attendanceChartVO.setDate(attendanceDailyReport.getReportDate());
-                    attendanceChartVO.setAttendRate(attendanceDailyReport.getAverageAttendanceRate());
+                    attendanceChartVO.setDate(entry.getKey());
+                    // 计算当天的平均考勤率
+                    List<AttendanceDailyReport> reports = entry.getValue();
+                    BigDecimal averageRate = reports.stream()
+                            .map(AttendanceDailyReport::getAverageAttendanceRate)
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)
+                            .divide(BigDecimal.valueOf(reports.size()), BigDecimal.ROUND_HALF_UP);
+                    attendanceChartVO.setAttendRate(averageRate);
                     return attendanceChartVO;
-
                 })
+                .sorted(Comparator.comparing(AttendanceChartVO::getDate)) // 按日期排序
                 .collect(Collectors.toList());
         return attendanceChartVOList;
     }
@@ -573,13 +584,25 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 .map(CourseSchedule::getOrderNo)
                 .collect(Collectors.toList());
         List<AttendanceCourseReport> attendanceCourseReportList = attendanceCourseReportService.getReportsByOrderNoAndType(courseOrderNos,queryDTO.getGranularity());
-        attendanceChartVOList = attendanceCourseReportList.stream()
-                .map(attendanceCourseReport -> {
+        // 将同一天的数据整合到一个点
+        Map<LocalDate, List<AttendanceCourseReport>> groupedByDate = attendanceCourseReportList.stream()
+                .collect(Collectors.groupingBy(AttendanceCourseReport::getReportDate));
+        
+        attendanceChartVOList = groupedByDate.entrySet().stream()
+                .map(entry -> {
                     AttendanceChartVO attendanceChartVO = new AttendanceChartVO();
-                    attendanceChartVO.setDate(attendanceCourseReport.getReportDate());
-                    attendanceChartVO.setAttendRate(attendanceCourseReport.getAverageAttendanceRate());
+                    attendanceChartVO.setDate(entry.getKey());
+                    // 计算当天的平均考勤率
+                    List<AttendanceCourseReport> reports = entry.getValue();
+                    BigDecimal averageRate = reports.stream()
+                            .map(AttendanceCourseReport::getAverageAttendanceRate)
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)
+                            .divide(BigDecimal.valueOf(reports.size()), BigDecimal.ROUND_HALF_UP);
+                    attendanceChartVO.setAttendRate(averageRate);
                     return attendanceChartVO;
                 })
+                .sorted(Comparator.comparing(AttendanceChartVO::getDate)) // 按日期排序
                 .collect(Collectors.toList());
         if(attendanceChartVOList.isEmpty()){
             return List.of();
