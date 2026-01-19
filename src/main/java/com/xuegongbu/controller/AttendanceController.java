@@ -113,7 +113,7 @@ public class AttendanceController {
     /**
      * 图表生成接口（按班级）
      */
-    @GetMapping("/queryAttendanceChartByClass")
+    @PostMapping("/queryAttendanceChartByClass")
     @Operation(summary = "图表生成接口（按班级）", description = "图表生成接口（按班级）")
     @SaCheckRole("teacher")
     public Result<List<AttendanceChartVO>> queryAttendanceChartByClass(@RequestBody AttendanceChartWithClassDTO queryDTO) {
@@ -125,7 +125,7 @@ public class AttendanceController {
     /**
      * 图表生成接口（按课程）
      */
-    @GetMapping("/queryAttendanceChartByCourse")
+    @PostMapping("/queryAttendanceChartByCourse")
     @Operation(summary = "图表生成接口（按课程）", description = "图表生成接口（按课程）")
     @SaCheckRole("teacher")
     public Result<List<AttendanceChartVO>> queryAttendanceChartByCourse(@RequestBody AttendanceChartWithCourseDTO queryDTO) {
