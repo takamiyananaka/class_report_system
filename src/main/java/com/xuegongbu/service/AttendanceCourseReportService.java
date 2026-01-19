@@ -24,7 +24,7 @@ public interface AttendanceCourseReportService extends IService<AttendanceCourse
      * @param periodType 时间范围类型：1-按日，2-按周(往前七天)，3-按月(往前30天)
      * @return 考勤报表列表
      */
-    List<AttendanceCourseReport> getReportsByOrderNoAndType(String orderNo, int periodType);
+    List<AttendanceCourseReport> getReportsByOrderNoAndType(List<String> orderNo, int periodType);
 
     /**
      * 根据图表查询参数获取课程考勤报表数据

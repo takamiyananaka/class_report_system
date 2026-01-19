@@ -16,6 +16,7 @@ import com.xuegongbu.service.AttendanceDailyReportService;
 import com.xuegongbu.service.ClassService;
 import com.xuegongbu.service.CollegeService;
 import com.xuegongbu.service.CourseService;
+import com.xuegongbu.vo.AttendanceChartVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -91,18 +92,20 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
         }
     }
     
+
+
     @Override
-    public List<AttendanceDailyReport> getReportsByClassIdAndType(String classId, int periodType) {
+    public List<AttendanceDailyReport> getAttendanceChartByClassIdAndType(List<String> classIds, Integer granularity, String semesterName) {
         LambdaQueryWrapper<AttendanceDailyReport> queryWrapper = new LambdaQueryWrapper<>();
-        
+
         // 根据班级ID过滤
-        queryWrapper.eq(AttendanceDailyReport::getClassId, classId);
-        
+        queryWrapper.in(AttendanceDailyReport::getClassId, classIds);
+
         // 根据查询类型设置日期范围
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate; // 默认为当天
-        
-        switch (periodType) {
+
+        switch (granularity) {
             case 1: // 按日
                 queryWrapper.eq(AttendanceDailyReport::getReportDate, startDate);
                 break;
@@ -114,15 +117,14 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
                 startDate = endDate.minusDays(29);
                 queryWrapper.between(AttendanceDailyReport::getReportDate, startDate, endDate);
                 break;
-            default:
-                // 如果没有指定查询类型，默认查询当天
-                queryWrapper.eq(AttendanceDailyReport::getReportDate, startDate);
+            case 4: //按学期
+                queryWrapper.eq(AttendanceDailyReport::getSemesterName, semesterName);
                 break;
         }
-        
+
         // 按日期升序排列
         queryWrapper.orderByAsc(AttendanceDailyReport::getReportDate);
-        
+
         return this.list(queryWrapper);
     }
 

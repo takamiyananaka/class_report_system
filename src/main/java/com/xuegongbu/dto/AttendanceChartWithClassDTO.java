@@ -1,7 +1,11 @@
 package com.xuegongbu.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
+@Data
+@Schema(description = "考勤图表数据(班级)")
 public class AttendanceChartWithClassDTO {
 
     @Schema(description = "学院名称")
@@ -14,6 +18,7 @@ public class AttendanceChartWithClassDTO {
     private String className;
 
     @Schema(description = "精细度：1-按日，2-按周，3-按月，4-按学期")
+    @NotNull(message = "请选择精细度")
     private Integer granularity; // 1-daily, 2-weekly, 3-monthly, 4-termly
 
     @Schema(description = "学期名称")

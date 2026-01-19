@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.AttendanceDailyReport;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.vo.AttendanceChartVO;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
@@ -16,11 +18,7 @@ public interface AttendanceDailyReportService extends IService<AttendanceDailyRe
   
   /**
    * 根据班级ID和查询类型获取考勤日报列表
-   * @param classId 班级ID
-   * @param periodType 时间范围类型：1-按日，2-按周(往前七天)，3-按月(往前30天)
    * @return 考勤日报列表
    */
-  List<AttendanceDailyReport> getReportsByClassIdAndType(String classId, int periodType);
-
-
+  List<AttendanceDailyReport> getAttendanceChartByClassIdAndType(List<String> classIds, @NotNull(message = "请选择精细度") Integer granularity, String semesterName);
 }

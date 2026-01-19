@@ -65,11 +65,11 @@ public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCou
     }
 
     @Override
-    public List<AttendanceCourseReport> getReportsByOrderNoAndType(String orderNo, int periodType) {
+    public List<AttendanceCourseReport> getReportsByOrderNoAndType(List<String> orderNo, int periodType) {
         LambdaQueryWrapper<AttendanceCourseReport> queryWrapper = new LambdaQueryWrapper<>();
 
         // 根据课序号过滤
-        queryWrapper.eq(AttendanceCourseReport::getOrderNo, orderNo);
+        queryWrapper.in(AttendanceCourseReport::getOrderNo, orderNo);
 
         // 根据查询类型设置日期范围
         LocalDate endDate = LocalDate.now();

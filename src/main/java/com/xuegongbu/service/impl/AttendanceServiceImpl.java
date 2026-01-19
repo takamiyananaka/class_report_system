@@ -505,12 +505,87 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
     @Override
     public List<AttendanceChartVO> queryAttendanceChartByClass(AttendanceChartWithClassDTO queryDTO) {
-        return List.of();
+        List<AttendanceChartVO> attendanceChartVOList = new ArrayList<>();
+        LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if(queryDTO.getCollegeName()!= null&&!queryDTO.getCollegeName().isEmpty()){
+            LambdaQueryWrapper<College> collegeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            collegeLambdaQueryWrapper.eq(College::getName, queryDTO.getCollegeName());
+            College college = collegeService.getOne(collegeLambdaQueryWrapper);
+            if(college != null){
+                teacherLambdaQueryWrapper.eq(Teacher::getCollegeNo, college.getCollegeNo());
+            }
+        }
+        if(queryDTO.getTeacherName()!= null&&!queryDTO.getTeacherName().isEmpty()){
+            teacherLambdaQueryWrapper.eq(Teacher::getRealName, queryDTO.getTeacherName());
+        }
+        List<Teacher> teachers = teacherService.list(teacherLambdaQueryWrapper);
+        if(teachers.isEmpty()){
+            return List.of();
+        }
+        classLambdaQueryWrapper.in(Class::getTeacherNo, teachers.stream().map(Teacher::getTeacherNo).collect(Collectors.toList()));
+        if(queryDTO.getClassName()!= null&&!queryDTO.getClassName().isEmpty()){
+            classLambdaQueryWrapper.eq(Class::getClassName, queryDTO.getClassName());
+        }
+        List<Class> classes = classService.list(classLambdaQueryWrapper);
+        if(classes.isEmpty()){
+            return List.of();
+        }
+        List<String> classIds = classes.stream()
+                .map(Class::getId)
+                .collect(Collectors.toList());
+        String semesterName = "";
+        if(queryDTO.getSemesterName()!= null&&!queryDTO.getSemesterName().isEmpty()){
+            semesterName = queryDTO.getSemesterName();
+        }
+       List<AttendanceDailyReport> attendanceDailyReports= attendanceDailyReportService.getAttendanceChartByClassIdAndType(classIds, queryDTO.getGranularity(),semesterName);
+        attendanceChartVOList = attendanceDailyReports.stream()
+                .map(attendanceDailyReport -> {
+                    AttendanceChartVO attendanceChartVO = new AttendanceChartVO();
+                    attendanceChartVO.setDate(attendanceDailyReport.getReportDate());
+                    attendanceChartVO.setAttendRate(attendanceDailyReport.getAverageAttendanceRate());
+                    return attendanceChartVO;
+
+                })
+                .collect(Collectors.toList());
+        return attendanceChartVOList;
     }
 
     @Override
     public List<AttendanceChartVO> queryAttendanceChartByCourse(AttendanceChartWithCourseDTO queryDTO) {
-        return List.of();
+        List<AttendanceChartVO> attendanceChartVOList = new ArrayList<>();
+        LambdaQueryWrapper<CourseSchedule> courseScheduleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<AttendanceCourseReport> attendanceCourseReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if(queryDTO.getTeacherName()!= null&&!queryDTO.getTeacherName().isEmpty()){
+            courseScheduleLambdaQueryWrapper.eq(CourseSchedule::getTeacherName, queryDTO.getTeacherName());
+        }
+        if(queryDTO.getSemesterName()!= null&&!queryDTO.getSemesterName().isEmpty()){
+            courseScheduleLambdaQueryWrapper.eq(CourseSchedule::getSemesterName, queryDTO.getSemesterName());
+        }
+        if(queryDTO.getOrderNo()!= null&&!queryDTO.getOrderNo().isEmpty()){
+            courseScheduleLambdaQueryWrapper.eq(CourseSchedule::getOrderNo, queryDTO.getOrderNo());
+        }
+        List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(courseScheduleLambdaQueryWrapper);
+        if(courseSchedules.isEmpty()){
+            return List.of();
+        }
+        List<String> courseOrderNos = courseSchedules.stream()
+                .map(CourseSchedule::getOrderNo)
+                .collect(Collectors.toList());
+        List<AttendanceCourseReport> attendanceCourseReportList = attendanceCourseReportService.getReportsByOrderNoAndType(courseOrderNos,queryDTO.getGranularity());
+        attendanceChartVOList = attendanceCourseReportList.stream()
+                .map(attendanceCourseReport -> {
+                    AttendanceChartVO attendanceChartVO = new AttendanceChartVO();
+                    attendanceChartVO.setDate(attendanceCourseReport.getReportDate());
+                    attendanceChartVO.setAttendRate(attendanceCourseReport.getAverageAttendanceRate());
+                    return attendanceChartVO;
+                })
+                .collect(Collectors.toList());
+        if(attendanceChartVOList.isEmpty()){
+            return List.of();
+        }
+
+        return attendanceChartVOList;
     }
 
 

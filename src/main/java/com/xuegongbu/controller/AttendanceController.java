@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/attendance")
 @Tag(name = "考勤管理", description = "考勤相关接口")
+@Valid
 public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService ;

@@ -61,7 +61,7 @@ public class CollegeController {
         return Result.success(collegeVOList);
     }
 
-    
+
 
     /**
      * 根据ID查询学院
