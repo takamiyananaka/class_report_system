@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @ColumnWidth(25)
 public class AttendanceSummaryExcelDTO {
 
-    @ExcelProperty("标识")
+    @ExcelProperty("id")
     private String identifier;
 
     @ExcelProperty("名称")
@@ -28,6 +28,6 @@ public class AttendanceSummaryExcelDTO {
     @ExcelProperty("学期平均考勤率")
     private BigDecimal semesterAttendanceRate;
     
-    @ExcelProperty("统计时间")
+    @ExcelProperty("统计时间范围")
     private String statisticsTime;
 }

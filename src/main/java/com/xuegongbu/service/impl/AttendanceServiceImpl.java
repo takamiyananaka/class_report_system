@@ -26,6 +26,7 @@ import org.apache.poi.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -413,90 +414,140 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         voPage.setCurrent(page.getCurrent());
         voPage.setSize(page.getSize());
         voPage.setTotal(page.getTotal());
-
-        List<AttendanceVO> voList =page.getRecords().stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
-
+        List<Attendance> attendanceList = page.getRecords();
+        List<AttendanceVO> voList = convertToVO(attendanceList);
         voPage.setRecords(voList);
 
         return voPage;
     }
 
-    private AttendanceVO convertToVO(Attendance attendance) {
-        AttendanceVO vo = new AttendanceVO();
-        vo.setId(attendance.getId());
-        vo.setCourseId(attendance.getCourseId());
-        vo.setCheckTime(attendance.getCheckTime());
-        vo.setActualCount(attendance.getActualCount());
-        vo.setExpectedCount(attendance.getExpectedCount());
-        vo.setAttendanceRate(attendance.getAttendanceRate());
-        vo.setImageUrl(attendance.getImageUrl());
-        vo.setCheckType(attendance.getCheckType());
-        vo.setStatus(attendance.getStatus());
-        vo.setRemark(attendance.getRemark());
-        LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        courseLambdaQueryWrapper.eq(Course::getCourseId, attendance.getCourseId());
-        List<Course> courses = courseMapper.selectList(courseLambdaQueryWrapper);
-        List<String> classIds = courses.stream()
-                .map(Course::getClassId)
-                .collect(Collectors.toList());
-        if(!classIds.isEmpty()){
-            LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            classLambdaQueryWrapper.in(Class::getId, classIds);
-            List<Class> classes = classMapper.selectList(classLambdaQueryWrapper);
-            List<String> classNames = classes.stream()
-                    .map(Class::getClassName)
-                    .collect(Collectors.toList());
-            vo.setClassNames(classNames);
-        }
-        CourseSchedule courseSchedule = courseScheduleService.getById(attendance.getCourseId());
-        vo.setCourseName(courseSchedule.getCourseName());
-        vo.setOrderNo(courseSchedule.getOrderNo());
-        vo.setCourseNo(courseSchedule.getCourseNo());
-        vo.setTeacherName(courseSchedule.getTeacherName());
-        vo.setCourseType(courseSchedule.getCourseType());
-        vo.setSemesterName(courseSchedule.getSemesterName());
-        return vo;
 
+    private List<AttendanceVO> convertToVO(List<Attendance> attendanceList) {
+        List<AttendanceVO> voList = new ArrayList<>(attendanceList.size());
+        for (Attendance attendance : attendanceList) {
+            AttendanceVO vo = new AttendanceVO();
+            vo.setId(attendance.getId());
+            vo.setCourseId(attendance.getCourseId());
+            vo.setCheckTime(attendance.getCheckTime());
+            vo.setActualCount(attendance.getActualCount());
+            vo.setExpectedCount(attendance.getExpectedCount());
+            vo.setAttendanceRate(attendance.getAttendanceRate());
+            vo.setImageUrl(attendance.getImageUrl());
+            vo.setCheckType(attendance.getCheckType());
+            vo.setStatus(attendance.getStatus());
+            vo.setRemark(attendance.getRemark());
+            voList.add(vo);
+        }
+
+        // 获取每一个考勤记录对应的course,通过一次数据库访问
+        List<String> courseIds = voList.stream()
+                .map(AttendanceVO::getCourseId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 批量查询课程信息
+        LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        courseLambdaQueryWrapper.in(Course::getCourseId, courseIds);
+        List<Course> courses = courseMapper.selectList(courseLambdaQueryWrapper);
+        Map<String, List<Course>> courseMap = courses.stream()
+                .collect(Collectors.groupingBy(Course::getCourseId));
+
+        // 批量查询课程安排信息
+        List<CourseSchedule> courseSchedules = courseScheduleService.listByIds(courseIds);
+        Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
+                .collect(Collectors.toMap(CourseSchedule::getId, courseSchedule -> courseSchedule));
+
+        // 提取所有涉及的班级ID，一次性查询班级信息
+        Set<String> allClassIds = new HashSet<>();
+        for (Map.Entry<String, List<Course>> entry : courseMap.entrySet()) {
+            List<Course> courseList = entry.getValue();
+            for (Course course : courseList) {
+                if (course.getClassId() != null) {
+                    allClassIds.add(course.getClassId());
+                }
+            }
+        }
+
+        // 批量查询班级信息
+        List<Class> allClasses = new ArrayList<>();
+        if (!allClassIds.isEmpty()) {
+            LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            classLambdaQueryWrapper.in(Class::getId, allClassIds);
+            allClasses = classMapper.selectList(classLambdaQueryWrapper);
+        }
+
+        // 创建班级ID到班级名称的映射
+        Map<String, String> classIdToNameMap = allClasses.stream()
+                .collect(Collectors.toMap(Class::getId, Class::getClassName));
+
+        // 填充VO对象
+        voList.forEach(vo -> {
+            List<Course> courseses = courseMap.get(vo.getCourseId());
+            if (courseses != null && !courseses.isEmpty()) {
+                // 根据课程列表获取对应的班级名称
+                List<String> classNames = new ArrayList<>();
+                for (Course course : courseses) {
+                    String className = classIdToNameMap.get(course.getClassId());
+                    if (className != null) {
+                        classNames.add(className);
+                    }
+                }
+                vo.setClassNames(classNames);
+            }
+
+            CourseSchedule courseSchedule = courseScheduleMap.get(vo.getCourseId());
+            if (courseSchedule != null) {
+                vo.setCourseName(courseSchedule.getCourseName());
+                vo.setOrderNo(courseSchedule.getOrderNo());
+                vo.setCourseNo(courseSchedule.getCourseNo());
+                vo.setTeacherName(courseSchedule.getTeacherName());
+                vo.setCourseType(courseSchedule.getCourseType());
+                vo.setSemesterName(courseSchedule.getSemesterName());
+            }
+        });
+
+        return voList;
     }
 
 
     @Override
     public void exportAttendanceReport(AttendanceReportQueryDTO queryDTO, HttpServletResponse response) {
+        // 设置分页参数，一次性获取所有数据
         queryDTO.setPageNum(1);
         queryDTO.setPageSize(Integer.MAX_VALUE);
         Page<AttendanceVO> attendancePage = queryAttendanceReport(queryDTO);
-        try {
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setCharacterEncoding("utf-8");
+        
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
 
-            String fileName = "AttendanceReport_" + System.currentTimeMillis() + ".xlsx";
-            response.setHeader("Content-disposition", "attachment;filename=" + fileName);
+        String fileName = "AttendanceReport_" + System.currentTimeMillis() + ".xlsx";
+        response.setHeader("Content-disposition", "attachment;filename=" + fileName);
 
-            // 使用EasyExcel创建多Sheet工作簿
-            com.alibaba.excel.ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build();
-
+        // 使用try-with-resources确保ExcelWriter正确关闭
+        try (com.alibaba.excel.ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build()) {
             // Sheet 1: 元数据信息
-            writeMetadataSheet(excelWriter,attendancePage);
+            writeMetadataSheet(excelWriter, attendancePage, queryDTO);
 
             // Sheet 2: 任课老师考勤率汇总
-            writeTeacherAttendanceSheet(excelWriter,attendancePage);
+            writeTeacherAttendanceSheet(excelWriter, attendancePage);
 
             // Sheet 3: 课程考勤率汇总
-            writeCourseAttendanceSheet(excelWriter,attendancePage);
+            writeCourseAttendanceSheet(excelWriter, attendancePage);
 
             // Sheet 4: 辅导员老师考勤率汇总
-            writeCounselorAttendanceSheet(excelWriter,attendancePage);
+            writeCounselorAttendanceSheet(excelWriter, attendancePage);
 
             // Sheet 5: 学院考勤率汇总
-            writeCollegeAttendanceSheet(excelWriter,attendancePage);
+            writeCollegeAttendanceSheet(excelWriter, attendancePage);
 
             // Sheet 6: 班级考勤率汇总
-            writeClassAttendanceSheet(excelWriter,attendancePage);
-
-            // 结束写入
+            writeClassAttendanceSheet(excelWriter, attendancePage);
+            
+            // 显式调用finish()完成写入
             excelWriter.finish();
+        } catch (IOException e) {
+            log.error("导出Excel时发生IO异常", e);
+            throw new BusinessException("导出Excel时发生IO异常: " + e.getMessage());
         } catch (Exception e) {
             log.error("导出多Sheet考勤报表失败", e);
             throw new BusinessException("导出多Sheet考勤报表失败: " + e.getMessage());
@@ -618,15 +669,21 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     }
 
 
-    private void writeMetadataSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
-        // 准备元数据信息
-        List<List<String>> head = new ArrayList<>();
-        head.add(Arrays.asList("筛选条件", "值"));
+    private void writeMetadataSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage,AttendanceReportQueryDTO queryDTO) {
+        try {
+            // 准备元数据信息
+            List<List<String>> head = new ArrayList<>();
+            head.add(Arrays.asList("筛选条件", "值"));
 
-        List<List<Object>> data = new ArrayList<>();
+            List<List<Object>> data = new ArrayList<>();
 
-        WriteSheet sheet = EasyExcel.writerSheet("元数据").head(head).build();
-        excelWriter.write(data, sheet);
+
+            WriteSheet sheet = EasyExcel.writerSheet("元数据").head(head).build();
+            excelWriter.write(data, sheet);
+        } catch (Exception e) {
+            log.error("写入元数据Sheet失败", e);
+            throw new BusinessException("写入元数据Sheet失败");
+        }
     }
     
     private void writeTeacherAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
@@ -663,170 +720,304 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     }
     
     private void writeCourseAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
-        // 获取符合条件的考勤记录，按课程分组统计
-        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
-        
-        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
-            // 按课程ID分组
-            Map<String, List<Attendance>> groupedByCourse = attendancePage.getRecords().stream()
-                .collect(Collectors.groupingBy(Attendance::getCourseId));
+        try {
+            // 获取符合条件的考勤记录，按课程分组统计
+            List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
             
-            for (Map.Entry<String, List<Attendance>> entry : groupedByCourse.entrySet()) {
-                String courseId = entry.getKey();
-                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
-                if (courseSchedule != null) {
-                    // 计算该课程的平均考勤率
-                    List<Attendance> courseAttendances = entry.getValue();
-                    double avgRate = courseAttendances.stream()
+            if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+                // 按课程ID分组
+                Map<String, List<Attendance>> groupedByCourse = attendancePage.getRecords().stream()
+                    .collect(Collectors.groupingBy(Attendance::getCourseId));
+                
+                // 提取所有课程ID并批量查询课程安排信息
+                Set<String> courseIds = attendancePage.getRecords().stream()
+                    .map(Attendance::getCourseId)
+                    .collect(Collectors.toSet());
+                
+                List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(
+                    new LambdaQueryWrapper<CourseSchedule>()
+                        .in(CourseSchedule::getId, courseIds)
+                );
+                
+                // 将课程安排信息放入Map中便于快速查找
+                Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
+                    .collect(Collectors.toMap(CourseSchedule::getId, cs -> cs));
+                
+                for (Map.Entry<String, List<Attendance>> entry : groupedByCourse.entrySet()) {
+                    String courseId = entry.getKey();
+                    CourseSchedule courseSchedule = courseScheduleMap.get(courseId);
+                    if (courseSchedule != null) {
+                        // 计算该课程的平均考勤率
+                        List<Attendance> courseAttendances = entry.getValue();
+                        double avgRate = courseAttendances.stream()
+                            .filter(attendance -> attendance.getAttendanceRate() != null)
+                            .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
+                            .average()
+                            .orElse(0.0);
+                        
+                        AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
+                        summary.setIdentifier(courseId);
+                        summary.setName(courseSchedule.getCourseName());
+                        summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
+                        summaryList.add(summary);
+                    }
+                }
+            }
+            
+            WriteSheet sheet = EasyExcel.writerSheet("课程考勤率").head(AttendanceSummaryExcelDTO.class).build();
+            excelWriter.write(summaryList, sheet);
+        } catch (Exception e) {
+            log.error("写入课程考勤率Sheet失败", e);
+            throw new BusinessException("写入课程考勤率Sheet失败");
+        }
+    }
+    
+    private void writeCounselorAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        try {
+            //按班级分组统计（通过班级关联到辅导员）
+            List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+            if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+                // 获取所有涉及的课程ID
+                Set<String> courseIds = attendancePage.getRecords().stream()
+                    .map(Attendance::getCourseId)
+                    .collect(Collectors.toSet());
+                
+                // 批量查询课程安排信息
+                List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(
+                    new LambdaQueryWrapper<CourseSchedule>()
+                        .in(CourseSchedule::getId, courseIds)
+                );
+                
+                // 将课程安排信息放入Map中便于快速查找
+                Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
+                    .collect(Collectors.toMap(CourseSchedule::getId, cs -> cs));
+                
+                // 获取所有涉及的班级ID
+                Set<String> classIds = new HashSet<>();
+                for (Attendance attendance : attendancePage.getRecords()) {
+                    String courseId = attendance.getCourseId();
+                    CourseSchedule courseSchedule = courseScheduleMap.get(courseId);
+                    if (courseSchedule != null) {
+                        // 假设课程与班级有关联
+                        List<String> classIdsFromCourse = courseMapper.selectClassIdsByCourseId(courseId);
+                        classIds.addAll(classIdsFromCourse);
+                    }
+                }
+                
+                // 批量查询班级信息
+                List<Class> classList = classMapper.selectList(
+                    new LambdaQueryWrapper<Class>()
+                        .in(Class::getId, classIds)
+                );
+                
+                // 将班级信息放入Map中便于快速查找
+                Map<String, Class> classMap = classList.stream()
+                    .collect(Collectors.toMap(Class::getId, c -> c));
+                
+                // 对每个班级计算平均考勤率
+                for (String classId : classIds) {
+                    Class clazz = classMap.get(classId);
+                    if (clazz != null) {
+                        // 查找该班级相关的考勤记录并计算平均考勤率
+                        double avgRate = attendancePage.getRecords().stream()
+                            .filter(attendance -> {
+                                String courseId = attendance.getCourseId();
+                                CourseSchedule courseSchedule = courseScheduleMap.get(courseId);
+                                if (courseSchedule != null) {
+                                    List<String> classIdsFromCourse = courseMapper.selectClassIdsByCourseId(courseId);
+                                    return classIdsFromCourse.contains(classId);
+                                }
+                                return false;
+                            })
+                            .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
+                            .average()
+                            .orElse(0.0);
+                        
+                        AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
+                        summary.setIdentifier(clazz.getId());
+                        summary.setName(clazz.getClassName());
+                        summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
+                        summaryList.add(summary);
+                    }
+                }
+            }
+            
+            WriteSheet sheet = EasyExcel.writerSheet("辅导员考勤率").head(AttendanceSummaryExcelDTO.class).build();
+            excelWriter.write(summaryList, sheet);
+        } catch (Exception e) {
+            log.error("写入辅导员考勤率Sheet失败", e);
+            throw new RuntimeException("写入辅导员考勤率Sheet失败");
+        }
+    }
+    
+    private void writeCollegeAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        try {
+            // 按学院分组统计
+            List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+            if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+                // 获取所有涉及的课程ID
+                Set<String> courseIds = attendancePage.getRecords().stream()
+                    .map(Attendance::getCourseId)
+                    .collect(Collectors.toSet());
+                
+                // 批量查询课程安排信息
+                List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(
+                    new LambdaQueryWrapper<CourseSchedule>()
+                        .in(CourseSchedule::getId, courseIds)
+                );
+                
+                // 将课程安排信息放入Map中便于快速查找
+                Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
+                    .collect(Collectors.toMap(CourseSchedule::getId, cs -> cs));
+                
+                // 按学院分组统计考勤率
+                Map<String, List<Attendance>> groupedByCollege = new HashMap<>();
+                
+                for (Attendance attendance : attendancePage.getRecords()) {
+                    String courseId = attendance.getCourseId();
+                    CourseSchedule courseSchedule = courseScheduleMap.get(courseId);
+                    if (courseSchedule != null) {
+                        // 获取课程所属的班级，进而获取学院信息
+                        List<String> classIds = courseMapper.selectClassIdsByCourseId(courseId);
+                        
+                        // 批量查询班级信息
+                        List<Class> classList = classMapper.selectList(
+                            new LambdaQueryWrapper<Class>()
+                                .in(Class::getId, classIds)
+                        );
+                        
+                        // 批量查询学院信息
+                        Set<String> collegeNos = classList.stream()
+                            .map(Class::getTeacherNo)
+                            .collect(Collectors.toSet());
+                        
+                        List<Teacher> teacherList = teacherService.list(
+                            new LambdaQueryWrapper<Teacher>()
+                                .in(Teacher::getTeacherNo, collegeNos)
+                        );
+                        
+                        Map<String, Teacher> teacherMap = teacherList.stream()
+                            .collect(Collectors.toMap(Teacher::getTeacherNo, t -> t));
+                        
+                        for (Class clazz : classList) {
+                            Teacher teacher = teacherMap.get(clazz.getTeacherNo());
+                            if (teacher != null) {
+                                String collegeNo = teacher.getCollegeNo();
+                                groupedByCollege.computeIfAbsent(collegeNo, k -> new ArrayList<>()).add(attendance);
+                            }
+                        }
+                    }
+                }
+                
+                // 批量查询学院信息
+                Set<String> collegeNos = groupedByCollege.keySet();
+                List<College> collegeList = collegeService.list(
+                    new LambdaQueryWrapper<College>()
+                        .in(College::getCollegeNo, collegeNos)
+                );
+                
+                Map<String, College> collegeMap = collegeList.stream()
+                    .collect(Collectors.toMap(College::getCollegeNo, c -> c));
+                
+                // 计算每个学院的平均考勤率
+                for (Map.Entry<String, List<Attendance>> entry : groupedByCollege.entrySet()) {
+                    String collegeNo = entry.getKey();
+                    List<Attendance> collegeAttendances = entry.getValue();
+                    double avgRate = collegeAttendances.stream()
                         .filter(attendance -> attendance.getAttendanceRate() != null)
                         .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
                         .average()
                         .orElse(0.0);
                     
+                    College college = collegeMap.get(collegeNo);
                     AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
-                    summary.setIdentifier(courseId);
-                    summary.setName(courseSchedule.getCourseName());
+                    summary.setIdentifier(collegeNo);
+                    summary.setName(college != null ? college.getName() : "未知学院");
                     summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
                     summaryList.add(summary);
                 }
             }
+            
+            WriteSheet sheet = EasyExcel.writerSheet("学院考勤率").head(AttendanceSummaryExcelDTO.class).build();
+            excelWriter.write(summaryList, sheet);
+        } catch (Exception e) {
+            log.error("写入学院考勤率Sheet失败", e);
+            throw new RuntimeException("写入学院考勤率Sheet失败");
+
         }
-        
-        WriteSheet sheet = EasyExcel.writerSheet("课程考勤率").head(AttendanceSummaryExcelDTO.class).build();
-        excelWriter.write(summaryList, sheet);
     }
     
-    private void writeCounselorAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
-        //按班级分组统计（通过班级关联到辅导员）
-        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
-        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
-            // 获取所有涉及的班级ID
-            Set<String> classIds = new HashSet<>();
-            for (Attendance attendance : attendancePage.getRecords()) {
-                String courseId = attendance.getCourseId();
-                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
-                if (courseSchedule != null) {
-                    // 假设课程与班级有关联
-                    List<String> classIdsFromCourse = courseMapper.selectClassIdsByCourseId(courseId);
-                    classIds.addAll(classIdsFromCourse);
+    private void writeClassAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
+        try {
+            // 获取符合条件的考勤记录，按班级分组统计
+            List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
+            if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
+                // 获取所有涉及的课程ID
+                Set<String> courseIds = attendancePage.getRecords().stream()
+                    .map(Attendance::getCourseId)
+                    .collect(Collectors.toSet());
+                
+                // 批量查询课程安排信息
+                List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(
+                    new LambdaQueryWrapper<CourseSchedule>()
+                        .in(CourseSchedule::getId, courseIds)
+                );
+                
+                // 将课程安排信息放入Map中便于快速查找
+                Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
+                    .collect(Collectors.toMap(CourseSchedule::getId, cs -> cs));
+                
+                // 按班级分组统计考勤率
+                Map<String, List<Attendance>> groupedByClass = new HashMap<>();
+                
+                for (Attendance attendance : attendancePage.getRecords()) {
+                    String courseId = attendance.getCourseId();
+                    CourseSchedule courseSchedule = courseScheduleMap.get(courseId);
+                    if (courseSchedule != null) {
+                        // 获取课程所属的班级
+                        List<String> classIds = courseMapper.selectClassIdsByCourseId(courseId);
+                        for (String classId : classIds) {
+                            groupedByClass.computeIfAbsent(classId, k -> new ArrayList<>()).add(attendance);
+                        }
+                    }
                 }
-            }
-            
-            // 对每个班级计算平均考勤率
-            for (String classId : classIds) {
-                Class clazz = classMapper.selectById(classId);
-                if (clazz != null) {
-                    // 查找该班级相关的考勤记录并计算平均考勤率
-                    double avgRate = attendancePage.getRecords().stream()
-                        .filter(attendance -> {
-                            String courseId = attendance.getCourseId();
-                            CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
-                            if (courseSchedule != null) {
-                                List<String> classIdsFromCourse = courseMapper.selectClassIdsByCourseId(courseId);
-                                return classIdsFromCourse.contains(classId);
-                            }
-                            return false;
-                        })
+                
+                // 批量查询班级信息
+                Set<String> classIds = groupedByClass.keySet();
+                List<Class> classList = classMapper.selectList(
+                    new LambdaQueryWrapper<Class>()
+                        .in(Class::getId, classIds)
+                );
+                
+                // 将班级信息放入Map中便于快速查找
+                Map<String, Class> classMap = classList.stream()
+                    .collect(Collectors.toMap(Class::getId, c -> c));
+                
+                // 计算每个班级的平均考勤率
+                for (Map.Entry<String, List<Attendance>> entry : groupedByClass.entrySet()) {
+                    String classId = entry.getKey();
+                    List<Attendance> classAttendances = entry.getValue();
+                    double avgRate = classAttendances.stream()
+                        .filter(attendance -> attendance.getAttendanceRate() != null)
                         .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
                         .average()
                         .orElse(0.0);
                     
+                    Class clazz = classMap.get(classId);
                     AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
-                    summary.setIdentifier(clazz.getId());
-                    summary.setName(clazz.getClassName());
+                    summary.setIdentifier(classId);
+                    summary.setName(clazz != null ? clazz.getClassName() : "未知班级");
                     summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
                     summaryList.add(summary);
                 }
             }
+            
+            WriteSheet sheet = EasyExcel.writerSheet("班级考勤率").head(AttendanceSummaryExcelDTO.class).build();
+            excelWriter.write(summaryList, sheet);
+        } catch (Exception e) {
+            log.error("写入班级考勤率Sheet失败", e);
+            throw new IllegalStateException("写入班级考勤率Sheet失败: " + e.getMessage(), e);
         }
-        
-        WriteSheet sheet = EasyExcel.writerSheet("辅导员考勤率").head(AttendanceSummaryExcelDTO.class).build();
-        excelWriter.write(summaryList, sheet);
-    }
-    
-    private void writeCollegeAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
-        // 按学院分组统计
-        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
-        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
-            // 按学院分组统计考勤率
-            Map<String, List<Attendance>> groupedByCollege = new HashMap<>();
-            
-            for (Attendance attendance : attendancePage.getRecords()) {
-                String courseId = attendance.getCourseId();
-                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
-                if (courseSchedule != null) {
-                    // 获取课程所属的班级，进而获取学院信息
-                    List<String> classIds = courseMapper.selectClassIdsByCourseId(courseId);
-                    for (String classId : classIds) {
-                        Class clazz = classMapper.selectById(classId);
-
-                    }
-                }
-            }
-            
-            // 计算每个学院的平均考勤率
-            for (Map.Entry<String, List<Attendance>> entry : groupedByCollege.entrySet()) {
-                String collegeNo = entry.getKey();
-                List<Attendance> collegeAttendances = entry.getValue();
-                double avgRate = collegeAttendances.stream()
-                    .filter(attendance -> attendance.getAttendanceRate() != null)
-                    .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
-                    .average()
-                    .orElse(0.0);
-                
-                College college = collegeService.getById(collegeNo);
-                AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
-                summary.setIdentifier(collegeNo);
-                summary.setName(college != null ? college.getName() : "未知学院");
-                summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
-                summaryList.add(summary);
-            }
-        }
-        
-        WriteSheet sheet = EasyExcel.writerSheet("学院考勤率").head(AttendanceSummaryExcelDTO.class).build();
-        excelWriter.write(summaryList, sheet);
-    }
-    
-    private void writeClassAttendanceSheet(com.alibaba.excel.ExcelWriter excelWriter,Page<AttendanceVO> attendancePage) {
-        // 获取符合条件的考勤记录，按班级分组统计
-        List<AttendanceSummaryExcelDTO> summaryList = new ArrayList<>();
-        if (attendancePage.getRecords() != null && !attendancePage.getRecords().isEmpty()) {
-            // 按班级分组统计考勤率
-            Map<String, List<Attendance>> groupedByClass = new HashMap<>();
-            
-            for (Attendance attendance : attendancePage.getRecords()) {
-                String courseId = attendance.getCourseId();
-                CourseSchedule courseSchedule = courseScheduleMapper.selectById(courseId);
-                if (courseSchedule != null) {
-                    // 获取课程所属的班级
-                    List<String> classIds = courseMapper.selectClassIdsByCourseId(courseId);
-                    for (String classId : classIds) {
-                        groupedByClass.computeIfAbsent(classId, k -> new ArrayList<>()).add(attendance);
-                    }
-                }
-            }
-            
-            // 计算每个班级的平均考勤率
-            for (Map.Entry<String, List<Attendance>> entry : groupedByClass.entrySet()) {
-                String classId = entry.getKey();
-                List<Attendance> classAttendances = entry.getValue();
-                double avgRate = classAttendances.stream()
-                    .filter(attendance -> attendance.getAttendanceRate() != null)
-                    .mapToDouble(attendance -> attendance.getAttendanceRate().doubleValue())
-                    .average()
-                    .orElse(0.0);
-                
-                Class clazz = classMapper.selectById(classId);
-                AttendanceSummaryExcelDTO summary = new AttendanceSummaryExcelDTO();
-                summary.setIdentifier(classId);
-                summary.setName(clazz != null ? clazz.getClassName() : "未知班级");
-                summary.setOverallAttendanceRate(BigDecimal.valueOf(avgRate));
-                summaryList.add(summary);
-            }
-        }
-        
-        WriteSheet sheet = EasyExcel.writerSheet("班级考勤率").head(AttendanceSummaryExcelDTO.class).build();
-        excelWriter.write(summaryList, sheet);
     }
 
     /**
