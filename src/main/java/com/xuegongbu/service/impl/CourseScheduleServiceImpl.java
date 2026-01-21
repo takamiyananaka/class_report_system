@@ -701,8 +701,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
 
     @Override
     public Result<String> addClass(List<String> classList,String courseId) {
-        QueryWrapper<Class> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("className", classList);
+       LambdaQueryWrapper<Class> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(Class::getClassName, classList);
         List<Class> classes = classMapper.selectList(queryWrapper);
         int successCount = classes.size();
         int failCount = classList.size() - successCount;
