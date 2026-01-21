@@ -46,4 +46,6 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
     Page<CourseScheduleVO> queryByClass(String id,int pageNum,int pageSize);
 
     List<String> queryClassCurrentCourse(String classId);
+
+    void deleteClass(List<String> classList, String id);
 }

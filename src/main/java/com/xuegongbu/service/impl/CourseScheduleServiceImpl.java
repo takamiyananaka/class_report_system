@@ -704,14 +704,18 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
        LambdaQueryWrapper<Class> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(Class::getClassName, classList);
         List<Class> classes = classMapper.selectList(queryWrapper);
-        int successCount = classes.size();
-        int failCount = classList.size() - successCount;
+        int successCount = 0;
+
         for(Class clazz:classes){
             Course course = new Course();
             course.setCourseId(courseId);
             course.setClassId(clazz.getId());
-            courseService.save(course);
+            if(courseService.save(course)){
+                log.info("添加班级{}成功", clazz.getClassName());
+                successCount++;
+            };
         }
+        int failCount = classList.size() - successCount;
         return Result.success(String.format("成功添加%d个班级，失败%d个", successCount, failCount));
     }
 
@@ -778,5 +782,24 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         return courseScheduleList.stream()
                 .map(CourseSchedule::getCourseName)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteClass(List<String> classList, String id) {
+        LambdaQueryWrapper<Class> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(Class::getClassName, classList);
+        List<Class> classes = classMapper.selectList(queryWrapper);
+        int successCount = 0;
+        for(Class clazz:classes){
+            LambdaQueryWrapper<Course> courseQueryWrapper = new LambdaQueryWrapper<>();
+            courseQueryWrapper.eq(Course::getClassId, clazz.getId());
+            courseQueryWrapper.eq(Course::getCourseId, id);
+            if(courseService.remove(courseQueryWrapper)){
+                log.info("成功删除班级：{}", clazz.getClassName());
+                successCount++;
+            }
+        }
+        int failCount = classList.size() - successCount;
+        log.info("成功删除%d个班级，失败%d个", successCount, failCount);
     }
 }

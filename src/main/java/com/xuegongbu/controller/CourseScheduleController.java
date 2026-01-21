@@ -112,6 +112,20 @@ public class CourseScheduleController {
     }
 
     /**
+     * 删除课程的班级
+     */
+    @DeleteMapping("/deleteClass/{id}")
+    @Operation(summary = "删除课程的班级", description = "删除课程的班级")
+    @SaCheckRole("admin")
+    public Result<String> deleteClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级列表") @RequestBody List<String> classList, @Parameter(description = "课程ID") @PathVariable String id){
+        log.info("删除课程的班级，班级列表：{}", classList);
+        courseScheduleService.deleteClass(classList,id);
+        log.info("删除课程的班级完成");
+        return Result.success("删除班级成功");
+
+    }
+
+    /**
      * 查询班级当前正在上的课的名字
      */
     @GetMapping("/queryClassCurrentCourse/{classId}")
