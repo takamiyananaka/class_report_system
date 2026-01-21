@@ -132,12 +132,14 @@ public class CourseScheduleController {
     @PostMapping("/add")
     @Operation(summary = "创建课表", description = "教师创建新课表，ID自动生成")
     @SaCheckRole("admin")
-    public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
+    public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule,@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级列表") @RequestBody List<String> classList) {
         log.info("创建课表，课表信息：{}", courseSchedule);
 
         try {
             CourseSchedule result = courseScheduleService.addCourseSchedule(courseSchedule);
             log.info("创建课表完成，课表ID：{}", result.getId());
+            courseScheduleService.addClass(classList,result.getId());
+            log.info("为课程添加班级完成");
             return Result.success(result);
         } catch (IllegalArgumentException e) {
             return Result.error(e.getMessage());
