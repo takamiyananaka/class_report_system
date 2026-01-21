@@ -168,8 +168,8 @@ public class AttendanceTask implements CommandLineRunner {
             //星期符合
             queryWrapper.eq(CourseSchedule::getWeekday, weekdayStr);
             //当前节次在开始节次和结束节次之间
-            queryWrapper.ge(CourseSchedule::getStartPeriod, classPeriod);
-            queryWrapper.le(CourseSchedule::getEndPeriod, classPeriod);
+            queryWrapper.le(CourseSchedule::getStartPeriod, classPeriod);
+            queryWrapper.ge(CourseSchedule::getEndPeriod, classPeriod);
             List<CourseSchedule> ongoingCourses = courseScheduleService.list(queryWrapper);
 
             log.info("找到 {} 个第 {} 节课的课程", ongoingCourses.size(), classPeriod);
