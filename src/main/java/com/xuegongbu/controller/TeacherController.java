@@ -291,6 +291,14 @@ public class TeacherController {
             teacher.setPhone(teacherRequest.getPhone());
         }
         if(StringUtil.isNullOrEmpty(teacherRequest.getUsername())){
+            //检查是否重复
+            Teacher existingByUsername = teacherService.lambdaQuery()
+                    .eq(Teacher::getUsername, teacherRequest.getUsername())
+                    .ne(Teacher::getId, existingTeacher.getId())
+                    .one();
+                    if (existingByUsername != null) {
+                        return Result.error("用户名已存在");
+                    }
             teacher.setUsername(teacherRequest.getUsername());
         }
         if(teacherRequest.getEnableEmailNotification() != null){
