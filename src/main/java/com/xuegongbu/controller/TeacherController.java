@@ -279,7 +279,7 @@ public class TeacherController {
         // 如果提供了新密码，则更新密码
         if (teacherRequest.getPassword() != null && !teacherRequest.getPassword().isEmpty()){
             // 验证密码长度
-            if (teacher.getPassword().length() < 6) {
+            if (teacherRequest.getPassword().length() < 6) {
                 return Result.error("密码长度不能少于6位");
             }
             teacher.setPassword(passwordEncoder.encode(teacherRequest.getPassword()));

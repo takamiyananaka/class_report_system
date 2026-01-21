@@ -49,8 +49,8 @@ public class AuthController {
     public Result<String> logout() {
         // 获取当前用户信息
         try {
-            if (cn.dev33.satoken.stp.StpUtil.isLogin()) {
-                Object loginId = cn.dev33.satoken.stp.StpUtil.getLoginId();
+            if (StpUtil.isLogin()) {
+                Object loginId =StpUtil.getLoginId();
                 log.info("用户登出: 用户ID={}", loginId);
             }
         } catch (Exception e) {
@@ -58,7 +58,7 @@ public class AuthController {
         }
         
         // Sa-Token登出
-        cn.dev33.satoken.stp.StpUtil.logout();
+        StpUtil.logout();
         
         log.info("用户登出成功");
         return Result.success("登出成功");
@@ -85,7 +85,7 @@ public class AuthController {
     @Operation(summary = "获取当前用户信息", description = "获取当前用户信息")
     public Result<Object> getUserInfo() {
         log.info("获取当前用户信息");
-        Object UserInfo = StpUtil.getSession().get("userInfo");
-        return Result.success(UserInfo);
+        Object userInfo = StpUtil.getSession().get("userInfo");
+        return Result.success(userInfo);
     }
 }
