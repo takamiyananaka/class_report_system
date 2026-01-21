@@ -700,9 +700,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     }
 
     @Override
-    public Result<String> addClass(List<String> classList,String courseId) {
+    public Result<String> addClassByIds(List<String> classList,String courseId) {
        LambdaQueryWrapper<Class> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(Class::getClassName, classList);
+        queryWrapper.in(Class::getId, classList);
         List<Class> classes = classMapper.selectList(queryWrapper);
         int successCount = 0;
 
@@ -785,9 +785,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     }
 
     @Override
-    public void deleteClass(List<String> classList, String id) {
+    public void deleteClassByIds(List<String> classList, String id) {
         LambdaQueryWrapper<Class> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(Class::getClassName, classList);
+        queryWrapper.in(Class::getId, classList);
         List<Class> classes = classMapper.selectList(queryWrapper);
         int successCount = 0;
         for(Class clazz:classes){

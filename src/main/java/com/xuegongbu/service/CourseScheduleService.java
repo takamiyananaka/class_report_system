@@ -41,11 +41,12 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
      */
     void downloadTemplate(jakarta.servlet.http.HttpServletResponse response);
 
-    Result<String> addClass(List<String> classList, String courseId);
+
+    Result<String> addClassByIds(List<String> classIds, String courseId);
 
     Page<CourseScheduleVO> queryByClass(String id,int pageNum,int pageSize);
 
     List<String> queryClassCurrentCourse(String classId);
 
-    void deleteClass(List<String> classList, String id);
+    void deleteClassByIds(List<String> classIds, String id);
 }

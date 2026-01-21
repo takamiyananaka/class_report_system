@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.dto.CourseScheduleWithClassIdsDTO;
 import com.xuegongbu.vo.CourseScheduleVO;
 import com.xuegongbu.dto.CourseScheduleWithClassIdQueryDTO;
 import com.xuegongbu.service.CourseScheduleService;
@@ -104,9 +105,9 @@ public class CourseScheduleController {
     @PostMapping("/addClass/{id}")
     @Operation(summary = "为课程添加班级", description = "为课程添加班级，以列表的形式")
     @SaCheckRole("admin")
-    public Result<String> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级列表") @RequestBody List<String> classList, @Parameter(description = "课程ID") @PathVariable String id) {
-        log.info("为课程添加班级，班级列表：{}", classList);
-       courseScheduleService.addClass(classList,id);
+    public Result<String> addClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级ID列表") @RequestBody List<String> classIds, @Parameter(description = "课程ID") @PathVariable String id) {
+        log.info("为课程添加班级，班级ID列表：{}", classIds);
+       courseScheduleService.addClassByIds(classIds, id);
         log.info("为课程添加班级完成");
         return Result.success("添加班级成功");
     }
@@ -117,9 +118,9 @@ public class CourseScheduleController {
     @DeleteMapping("/deleteClass/{id}")
     @Operation(summary = "删除课程的班级", description = "删除课程的班级")
     @SaCheckRole("admin")
-    public Result<String> deleteClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级列表") @RequestBody List<String> classList, @Parameter(description = "课程ID") @PathVariable String id){
-        log.info("删除课程的班级，班级列表：{}", classList);
-        courseScheduleService.deleteClass(classList,id);
+    public Result<String> deleteClass(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级ID列表") @RequestBody List<String> classIds, @Parameter(description = "课程ID") @PathVariable String id){
+        log.info("删除课程的班级，班级ID列表：{}", classIds);
+        courseScheduleService.deleteClassByIds(classIds, id);
         log.info("删除课程的班级完成");
         return Result.success("删除班级成功");
 
@@ -146,13 +147,14 @@ public class CourseScheduleController {
     @PostMapping("/add")
     @Operation(summary = "创建课表", description = "教师创建新课表，ID自动生成")
     @SaCheckRole("admin")
-    public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule,@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "班级列表") @RequestBody List<String> classList) {
-        log.info("创建课表，课表信息：{}", courseSchedule);
+    public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息和班级ID列表") @RequestBody CourseScheduleWithClassIdsDTO dto) {
+        log.info("创建课表，课表信息：{}，班级ID列表：{}", dto.getCourseSchedule(), dto.getClassIds());
 
         try {
+            CourseSchedule courseSchedule = dto.getCourseSchedule();
             CourseSchedule result = courseScheduleService.addCourseSchedule(courseSchedule);
             log.info("创建课表完成，课表ID：{}", result.getId());
-            courseScheduleService.addClass(classList,result.getId());
+            courseScheduleService.addClassByIds(dto.getClassIds(), result.getId());
             log.info("为课程添加班级完成");
             return Result.success(result);
         } catch (IllegalArgumentException e) {
@@ -162,6 +164,7 @@ public class CourseScheduleController {
             return Result.error("创建失败: " + e.getMessage());
         }
     }
+
 
     /**
      * 更新课表
