@@ -83,6 +83,12 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         userInfo.put("department", teacher.getDepartment());
         userInfo.put("collegeNo", teacher.getCollegeNo());
         userInfo.put("role", "teacher");
+        userInfo.put("attendanceThreshold",teacher.getAttendanceThreshold());
+        userInfo.put("status", teacher.getStatus());
+        userInfo.put("lastLoginTime", teacher.getLastLoginTime());
+        userInfo.put("enableEmailNotification", teacher.getEnableEmailNotification());
+        userInfo.put("lastLoginIp", teacher.getLastLoginIp());
+        userInfo.put("remark", teacher.getRemark());
         log.info("教师登录成功: {}", teacher.getUsername());
         return new LoginResponse(token, userInfo);
     }

@@ -63,6 +63,7 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
         for (String classId : classIds) {
             LambdaQueryWrapper<AttendanceDailyReport> attendanceDailyReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
             attendanceDailyReportLambdaQueryWrapper.eq(AttendanceDailyReport::getClassId, classId);
+            attendanceDailyReportLambdaQueryWrapper.eq(AttendanceDailyReport::getReportDate, attendance.getCheckTime().toLocalDate());
             AttendanceDailyReport attendanceDailyReport = this.getOne(attendanceDailyReportLambdaQueryWrapper);
             if (attendanceDailyReport == null) { 
                 attendanceDailyReport = new AttendanceDailyReport();

@@ -36,6 +36,7 @@ public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCou
         //更新课程报表
         LambdaQueryWrapper<AttendanceCourseReport> attendanceCourseReportLambdaQueryWrapper = new LambdaQueryWrapper<>();
         attendanceCourseReportLambdaQueryWrapper.eq(AttendanceCourseReport::getOrderNo, course.getOrderNo());
+        attendanceCourseReportLambdaQueryWrapper.eq(AttendanceCourseReport::getReportDate, attendance.getCheckTime().toLocalDate());
         AttendanceCourseReport attendanceCourseReport = this.getOne(attendanceCourseReportLambdaQueryWrapper);
         if (attendanceCourseReport == null) {
             attendanceCourseReport = new AttendanceCourseReport();
