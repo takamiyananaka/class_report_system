@@ -115,9 +115,7 @@ public class Alert implements Serializable {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
-    @Schema(description = "逻辑删除")
-    @TableLogic(value = "0", delval = "1")
-    private Integer isDeleted;
+    
 
 
 }
