@@ -127,6 +127,17 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             log.error("当前不在该课程的上课节次范围内："+currentPeriod);
             throw new BusinessException("当前不在该课程的上课节次范围内");
         }
+        //由当前时间按照"HH:MM"格式生成checkTime
+        LocalDateTime checkTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        //查找当前分种内当前课程考勤记录是否已存在，若存在则不再新生成考勤记录，同分种只有一条考勤记录
+        LambdaQueryWrapper<Attendance> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Attendance::getCourseId, courseId)
+                .eq(Attendance::getCheckTime, checkTime);
+        Attendance exixtingAttendance = getOne(queryWrapper);
+        if (exixtingAttendance != null) {
+            log.error("当前分种内当前课程考勤记录已存在："+exixtingAttendance.getId());
+            return exixtingAttendance;
+        }
 
         String classroomName = course.getClassroom();
         //Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
@@ -137,8 +148,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         //调用模型
         //CountResponse countResponse = countUtil.getCount(deviceUrls);
         //生成考勤记录
-        //由当前时间按照"HH:MM"格式生成checkTime
-        LocalDateTime checkTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
 
         //根据课程获取关联班级的总人数
         int expectedCount = course.getExpectedCount();
