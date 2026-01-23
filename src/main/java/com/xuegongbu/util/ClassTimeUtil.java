@@ -1,9 +1,13 @@
 package com.xuegongbu.util;
 
+import com.xuegongbu.domain.Semester;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -204,5 +208,25 @@ public class ClassTimeUtil {
             default:
                 return "星期一"; // 默认值
         }
+    }
+
+   /**
+     * 获取日期范围
+     * @param semester 学期（ex:2025-2026春季学期）
+     * @param weekRange 周数范围（3-16周）
+     * @return 课程日期范围
+     */
+    public static List<LocalDate> getCourseDateRange(Semester semester, String weekRange) {
+        //日期列表存放课程起始日期和结束日期
+        List<LocalDate> dateList = new ArrayList<>();
+        String[] weekRangeArr = weekRange.split("-");
+        int startWeek = Integer.parseInt(weekRangeArr[0]);
+        int endWeek = Integer.parseInt(weekRangeArr[1]);
+
+        LocalDate startDate = semester.getStartDate().plusWeeks(startWeek - 1);
+        LocalDate endDate = semester.getStartDate().plusWeeks(endWeek - 1);
+        dateList.add(startDate);
+        dateList.add(endDate);
+        return dateList;
     }
 }

@@ -66,6 +66,8 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
     private AttendanceDailyReportService attendanceDailyReportService;
     @Autowired
     private AttendanceCourseReportService attendanceCourseReportService;
+    @Autowired
+    private SemesterService semesterService;
 
 
     /**
@@ -113,7 +115,15 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             throw new BusinessException("无效的id");
         }
 
-        //检查是否在上课时间内（根据节次判断）
+        //检查是否在上课时间内（根据节次和日期判断）
+        //查询是否在日期范围内
+        String semesterName = course.getSemesterName();
+        Semester semester = semesterService.lambdaQuery().eq(Semester::getSemesterName, semesterName).one();
+        List<LocalDate> dateList = ClassTimeUtil.getCourseDateRange(semester,course.getWeekRange());
+        if(!(dateList.get(0).isBefore(LocalDate.now())&&LocalDate.now().isBefore(dateList.get(dateList.size()-1)))){
+            log.error("不在该课程的日期范围内："+dateList);
+            throw new BusinessException("不在该课程的日期范围内");
+        }
         LocalDateTime now = LocalDateTime.now();
         String weekday = ClassTimeUtil.convertDayOfWeekToChinese(now.getDayOfWeek());
         if (!weekday.equals(course.getWeekday())) {
