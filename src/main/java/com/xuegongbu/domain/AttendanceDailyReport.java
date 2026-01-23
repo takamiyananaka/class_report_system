@@ -23,7 +23,7 @@ public class AttendanceDailyReport implements Serializable {
     /**
      * 主键ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "主键ID")
     private Long id;
 

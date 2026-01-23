@@ -219,9 +219,18 @@ public class ClassTimeUtil {
     public static List<LocalDate> getCourseDateRange(Semester semester, String weekRange) {
         //日期列表存放课程起始日期和结束日期
         List<LocalDate> dateList = new ArrayList<>();
-        String[] weekRangeArr = weekRange.split("-");
-        int startWeek = Integer.parseInt(weekRangeArr[0]);
-        int endWeek = Integer.parseInt(weekRangeArr[1]);
+        
+        // 处理可能带有“周”字的周数范围，如“3-16周”，“3-16周(全周)”等
+        String cleanedWeekRange = weekRange.replaceAll("周.*$", "");
+        String[] weekRangeArr = cleanedWeekRange.split("-");
+        
+        // 提取开始周数，去除所有非数字字符
+        String startWeekStr = weekRangeArr[0].trim().replaceAll("[^0-9]", "");
+        // 提取结束周数，去除所有非数字字符
+        String endWeekStr = weekRangeArr[1].trim().replaceAll("[^0-9]", "");
+        
+        int startWeek = Integer.parseInt(startWeekStr);
+        int endWeek = Integer.parseInt(endWeekStr);
 
         LocalDate startDate = semester.getStartDate().plusWeeks(startWeek - 1);
         LocalDate endDate = semester.getStartDate().plusWeeks(endWeek - 1);
