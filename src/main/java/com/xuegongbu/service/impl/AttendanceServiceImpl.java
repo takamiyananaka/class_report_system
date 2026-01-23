@@ -318,7 +318,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 return new Page<>();
             }
         }
-        if (queryDTO.getCourseTeachers()!=null&&!queryDTO.getCourseTeachers().isEmpty()){
+        if (queryDTO.getTeacherNames()!=null&&!queryDTO.getTeacherNames().isEmpty()){
             List<String> teacherNames = queryDTO.getCourseTeachers();
             LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
             int flag = 0 ;
