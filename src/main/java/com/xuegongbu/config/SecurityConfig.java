@@ -70,6 +70,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
         // 从配置文件读取允许的域名
         config.addAllowedOrigin("http://117.72.173.242:3006");
+        config.addAllowedOrigin("http://localhost:3006");
       /*  for (String origin : origins) {
             if (origin.contains("*")) {
                 config.addAllowedOriginPattern(origin);
