@@ -216,4 +216,34 @@ public class MailServiceImpl implements MailService {
         
         return content.toString();
     }
+    
+    @Override
+    @Async
+    @Retryable(value = {MessagingException.class}, maxAttempts = 3, backoff = @Backoff(delay = 2000, multiplier = 2))
+    public void sendVerificationCode(String email, String verificationCode) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            
+            // 设置邮件内容
+            helper.setFrom(fromEmail);
+            helper.setTo(email);
+            helper.setSubject("密码重置验证码");
+            
+            String content = "<html><body>" +
+                    "<h2>密码重置验证码</h2>" +
+                    "<p>您的验证码为：<strong style=\"font-size: 24px; color: #007bff;\">" + verificationCode + "</strong></p>" +
+                    "<p>此验证码将在5分钟后失效，请尽快使用。</p>" +
+                    "<p>如果不是您本人操作，请忽略此邮件。</p>" +
+                    "</body></html>";
+            
+            helper.setText(content, true);
+            
+            mailSender.send(mimeMessage);
+            log.info("成功发送验证码邮件，邮箱: {}", email);
+        } catch (Exception e) {
+            log.error("发送验证码邮件失败: {}", e.getMessage(), e);
+            throw new RuntimeException("发送验证码邮件失败: " + e.getMessage());
+        }
+    }
 }

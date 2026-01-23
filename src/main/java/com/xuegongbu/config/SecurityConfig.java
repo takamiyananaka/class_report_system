@@ -112,7 +112,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         "/webjars/**",
                         "/favicon.ico",
                         "/auth/login",
-                        "/auth/logout",
+                        "/auth/forgot-password/**",
                         // 模板下载接口
                         "/courseSchedule/downloadTemplate",
                         "/class/downloadTemplate",

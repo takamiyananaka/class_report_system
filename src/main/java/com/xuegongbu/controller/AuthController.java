@@ -2,6 +2,8 @@ package com.xuegongbu.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.xuegongbu.common.Result;
+import com.xuegongbu.common.exception.BusinessException;
+import com.xuegongbu.dto.ForgotPasswordRequest;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
 import com.xuegongbu.service.AuthService;
@@ -87,5 +89,41 @@ public class AuthController {
         log.info("获取当前用户信息");
         Object userInfo = StpUtil.getSession().get("userInfo");
         return Result.success(userInfo);
+    }
+    
+    /**
+     * 发送忘记密码验证码
+     */
+    @PostMapping("/forgot-password/send-code")
+    @Operation(summary = "发送忘记密码验证码", description = "通过邮箱发送验证码用于密码重置")
+    public Result<String> sendForgotPasswordCode(@RequestBody @Valid ForgotPasswordRequest request) {
+        log.info("发送忘记密码验证码请求: {}", request.getEmail());
+        try {
+            String result = authService.sendForgotPasswordCode(request.getEmail());
+            return Result.success(result);
+        } catch (BusinessException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("发送忘记密码验证码失败", e);
+            return Result.error("发送验证码失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 重置密码
+     */
+    @PostMapping("/forgot-password/reset")
+    @Operation(summary = "重置密码", description = "通过邮箱和验证码重置密码")
+    public Result<String> resetPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        log.info("重置密码请求: {}", request.getEmail());
+        try {
+            String result = authService.resetPassword(request.getEmail(), request.getVerificationCode(), request.getNewPassword());
+            return Result.success(result);
+        } catch (BusinessException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("重置密码失败", e);
+            return Result.error("重置密码失败: " + e.getMessage());
+        }
     }
 }
