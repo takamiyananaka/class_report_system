@@ -441,7 +441,11 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
 
 
     private List<AttendanceVO> convertToVO(List<Attendance> attendanceList) {
+        if(attendanceList.isEmpty()){
+            return Collections.emptyList();
+        }
         List<AttendanceVO> voList = new ArrayList<>(attendanceList.size());
+
         for (Attendance attendance : attendanceList) {
             AttendanceVO vo = new AttendanceVO();
             vo.setId(attendance.getId());
