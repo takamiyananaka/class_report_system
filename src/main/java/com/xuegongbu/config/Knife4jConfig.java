@@ -151,7 +151,9 @@ public class Knife4jConfig {
                 openApi.getPaths().forEach((path, pathItem) -> {
                     // 排除不需要认证的接口
                     boolean isPublicEndpoint = path.equals("/front/login") 
-                        || path.equals("/admin/login")
+                        || path.equals("/auth/login")
+                        || path.equals("/auth/logout")
+                        || path.equals("/auth/forgot-password/**")
                         || path.equals("/courseSchedule/downloadTemplate")
                         || path.startsWith("/doc.html")
                         || path.startsWith("/v3/api-docs")
