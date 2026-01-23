@@ -464,11 +464,16 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 .collect(Collectors.toList());
 
         // 批量查询课程信息
-        LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        courseLambdaQueryWrapper.in(Course::getCourseId, courseIds);
-        List<Course> courses = courseMapper.selectList(courseLambdaQueryWrapper);
-        Map<String, List<Course>> courseMap = courses.stream()
-                .collect(Collectors.groupingBy(Course::getCourseId));
+        Map<String, List<Course>> courseMap;
+        if (!courseIds.isEmpty()) {
+            LambdaQueryWrapper<Course> courseLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            courseLambdaQueryWrapper.in(Course::getCourseId, courseIds);
+            List<Course> courses = courseMapper.selectList(courseLambdaQueryWrapper);
+            courseMap = courses.stream()
+                    .collect(Collectors.groupingBy(Course::getCourseId));
+        } else {
+            courseMap = new HashMap<>();
+        }
 
         // 批量查询课程安排信息
         List<CourseSchedule> courseSchedules = courseScheduleService.listByIds(courseIds);
@@ -850,10 +855,13 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                     .collect(Collectors.toSet());
                 
                 // 批量查询课程安排信息
-                List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(
-                    new LambdaQueryWrapper<CourseSchedule>()
-                        .in(CourseSchedule::getId, courseIds)
-                );
+                List<CourseSchedule> courseSchedules = new ArrayList<>();
+                if (!courseIds.isEmpty()) {
+                    courseSchedules = courseScheduleMapper.selectList(
+                        new LambdaQueryWrapper<CourseSchedule>()
+                            .in(CourseSchedule::getId, courseIds)
+                    );
+                }
                 
                 // 将课程安排信息放入Map中便于快速查找
                 Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
@@ -928,10 +936,13 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                     .collect(Collectors.toSet());
                 
                 // 批量查询课程安排信息
-                List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(
-                    new LambdaQueryWrapper<CourseSchedule>()
-                        .in(CourseSchedule::getId, courseIds)
-                );
+                List<CourseSchedule> courseSchedules = new ArrayList<>();
+                if (!courseIds.isEmpty()) {
+                    courseSchedules = courseScheduleMapper.selectList(
+                        new LambdaQueryWrapper<CourseSchedule>()
+                            .in(CourseSchedule::getId, courseIds)
+                    );
+                }
                 
                 // 将课程安排信息放入Map中便于快速查找
                 Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
@@ -1025,10 +1036,13 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                     .collect(Collectors.toSet());
                 
                 // 批量查询课程安排信息
-                List<CourseSchedule> courseSchedules = courseScheduleMapper.selectList(
-                    new LambdaQueryWrapper<CourseSchedule>()
-                        .in(CourseSchedule::getId, courseIds)
-                );
+                List<CourseSchedule> courseSchedules = new ArrayList<>();
+                if (!courseIds.isEmpty()) {
+                    courseSchedules = courseScheduleMapper.selectList(
+                        new LambdaQueryWrapper<CourseSchedule>()
+                            .in(CourseSchedule::getId, courseIds)
+                    );
+                }
                 
                 // 将课程安排信息放入Map中便于快速查找
                 Map<String, CourseSchedule> courseScheduleMap = courseSchedules.stream()
@@ -1051,10 +1065,13 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 
                 // 批量查询班级信息
                 Set<String> classIds = groupedByClass.keySet();
-                List<Class> classList = classMapper.selectList(
-                    new LambdaQueryWrapper<Class>()
-                        .in(Class::getId, classIds)
-                );
+                List<Class> classList = new ArrayList<>();
+                if (!classIds.isEmpty()) {
+                    classList = classMapper.selectList(
+                        new LambdaQueryWrapper<Class>()
+                            .in(Class::getId, classIds)
+                    );
+                }
                 
                 // 将班级信息放入Map中便于快速查找
                 Map<String, Class> classMap = classList.stream()
