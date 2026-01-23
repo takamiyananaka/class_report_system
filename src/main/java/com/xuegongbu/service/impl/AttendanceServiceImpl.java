@@ -423,8 +423,8 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         }
 
         if (queryDTO.getStartDate() != null && queryDTO.getEndDate() != null){
-            attendanceLambdaQueryWrapper.ge(Attendance::getCheckTime, queryDTO.getStartDate().atStartOfDay())
-                    .le(Attendance::getCheckTime, queryDTO.getEndDate().plusDays(1).atStartOfDay());
+            attendanceLambdaQueryWrapper.le(Attendance::getCheckTime, queryDTO.getStartDate().atStartOfDay())
+                    .ge(Attendance::getCheckTime, queryDTO.getEndDate().plusDays(1).atStartOfDay());
         }
 
         Page<Attendance>  page = this.page(new Page<>(pageNum, pageSize), attendanceLambdaQueryWrapper);
