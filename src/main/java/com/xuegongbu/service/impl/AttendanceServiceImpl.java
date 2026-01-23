@@ -319,7 +319,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             }
         }
         if (queryDTO.getTeacherNames()!=null&&!queryDTO.getTeacherNames().isEmpty()){
-            List<String> teacherNames = queryDTO.getCourseTeachers();
+            List<String> teacherNames = queryDTO.getTeacherNames();
             LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
             int flag = 0 ;
             for (String teacherName : teacherNames) {
