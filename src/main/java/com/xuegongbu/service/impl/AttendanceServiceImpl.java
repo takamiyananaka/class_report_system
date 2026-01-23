@@ -135,7 +135,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 .eq(Attendance::getCheckTime, checkTime);
         Attendance exixtingAttendance = getOne(queryWrapper);
         if (exixtingAttendance != null) {
-            log.error("当前分种内当前课程考勤记录已存在："+exixtingAttendance.getId());
+            log.error("当前分钟内当前课程考勤记录已存在："+exixtingAttendance.getId());
             return exixtingAttendance;
         }
 

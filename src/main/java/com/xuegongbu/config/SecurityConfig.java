@@ -69,11 +69,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         CorsConfiguration config = new CorsConfiguration();
 
         // 从配置文件读取允许的域名
-        List<String> origins = corsProperties.getOrigins();
-        for (String origin : origins) {
-            // 全部使用 allowedOriginPattern，它支持通配符且兼容 allowCredentials
-            config.addAllowedOriginPattern(origin);
-        }
+        config.addAllowedOrigin("http://117.72.173.242:3006");
       /*  for (String origin : origins) {
             if (origin.contains("*")) {
                 config.addAllowedOriginPattern(origin);
