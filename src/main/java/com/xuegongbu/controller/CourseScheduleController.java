@@ -260,10 +260,10 @@ public class CourseScheduleController {
     @GetMapping("/get/{id}")
     @Operation(summary = "根据ID查询课表详情", description = "根据课表ID查询课表详情")
     @SaCheckRole("teacher")
-    public Result<CourseSchedule> getCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id) {
+    public Result<CourseScheduleVO> getCourseScheduleById(@Parameter(description = "课表ID") @PathVariable String id) {
         log.info("根据ID查询课表详情，课表ID：{}", id);
         
-        CourseSchedule courseSchedule = courseScheduleService.getById(id);
+        CourseScheduleVO courseSchedule = courseScheduleService.getCourseScheduleById(id);
         if (courseSchedule == null) {
             return Result.error("课表不存在");
         }

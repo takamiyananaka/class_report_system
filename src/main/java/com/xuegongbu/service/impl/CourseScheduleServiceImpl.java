@@ -802,4 +802,10 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         int failCount = classList.size() - successCount;
         log.info("成功删除%d个班级，失败%d个", successCount, failCount);
     }
+
+    @Override
+    public CourseScheduleVO getCourseScheduleById(String id) {
+        CourseSchedule courseSchedule = this.getById(id);
+        return convertToVO(courseSchedule);
+    }
 }
