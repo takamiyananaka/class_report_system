@@ -47,6 +47,7 @@ public class CourseSchedule implements Serializable {
     @NotBlank(message="[课程名称]不能为空")
     @Size(max= 100,message="编码长度不能超过100")
     @Schema(description = "课程名称")
+
     private String courseName;
 
     /**

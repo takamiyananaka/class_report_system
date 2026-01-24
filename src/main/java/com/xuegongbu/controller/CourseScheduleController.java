@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -147,15 +148,19 @@ public class CourseScheduleController {
     @PostMapping("/add")
     @Operation(summary = "创建课表", description = "教师创建新课表，ID自动生成")
     @SaCheckRole("admin")
-    public Result<CourseSchedule> addCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息和班级ID列表") @RequestBody CourseScheduleWithClassIdsDTO dto) {
+    public Result<CourseSchedule> addCourseSchedule(@Valid @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息和班级ID列表") @RequestBody CourseScheduleWithClassIdsDTO dto) {
         log.info("创建课表，课表信息：{}，班级ID列表：{}", dto.getCourseSchedule(), dto.getClassIds());
 
         try {
             CourseSchedule courseSchedule = dto.getCourseSchedule();
             CourseSchedule result = courseScheduleService.addCourseSchedule(courseSchedule);
             log.info("创建课表完成，课表ID：{}", result.getId());
-            courseScheduleService.addClassByIds(dto.getClassIds(), result.getId());
-            log.info("为课程添加班级完成");
+            if(dto.getClassIds() != null&& !dto.getClassIds().isEmpty()){
+                courseScheduleService.addClassByIds(dto.getClassIds(), result.getId());
+                log.info("为课程添加班级完成");
+            }else {
+                log.info("没有班级需要添加");
+            }
             return Result.success(result);
         } catch (IllegalArgumentException e) {
             return Result.error(e.getMessage());

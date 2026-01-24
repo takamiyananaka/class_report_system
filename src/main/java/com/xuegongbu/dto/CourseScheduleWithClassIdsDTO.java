@@ -2,6 +2,7 @@ package com.xuegongbu.dto;
 
 import com.xuegongbu.domain.CourseSchedule;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
@@ -17,5 +18,6 @@ public class CourseScheduleWithClassIdsDTO {
     private CourseSchedule courseSchedule;
 
     @Schema(description = "班级ID列表")
+    @NotNull(message = "班级ID列表不能为空")
     private List<String> classIds;
 }

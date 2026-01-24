@@ -17,6 +17,7 @@ import com.xuegongbu.service.ClassService;
 import com.xuegongbu.service.CollegeService;
 import com.xuegongbu.service.CourseService;
 import com.xuegongbu.vo.AttendanceChartVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  * 班级每日考勤报表 Service 实现类
  */
 @Service
+@Slf4j
 public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDailyReportMapper, AttendanceDailyReport> implements AttendanceDailyReportService {
     private final CourseService courseService;
     
@@ -75,6 +77,7 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
                 attendanceDailyReport.setAverageAttendanceRate(attendance.getAttendanceRate());
                 attendanceDailyReport.setSemesterName(course.getSemesterName()); // 设置学期名称
                 this.save(attendanceDailyReport);
+                log.info("新增班级每日考勤报表：{}", attendanceDailyReport);
             }else {
                 attendanceDailyReport.setAttendanceRecordCount(attendanceDailyReport.getAttendanceRecordCount() + 1);
                 attendanceDailyReport.setTotalExpectedCount(attendanceDailyReport.getTotalExpectedCount() + course.getExpectedCount());
@@ -89,6 +92,8 @@ public class AttendanceDailyReportServiceImpl extends ServiceImpl<AttendanceDail
                     attendanceDailyReport.setAverageAttendanceRate(BigDecimal.ZERO);
                 }
                 attendanceDailyReport.setSemesterName(course.getSemesterName()); // 更新学期名称
+                this.update(attendanceDailyReport, attendanceDailyReportLambdaQueryWrapper);
+                log.info("更新班级每日考勤报表：{}", attendanceDailyReport);
             }
         }
     }
