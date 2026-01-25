@@ -418,8 +418,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         vo.setUpdateTime(courseSchedule.getUpdateTime());
         
         // 查询并设置关联的班级信息
-        List<String> classNames = getClassNamesByCourseId(courseSchedule.getId());
-        vo.setClassNames(classNames);
+        List<Class> classes = getClassNamesByCourseId(courseSchedule.getId());
+        vo.setClasses( classes);
         //设置是否在上课时间
         vo.setInClassTime(isInClassTime(courseSchedule));
         return vo;
@@ -444,7 +444,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     /**
      * 根据课程ID获取关联的班级名称列表
      */
-    private List<String> getClassNamesByCourseId(String courseId) {
+    private List<Class> getClassNamesByCourseId(String courseId) {
         LambdaQueryWrapper<Course> courseQueryWrapper = new LambdaQueryWrapper<>();
         courseQueryWrapper.eq(Course::getCourseId, courseId);
         
@@ -457,9 +457,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             LambdaQueryWrapper<Class> classQueryWrapper = new LambdaQueryWrapper<>();
             classQueryWrapper.in(Class::getId, classIds);
             List<Class> classList = classService.list(classQueryWrapper);
-            return classList.stream()
-                    .map(Class::getClassName)
-                    .collect(Collectors.toList());
+            return classList;
         }
         
         return new ArrayList<>();
