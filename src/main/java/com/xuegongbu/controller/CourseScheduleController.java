@@ -177,7 +177,8 @@ public class CourseScheduleController {
     @PutMapping("/update")
     @Operation(summary = "更新课表", description = "教师更新课表信息，通过课程名称定位，只能更新自己的课表")
     @SaCheckRole("admin")
-    public Result<String> updateCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseSchedule courseSchedule) {
+    public Result<String> updateCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseScheduleWithClassIdsDTO courseScheduleDTO) {
+        CourseSchedule courseSchedule = courseScheduleDTO.getCourseSchedule();
         log.info("更新课表，课程名称：{}，课表信息：{}", 
                 courseSchedule.getCourseName(), courseSchedule);
         
@@ -197,8 +198,16 @@ public class CourseScheduleController {
         
         // 设置ID以便更新
         courseSchedule.setId(existing.getId());
-        
+
         courseScheduleService.updateById(courseSchedule);
+
+        //更新班级信息
+        if(courseScheduleDTO.getClassIds() != null&& !courseScheduleDTO.getClassIds().isEmpty()){
+            // 删除原来的班级信息
+            courseScheduleService.deleteClassByIds(courseScheduleDTO.getClassIds(), existing.getId());
+            courseScheduleService.addClassByIds(courseScheduleDTO.getClassIds(), existing.getId());
+            log.info("更新班级信息完成");
+        }
         log.info("更新课表完成");
         return Result.success("更新成功");
     }
