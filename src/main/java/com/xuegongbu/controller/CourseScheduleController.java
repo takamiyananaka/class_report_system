@@ -178,39 +178,7 @@ public class CourseScheduleController {
     @Operation(summary = "更新课表", description = "教师更新课表信息，通过课程名称定位，只能更新自己的课表")
     @SaCheckRole("admin")
     public Result<String> updateCourseSchedule(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "课表信息") @RequestBody CourseScheduleWithClassIdsDTO courseScheduleDTO) {
-        CourseSchedule courseSchedule = courseScheduleDTO.getCourseSchedule();
-        log.info("更新课表，课程名称：{}，课表信息：{}", 
-                courseSchedule.getCourseName(), courseSchedule);
-        
-        if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
-            return Result.error("课程名称不能为空");
-        }
-
-        // 根据课程名称查询课表（班级信息现在通过关联表获取）
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper = 
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim());
-        
-        CourseSchedule existing = courseScheduleService.getOne(queryWrapper);
-        if (existing == null) {
-            return Result.error("课表不存在或无权限修改");
-        }
-        
-        // 设置ID以便更新
-        courseSchedule.setId(existing.getId());
-
-        courseScheduleService.updateById(courseSchedule);
-
-        //更新班级信息
-        if(courseScheduleDTO.getClassIds() != null&& !courseScheduleDTO.getClassIds().isEmpty()){
-            // 删除原来的班级信息
-            List<String> classIds = courseScheduleService.queryClassIdsByCourseId(existing.getId());
-            courseScheduleService.deleteClassByIds(courseScheduleDTO.getClassIds(), existing.getId());
-            courseScheduleService.addClassByIds(courseScheduleDTO.getClassIds(), existing.getId());
-            log.info("更新班级信息完成");
-        }
-        log.info("更新课表完成");
-        return Result.success("更新成功");
+        return courseScheduleService.updateCourseSchedule(courseScheduleDTO);
     }
 
     /**

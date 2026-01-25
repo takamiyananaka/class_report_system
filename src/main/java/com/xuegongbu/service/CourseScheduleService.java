@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.CourseSchedule;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.dto.CourseScheduleWithClassIdsDTO;
 import com.xuegongbu.vo.CourseScheduleVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,5 +53,6 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
 
     CourseScheduleVO getCourseScheduleById(String id);
 
-    List<String> queryClassIdsByCourseId(String id);
+
+    Result<String> updateCourseSchedule(CourseScheduleWithClassIdsDTO courseScheduleDTO);
 }

@@ -11,6 +11,7 @@ import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
 import com.xuegongbu.dto.CourseScheduleExcelDTO;
 import com.xuegongbu.dto.CourseScheduleQueryDTO;
+import com.xuegongbu.dto.CourseScheduleWithClassIdsDTO;
 import com.xuegongbu.vo.CourseScheduleVO;
 import com.xuegongbu.mapper.ClassMapper;
 import com.xuegongbu.mapper.CourseScheduleMapper;
@@ -817,5 +818,42 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     public CourseScheduleVO getCourseScheduleById(String id) {
         CourseSchedule courseSchedule = this.getById(id);
         return convertToVO(courseSchedule);
+    }
+
+    @Override
+    public Result<String> updateCourseSchedule(CourseScheduleWithClassIdsDTO courseScheduleDTO) {
+        CourseSchedule courseSchedule = courseScheduleDTO.getCourseSchedule();
+        log.info("更新课表，课程名称：{}，课表信息：{}",
+                courseSchedule.getCourseName(), courseSchedule);
+
+        if (courseSchedule.getCourseName() == null || courseSchedule.getCourseName().trim().isEmpty()) {
+            return Result.error("课程名称不能为空");
+        }
+
+        // 根据课程名称查询课表（班级信息现在通过关联表获取）
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim());
+
+        CourseSchedule existing =this.getOne(queryWrapper);
+        if (existing == null) {
+            return Result.error("课表不存在或无权限修改");
+        }
+
+        // 设置ID以便更新
+        courseSchedule.setId(existing.getId());
+
+       this.updateById(courseSchedule);
+
+        //更新班级信息
+        if(courseScheduleDTO.getClassIds() != null&& !courseScheduleDTO.getClassIds().isEmpty()){
+            // 删除原来的班级信息
+            List<String> classIds = this.getClassIdsByCourseId(existing.getId());
+            deleteClassByIds(classIds, existing.getId());
+            addClassByIds(courseScheduleDTO.getClassIds(), existing.getId());
+            log.info("更新班级信息完成");
+        }
+        log.info("更新课表完成");
+        return Result.success("更新成功");
     }
 }
