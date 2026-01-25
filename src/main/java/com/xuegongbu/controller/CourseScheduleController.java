@@ -204,6 +204,7 @@ public class CourseScheduleController {
         //更新班级信息
         if(courseScheduleDTO.getClassIds() != null&& !courseScheduleDTO.getClassIds().isEmpty()){
             // 删除原来的班级信息
+            List<String> classIds = courseScheduleService.queryClassIdsByCourseId(existing.getId());
             courseScheduleService.deleteClassByIds(courseScheduleDTO.getClassIds(), existing.getId());
             courseScheduleService.addClassByIds(courseScheduleDTO.getClassIds(), existing.getId());
             log.info("更新班级信息完成");

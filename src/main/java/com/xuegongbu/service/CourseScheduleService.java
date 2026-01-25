@@ -51,4 +51,6 @@ public interface CourseScheduleService extends IService<CourseSchedule> {
     void deleteClassByIds(List<String> classIds, String id);
 
     CourseScheduleVO getCourseScheduleById(String id);
+
+    List<String> queryClassIdsByCourseId(String id);
 }

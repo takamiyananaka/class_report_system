@@ -463,6 +463,16 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         
         return new ArrayList<>();
     }
+
+    private List<String> getClassIdsByCourseId(String courseId){
+        LambdaQueryWrapper<Course> courseQueryWrapper = new LambdaQueryWrapper<>();
+        courseQueryWrapper.eq(Course::getCourseId, courseId);
+        List<Course> courseList = courseService.list(courseQueryWrapper);
+        List<String> classIds = courseList.stream()
+                .map(Course::getClassId)
+                .collect(Collectors.toList());
+        return classIds;
+    }
     
     @Override
     public Page<CourseScheduleVO> queryPage(CourseScheduleQueryDTO queryDTO) {
