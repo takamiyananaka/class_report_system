@@ -62,14 +62,17 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
             QueryWrapper<Class> classQueryWrapper = new QueryWrapper<>();
             classQueryWrapper.eq("teacher_no", teacherNo);
             List<Class> classes = classMapper.selectList(classQueryWrapper);
+            classIds = classes.stream()
+                    .map(Class::getId)
+                    .collect(Collectors.toList());
         }
         
         if (classIds.isEmpty()) {
-            // 如果没有课程，返回空分页结果
+            // 如果没有班级，返回空分页结果
             return page;
         }
         
-        // 根据课程ID列表查询预警记录
+        // 根据班级ID列表查询预警记录
         QueryWrapper<Alert> alertQueryWrapper = new QueryWrapper<>();
         alertQueryWrapper.in("class_id", classIds);
         
