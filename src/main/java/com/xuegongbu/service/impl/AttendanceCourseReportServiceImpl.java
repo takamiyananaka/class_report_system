@@ -66,7 +66,7 @@ public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCou
     }
 
     @Override
-    public List<AttendanceCourseReport> getReportsByOrderNoAndType(List<String> orderNo, int periodType) {
+    public List<AttendanceCourseReport> getReportsByOrderNoAndType(List<String> orderNo, int periodType,String semesterName) {
         LambdaQueryWrapper<AttendanceCourseReport> queryWrapper = new LambdaQueryWrapper<>();
 
         // 根据课序号过滤
@@ -87,6 +87,9 @@ public class AttendanceCourseReportServiceImpl extends ServiceImpl<AttendanceCou
             case 3: // 按月：往前推29天，总共30天
                 startDate = endDate.minusDays(29);
                 queryWrapper.between(AttendanceCourseReport::getReportDate, startDate, endDate);
+                break;
+            case 4://按学期
+                queryWrapper.eq(AttendanceCourseReport::getSemesterName,semesterName);
                 break;
             default:
                 // 如果没有指定查询类型，默认查询当天

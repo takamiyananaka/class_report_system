@@ -668,7 +668,12 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         List<String> courseOrderNos = courseSchedules.stream()
                 .map(CourseSchedule::getOrderNo)
                 .collect(Collectors.toList());
-        List<AttendanceCourseReport> attendanceCourseReportList = attendanceCourseReportService.getReportsByOrderNoAndType(courseOrderNos,queryDTO.getGranularity());
+        List<AttendanceCourseReport> attendanceCourseReportList = List.of();
+        if(queryDTO.getGranularity()==4&&queryDTO.getSemesterName()!= null){
+            attendanceCourseReportList = attendanceCourseReportService.getReportsByOrderNoAndType(courseOrderNos, queryDTO.getGranularity(), queryDTO.getSemesterName());
+        }else {
+            attendanceCourseReportList= attendanceCourseReportService.getReportsByOrderNoAndType(courseOrderNos, queryDTO.getGranularity(), null);
+        }
         // 将同一天的数据整合到一个点
         Map<LocalDate, List<AttendanceCourseReport>> groupedByDate = attendanceCourseReportList.stream()
                 .collect(Collectors.groupingBy(AttendanceCourseReport::getReportDate));
