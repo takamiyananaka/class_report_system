@@ -12,12 +12,11 @@ import java.util.Map;
 public interface ClassService extends IService<Class> {
     
     /**
-     * 从Excel文件导入班级数据
-     * @param file Excel文件
-     * @param teacherNo 辅导员工号（从前端传入）
+     * 从 Excel 文件导入班级数据
+     * @param file Excel 文件
      * @return 导入结果
      */
-    Map<String, Object> importFromExcel(MultipartFile file, String teacherNo);
+    Map<String, Object> importFromExcel(MultipartFile file);
     
     /**
      * 添加单个班级

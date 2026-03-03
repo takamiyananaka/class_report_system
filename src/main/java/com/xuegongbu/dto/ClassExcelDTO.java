@@ -34,4 +34,10 @@ public class ClassExcelDTO implements Serializable {
      */
     @ExcelProperty(index = 3, value = "专业")
     private String major;
+
+    /**
+     * 辅导员工号
+     */
+    @ExcelProperty(index = 4, value = "辅导员工号")
+    private String teacherNo;
 }

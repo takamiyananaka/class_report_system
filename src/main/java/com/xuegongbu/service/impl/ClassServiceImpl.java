@@ -71,18 +71,14 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> importFromExcel(MultipartFile file, String teacherNo) {
+    public Map<String, Object> importFromExcel(MultipartFile file) {
         Map<String, Object> result = new HashMap<>();
         
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件不能为空");
         }
-        
-        if (teacherNo == null || teacherNo.trim().isEmpty()) {
-            throw new IllegalArgumentException("辅导员工号不能为空");
-        }
-        
-        // 检查文件扩展名和Content-Type
+                
+        // 检查文件扩展名和 Content-Type
         String originalFilename = file.getOriginalFilename();
         String contentType = file.getContentType();
         
@@ -121,22 +117,27 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                     
                     // 验证必填字段是否完整
                     if (isBlank(dto.getClassName())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据：班级名称不能为空", rowNum));
                         failCount++;
                         continue;
                     }
                     if (dto.getCount() == null || dto.getCount() <= 0) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据：班级人数必须大于 0", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getGrade())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据：年级不能为空", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getMajor())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据：专业不能为空", rowNum));
+                        failCount++;
+                        continue;
+                    }
+                    if (isBlank(dto.getTeacherNo())) {
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据：辅导员工号不能为空", rowNum));
                         failCount++;
                         continue;
                     }
@@ -148,8 +149,8 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                     classEntity.setGrade(dto.getGrade().trim());
                     classEntity.setMajor(dto.getMajor().trim());
                     
-                    // 使用统一的addClass方法
-                    addClass(classEntity, teacherNo);
+                    // 使用统一的 addClass 方法
+                    addClass(classEntity, dto.getTeacherNo().trim());
                     successCount++;
                     
                 } catch (Exception e) {
@@ -302,6 +303,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             example.setCount(45);
             example.setGrade("2025级");
             example.setMajor("计算机科学与技术");
+            example.setTeacherNo("T001");
             templateData.add(example);
             
             // 写入Excel

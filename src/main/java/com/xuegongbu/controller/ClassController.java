@@ -35,26 +35,24 @@ public class ClassController {
     private TeacherService teacherService;
 
     /**
-     * Excel导入班级
+     * Excel 导入班级
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Excel导入班级", description = "通过上传Excel文件批量导入班级数据。辅导员工号从前端传入。Excel格式要求：第一行为表头，列顺序为：班级名称、班级人数、年级、专业")
+    @Operation(summary = "Excel 导入班级", description = "通过上传 Excel 文件批量导入班级数据。辅导员工号作为 Excel 文件的一列。Excel 格式要求：第一行为表头，列顺序为：班级名称、班级人数、年级、专业、辅导员工号")
     @SaCheckRole("admin")
     public Result<Map<String, Object>> importFromExcel(
-            @Parameter(description = "Excel文件", required = true, 
+            @Parameter(description = "Excel 文件", required = true, 
                       content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
-            @RequestPart("file") MultipartFile file,
-            @Parameter(description = "辅导员工号", required = true)
-            @RequestParam("teacherNo") String teacherNo) {
+            @RequestPart("file") MultipartFile file) {
         try {
-            log.info("开始导入班级，文件名：{}，教师工号：{}", file.getOriginalFilename(), teacherNo);
-            
-            Map<String, Object> result = classService.importFromExcel(file, teacherNo);
+            log.info("开始导入班级，文件名：{}", file.getOriginalFilename());
+                
+            Map<String, Object> result = classService.importFromExcel(file);
             log.info("班级导入完成：{}", result.get("message"));
             return Result.success(result);
         } catch (Exception e) {
             log.error("班级导入失败", e);
-            return Result.error("导入失败: " + e.getMessage());
+            return Result.error("导入失败：" + e.getMessage());
         }
     }
 
