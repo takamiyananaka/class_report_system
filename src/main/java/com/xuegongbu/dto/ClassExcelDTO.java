@@ -14,30 +14,30 @@ public class ClassExcelDTO implements Serializable {
     /**
      * 班级名字
      */
-    @ExcelProperty(index = 0, value = "班级名称")
+    @ExcelProperty(value = "班级名称")
     private String className;
 
     /**
      * 班级人数
      */
-    @ExcelProperty(index = 1, value = "班级人数")
+    @ExcelProperty(value = "总人数")
     private Integer count;
 
     /**
      * 年级
      */
-    @ExcelProperty(index = 2, value = "年级")
+    @ExcelProperty(value = "年级")
     private String grade;
 
     /**
      * 专业
      */
-    @ExcelProperty(index = 3, value = "专业")
+    @ExcelProperty(value = "专业")
     private String major;
 
     /**
      * 辅导员工号
      */
-    @ExcelProperty(index = 4, value = "辅导员工号")
+    @ExcelProperty(value = "辅导员工号")
     private String teacherNo;
 }

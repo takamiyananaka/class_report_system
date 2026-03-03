@@ -12,15 +12,15 @@ import lombok.Data;
 @ColumnWidth(25)
 public class TeacherExcelDTO {
 
-    @ExcelProperty(value = "工号", index = 0)
+    @ExcelProperty(value = "辅导员工号")
     @NotBlank(message = "工号不能为空")
     private String teacherNo;
 
-    @ExcelProperty(value = "真实姓名", index = 1)
+    @ExcelProperty(value = "辅导员姓名")
     @NotBlank(message = "真实姓名不能为空")
     private String realName;
 
-    @ExcelProperty(value = "学院名", index = 2)
+    @ExcelProperty(value = "院系")
     @NotBlank(message = "学院名不能为空")
     private String department;
 }

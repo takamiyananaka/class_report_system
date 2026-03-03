@@ -91,6 +91,9 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             throw new IllegalArgumentException("结束节次必须大于或等于开始节次");
         }
         if (courseSchedule.getClassroom() == null || courseSchedule.getClassroom().trim().isEmpty()) {
+            //教室格式检查和正确格式化
+            String classroom = courseSchedule.getClassroom().trim();
+            courseSchedule.setClassroom(formatClassroom(classroom));
             throw new IllegalArgumentException("教室不能为空");
         }
         
@@ -152,65 +155,29 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             
             // 逐行处理数据
             for (int i = 0; i < excelDataList.size(); i++) {
-                int rowNum = i + 2; // Excel行号从2开始（第1行是表头）
+                int rowNum = i + 2; // Excel 行号从 2 开始（第 1 行是表头）
                 
                 try {
                     CourseScheduleExcelDTO dto = excelDataList.get(i);
                     
                     // 验证必填字段是否完整
                     if (isBlank(dto.getCourseNo())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getCourseName())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     if (isBlank(dto.getOrderNo())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
-                    if (isBlank(dto.getWeekRange())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
-                        failCount++;
-                        continue;
-                    }
-                    if (isBlank(dto.getWeekday())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
-                        failCount++;
-                        continue;
-                    }
-                    if (!isValidWeekday(dto.getWeekday())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
-                        failCount++;
-                        continue;
-                    }
-                    
-                    // 验证并转换节次
-                    Integer startPeriod = extractNumberFromString(dto.getStartPeriod());
-                    Integer endPeriod = extractNumberFromString(dto.getEndPeriod());
-                    
-                    if (startPeriod == null || startPeriod < 1 || startPeriod > 12) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
-                        failCount++;
-                        continue;
-                    }
-                    if (endPeriod == null || endPeriod < 1 || endPeriod > 12) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
-                        failCount++;
-                        continue;
-                    }
-                    if (startPeriod > endPeriod) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
-                        failCount++;
-                        continue;
-                    }
-                    
-                    if (isBlank(dto.getClassroom())) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                    if (isBlank(dto.getSchedule())) {
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
@@ -218,30 +185,23 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     // 验证预到人数（必填）
                     Integer expectedCount = extractNumberFromString(dto.getExpectedCount());
                     if (expectedCount == null || expectedCount <= 0) {
-                        errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                        errorMessages.add(String.format("第%d行上传失败，请检查该行数据", rowNum));
                         failCount++;
                         continue;
                     }
                     
-                    // 创建课表对象
-                    CourseSchedule courseSchedule = new CourseSchedule();
-                    courseSchedule.setCourseNo(dto.getCourseNo().trim());
-                    courseSchedule.setCourseName(dto.getCourseName().trim());
-                    courseSchedule.setOrderNo(dto.getOrderNo().trim());
-                    courseSchedule.setWeekRange(dto.getWeekRange().trim());
-                    courseSchedule.setWeekday(dto.getWeekday().trim());
-                    courseSchedule.setStartPeriod(startPeriod);
-                    courseSchedule.setEndPeriod(endPeriod);
-                    courseSchedule.setClassroom(dto.getClassroom().trim());
-                    courseSchedule.setTeacherName(isBlank(dto.getTeacherName()) ? null : dto.getTeacherName().trim());
-                    courseSchedule.setCourseType(isBlank(dto.getCourseType()) ? null : dto.getCourseType().trim());
-                    // 使用上传的预到人数，不进行计算
-                    courseSchedule.setExpectedCount(expectedCount);
+                    // 解析 schedule 字符串，生成多个 CourseSchedule 对象
+                    List<CourseSchedule> courseSchedules = parseScheduleString(dto.getSchedule(), dto, rowNum, errorMessages);
                     
-
-                    // 处理新增字段：学期名
+                    if (courseSchedules.isEmpty()) {
+                        failCount++;
+                        continue;
+                    }
+                    
+                    // 处理学期名
+                    String semesterName = null;
                     if (!isBlank(dto.getSemesterName())) {
-                        String semesterName = dto.getSemesterName().trim();
+                        semesterName = dto.getSemesterName().trim();
                         LambdaQueryWrapper<Semester> semesterQueryWrapper = new LambdaQueryWrapper<>();
                         semesterQueryWrapper.eq(Semester::getSemesterName, semesterName);
                         Semester semester = semesterService.getOne(semesterQueryWrapper);
@@ -251,9 +211,6 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                             failCount++;
                             continue;
                         }
-                        courseSchedule.setSemesterName(semesterName);
-                    } else {
-                        courseSchedule.setSemesterName(null);
                     }
                     
                     // 处理班级列表
@@ -282,15 +239,24 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                         }
                     }
                     
-                    // 使用统一的addCourseSchedule方法
-                    addCourseSchedule(courseSchedule);
-                    
-                    // 保存课程与班级的关联关系
-                    for (Class classEntity : successClasses) {
-                        Course course = new Course();
-                        course.setCourseId(courseSchedule.getId());
-                        course.setClassId(classEntity.getId());
-                        courseService.save(course);
+                    // 保存所有解析出的课表对象
+                    for (CourseSchedule courseSchedule : courseSchedules) {
+                        // 设置其他公共属性
+                        courseSchedule.setTeacherName(isBlank(dto.getTeacherName()) ? null : dto.getTeacherName().trim());
+                        courseSchedule.setCourseType(isBlank(dto.getCourseType()) ? null : dto.getCourseType().trim());
+                        courseSchedule.setExpectedCount(expectedCount);
+                        courseSchedule.setSemesterName(semesterName);
+                        
+                        // 使用统一的 addCourseSchedule 方法
+                        addCourseSchedule(courseSchedule);
+                        
+                        // 保存课程与班级的关联关系
+                        for (Class classEntity : successClasses) {
+                            Course course = new Course();
+                            course.setCourseId(courseSchedule.getId());
+                            course.setClassId(classEntity.getId());
+                            courseService.save(course);
+                        }
                     }
                     
                     successCount++;
@@ -302,8 +268,8 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
                     }
                     
                 } catch (Exception e) {
-                    log.error("处理第{}行数据时出错: {}", rowNum, e.getMessage(), e);
-                    errorMessages.add(String.format("第%d行上传失败,请检查该行数据", rowNum));
+                    log.error("处理第{}行数据时出错：{}", rowNum, e.getMessage(), e);
+                    errorMessages.add(String.format("第%d行上传失败，请检查该行数据", rowNum));
                     failCount++;
                 }
             }
@@ -336,22 +302,123 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     /**
      * 从字符串中提取第一个数字
      * @param str 包含数字的字符串
-     * @return 提取的数字，如果未找到则返回null
+     * @return 提取的数字，如果未找到则返回 null
      */
     private Integer extractNumberFromString(String str) {
         if (str == null || str.isEmpty()) {
             return null;
         }
-
+    
         // 使用正则表达式查找第一个数字序列
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+");
         java.util.regex.Matcher matcher = pattern.matcher(str);
-
+    
         if (matcher.find()) {
             return Integer.valueOf(matcher.group());
         }
-        
+            
         return null;
+    }
+        
+    /**
+     * 解析 schedule 字符串，生成多个 CourseSchedule 对象
+     * schedule 格式示例："1-9 周 星期一 第 3 节 - 第 5 节 明理楼 B103,1-9 周 星期三 第 6 节 - 第 7 节 明理楼 B103"
+     * @param schedule schedule 字符串
+     * @param dto Excel DTO 对象（用于获取公共属性）
+     * @param rowNum 当前行号（用于错误提示）
+     * @param errorMessages 错误消息列表
+     * @return CourseSchedule 对象列表
+     */
+    private List<CourseSchedule> parseScheduleString(String schedule, CourseScheduleExcelDTO dto, int rowNum, List<String> errorMessages) {
+        List<CourseSchedule> result = new ArrayList<>();
+            
+        if (isBlank(schedule)) {
+            return result;
+        }
+            
+        // 按逗号分割成多个 schedule 对象
+        String[] scheduleArray = schedule.trim().split(",");
+            
+        for (String scheduleItem : scheduleArray) {
+            scheduleItem = scheduleItem.trim();
+            if (scheduleItem.isEmpty()) {
+                continue;
+            }
+                
+            // 按空格分割各个部分
+            String[] parts = scheduleItem.split("\\s+");
+                
+            if (parts.length < 4) {
+                errorMessages.add(String.format("第%d行 schedule 格式错误：%s", rowNum, scheduleItem));
+                continue;
+            }
+                
+            try {
+                CourseSchedule courseSchedule = new CourseSchedule();
+                courseSchedule.setCourseNo(dto.getCourseNo().trim());
+                courseSchedule.setCourseName(dto.getCourseName().trim());
+                courseSchedule.setOrderNo(dto.getOrderNo().trim());
+                    
+                // 解析周次范围（例如："1-9 周"）
+                String weekRange = parts[0].trim();
+                if (!weekRange.contains("周")) {
+                    errorMessages.add(String.format("第%d行周次格式错误：%s", rowNum, weekRange));
+                    continue;
+                }
+                courseSchedule.setWeekRange(weekRange);
+                    
+                // 解析星期几（例如："星期一"）
+                String weekday = parts[1].trim();
+                if (!isValidWeekday(weekday)) {
+                    errorMessages.add(String.format("第%d行星期格式错误：%s", rowNum, weekday));
+                    continue;
+                }
+                courseSchedule.setWeekday(weekday);
+                    
+                // 解析节次（例如："第 3 节 - 第 5 节"）
+                String periodStr = parts[2].trim();
+                Integer startPeriod = extractNumberFromString(periodStr.split("-")[0]);
+                Integer endPeriod = extractNumberFromString(periodStr.split("-")[1]);
+                    
+                if (startPeriod == null || startPeriod < 1 || startPeriod > 12) {
+                    errorMessages.add(String.format("第%d行开始节次错误：%s", rowNum, periodStr));
+                    continue;
+                }
+                if (endPeriod == null || endPeriod < 1 || endPeriod > 12) {
+                    errorMessages.add(String.format("第%d行结束节次错误：%s", rowNum, periodStr));
+                    continue;
+                }
+                if (startPeriod > endPeriod) {
+                    errorMessages.add(String.format("第%d行节次错误：开始节次大于结束节次", rowNum));
+                    continue;
+                }
+                courseSchedule.setStartPeriod(startPeriod);
+                courseSchedule.setEndPeriod(endPeriod);
+                    
+                // 解析教室（剩余的所有部分，因为教室名可能包含空格）
+                StringBuilder classroomBuilder = new StringBuilder();
+                for (int i = 3; i < parts.length; i++) {
+                    if (i > 3) {
+                        classroomBuilder.append(" ");
+                    }
+                    classroomBuilder.append(parts[i]);
+                }
+                String classroom = classroomBuilder.toString().trim();
+                if (isBlank(classroom)) {
+                    errorMessages.add(String.format("第%d行教室信息缺失", rowNum));
+                    continue;
+                }
+                courseSchedule.setClassroom(formatClassroom(classroom));
+                    
+                result.add(courseSchedule);
+                    
+            } catch (Exception e) {
+                log.error("解析 schedule 出错：{}", e.getMessage());
+                errorMessages.add(String.format("第%d行 schedule 解析失败：%s", rowNum, scheduleItem));
+            }
+        }
+            
+        return result;
     }
     
     /**
@@ -363,7 +430,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         if (classroom == null || classroom.trim().isEmpty()) {
             return classroom;
         }
-        
+
         classroom = classroom.trim();
         
         // 提取楼名和房间号
@@ -684,11 +751,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setCourseNo("MATH001");
             example.setCourseName("高等数学");
             example.setOrderNo("01");
-            example.setWeekRange("3-16周");
-            example.setWeekday("星期一");
-            example.setStartPeriod("1");
-            example.setEndPeriod("2");
-            example.setClassroom("思学楼A101");
+            example.setSchedule("1-9周 星期一 第3节-第5节 明理楼B103,1-9周 星期三 第6节-第7节 明理楼B103");
             example.setClassList("24软件1班");
             example.setTeacherName("张老师");
             example.setCourseType("必修课");

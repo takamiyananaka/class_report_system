@@ -59,6 +59,11 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         if (teacherNo == null || teacherNo.trim().isEmpty()) {
             throw new IllegalArgumentException("辅导员工号不能为空");
         }
+        //验证工号是否已存在
+        Teacher teacher = teacherMapper.selectOne(new LambdaQueryWrapper<Teacher>().eq(Teacher::getTeacherNo, teacherNo));
+        if (teacher == null) {
+            throw new IllegalArgumentException("辅导员工号不存在");
+        }
         
         // 设置辅导员工号
         classEntity.setTeacherNo(teacherNo.trim());

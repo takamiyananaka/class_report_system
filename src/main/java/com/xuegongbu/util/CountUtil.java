@@ -41,7 +41,7 @@ public class CountUtil {
         
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("source", deviceUrls.get("highChn2"));
-        requestBody.put("weights", "weights/yolov10l.pt");
+        requestBody.put("weights", "weights/yolox_x.pth");
         requestBody.put("imgsz", 1280);
         requestBody.put("conf", 0.25);
         requestBody.put("max_frames", 10);

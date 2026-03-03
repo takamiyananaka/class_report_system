@@ -156,23 +156,18 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             throw new BusinessException("当前教室无可用的设备");
         }
         //调用模型
-        //CountResponse countResponse = countUtil.getCount(deviceUrls);
+        CountResponse countResponse = countUtil.getCount(deviceUrls);
         //生成考勤记录
-
-
         //根据课程获取关联班级的总人数
         int expectedCount = course.getExpectedCount();
 
         Attendance attendance = new Attendance();
         attendance.setCourseId(courseId);
         attendance.setCheckTime(checkTime);
-        //attendance.setActualCount((int) Math.round(countResponse.getSummary().getAverageCount()));
-        attendance.setActualCount(4);
+        attendance.setActualCount((int) Math.round(countResponse.getSummary().getAverageCount()));
         attendance.setExpectedCount(expectedCount);
-        //attendance.setAttendanceRate(BigDecimal.valueOf(countResponse.getSummary().getAverageCount() / expectedCount));
-        attendance.setAttendanceRate(BigDecimal.valueOf(4.0 / expectedCount));
-        //attendance.setImageUrl(countResponse.getSampleUrl());
-        attendance.setImageUrl("http://117.72.173.242:8082/i/2025/12/15/693f6db765980.jpg");
+        attendance.setAttendanceRate(BigDecimal.valueOf(countResponse.getSummary().getAverageCount() / expectedCount));
+        attendance.setImageUrl(countResponse.getSampleUrl());
         attendance.setCheckType(2);
         attendance.setStatus(1);
         attendance.setRemark("手动考勤");
