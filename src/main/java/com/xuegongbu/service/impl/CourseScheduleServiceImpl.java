@@ -681,7 +681,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             // 创建模板数据
             List<CourseScheduleExcelDTO> templateData = new ArrayList<>();
             CourseScheduleExcelDTO example = new CourseScheduleExcelDTO();
-            example.setCourseNo("MATH101");
+            example.setCourseNo("MATH001");
             example.setCourseName("高等数学");
             example.setOrderNo("01");
             example.setWeekRange("3-16周");
@@ -689,11 +689,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             example.setStartPeriod("1");
             example.setEndPeriod("2");
             example.setClassroom("思学楼A101");
-            example.setClassList("25计算机类-1班,25计算机类-2班");
+            example.setClassList("24软件1班");
             example.setTeacherName("张老师");
-            example.setCourseType("专业课");
+            example.setCourseType("必修课");
             example.setExpectedCount("90");
-            example.setSemesterName("2025-2026学年春季学期");
+            example.setSemesterName("2025-2026学年秋季学期");
             templateData.add(example);
             
             // 写入Excel
