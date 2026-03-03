@@ -71,6 +71,8 @@ public class AttendanceController {
         return Result.success(attendancePage);
     }
 
+
+
     /**
      * 报表生成接口（excel）
      */
@@ -104,9 +106,24 @@ public class AttendanceController {
     @GetMapping("/queryCurrentAttendance")
     @Operation(summary = "查询当前考勤记录", description = "查询当前考勤记录")
     @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
-    public Result<Attendance> queryCurrentAttendance(@Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
-        log.info("查询当前考勤记录，课程ID：{}", courseId);
+    public Result<Attendance> queryCurrentAttendance(@Parameter(description = "课程 ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
+        log.info("查询当前考勤记录，课程 ID：{}", courseId);
         Attendance attendance = attendanceService.queryCurrentAttendance(courseId);
+        return Result.success(attendance);
+    }
+    
+    /**
+     * 按 id 查询考勤记录详情
+     */
+    @GetMapping("/get/{id}")
+    @Operation(summary = "按 id 查询考勤记录详情", description = "按 id 查询考勤记录详情")
+    @SaCheckRole(value = {"college_admin","admin","teacher"}, mode = SaMode.OR)
+    public Result<Attendance> getAttendanceById(@Parameter(description = "考勤记录 ID", required = true) @PathVariable String id){
+        log.info("按 id 查询考勤记录详情，ID：{}", id);
+        Attendance attendance = attendanceService.getById(id);
+        if (attendance == null) {
+            return Result.error("考勤记录不存在");
+        }
         return Result.success(attendance);
     }
 
