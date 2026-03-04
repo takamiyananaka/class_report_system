@@ -89,11 +89,10 @@ public class AttendanceTask implements CommandLineRunner {
      */
     private void setupAttendanceTasksForToday() {
         log.info("设置今天的考勤任务");
-        
-        try {
+
+       /** try {
             // 获取今天的日期
             LocalDate today = LocalDate.now();
-            
             // 遍历所有课程节数，为每节课的第5分钟、第25分钟、第40分钟设置定时任务
             Integer[] allClassNumbers = ClassTimeUtil.getAllClassNumbers();
             for (Integer classNumber : allClassNumbers) {
@@ -137,7 +136,9 @@ public class AttendanceTask implements CommandLineRunner {
         } catch (Exception e) {
             log.error("设置考勤任务时发生错误", e);
         }
+        */
     }
+
 
     /**
      * 检查时间是否在运营时间内（8:00-21:25）
