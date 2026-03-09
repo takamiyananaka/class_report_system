@@ -892,11 +892,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             return Result.error("课程名称不能为空");
         }
 
-        // 根据课序号查询课表（班级信息现在通过关联表获取）
+        // 根据课序号和教室查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper =
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         queryWrapper.eq(CourseSchedule::getCourseNo, courseSchedule.getCourseNo().trim());
-
+        queryWrapper.eq(CourseSchedule::getClassroom, courseSchedule.getClassroom().trim());
         CourseSchedule existing =this.getOne(queryWrapper);
         if (existing == null) {
             return Result.error("课表不存在或无权限修改");
