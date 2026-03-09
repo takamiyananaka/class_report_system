@@ -895,7 +895,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         // 根据课序号和教室查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper =
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseSchedule::getCourseNo, courseSchedule.getCourseNo().trim());
+        queryWrapper.eq(CourseSchedule::getOrderNo, courseSchedule.getOrderNo().trim());
         queryWrapper.eq(CourseSchedule::getClassroom, courseSchedule.getClassroom().trim());
         CourseSchedule existing =this.getOne(queryWrapper);
         if (existing == null) {
