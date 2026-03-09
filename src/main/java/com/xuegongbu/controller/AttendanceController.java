@@ -95,7 +95,7 @@ public class AttendanceController {
     public Result<String> manualAttendance(
             @Parameter(description = "课程ID", required = true) @RequestParam(value = "courseId", required = true) String courseId){
         log.info("手动考勤，课程ID：{}", courseId);
-        attendanceService.manualAttendance(courseId);
+        //attendanceService.manualAttendance(courseId);
         log.info("手动考勤完成");
         return Result.success("考勤记录生成完成");
     }

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuegongbu.common.Result;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.*;
 import com.xuegongbu.domain.Class;
@@ -148,6 +149,7 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
             log.error("当前分钟内当前课程考勤记录已存在："+exixtingAttendance.getId());
             return exixtingAttendance;
         }
+
 
         String classroomName = course.getClassroom();
         Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
