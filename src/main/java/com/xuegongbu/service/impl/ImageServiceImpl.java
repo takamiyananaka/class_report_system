@@ -27,7 +27,7 @@ public class ImageServiceImpl implements ImageService {
             }
 
             // 加上handoff_backend文件夹相对于ImgServiceImpl的相对路径前缀
-            String relativePath = "handoff_backend" + File.separator + imagePath;
+            String relativePath = "handoff_backend/weights" + File.separator + imagePath;
             
             // 上传图片获取URL
             String imageUrl = uploadImage(token, relativePath);

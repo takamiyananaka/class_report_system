@@ -2,9 +2,11 @@ package com.xuegongbu.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.Alert;
 import com.xuegongbu.domain.Attendance;
 import com.xuegongbu.domain.CourseSchedule;
+import com.xuegongbu.domain.Semester;
 import com.xuegongbu.service.*;
 import com.xuegongbu.util.ClassTimeUtil;
 import com.xuegongbu.util.CountUtil;
@@ -32,17 +34,18 @@ public class AttendanceTask implements CommandLineRunner {
     private final CountUtil countUtil;
     private final AlertService alertService;
     private final ThreadPoolTaskScheduler taskScheduler;
+    private final SemesterService semesterService;
 
     // 存储每天的定时任务
     private volatile ScheduledFuture<?> dailyAttendanceTask;
     private volatile ScheduledFuture<?> dailyScheduleTask;
 
-    public AttendanceTask(CourseScheduleService courseScheduleService, 
+    public AttendanceTask(CourseScheduleService courseScheduleService,
                           AttendanceService attendanceService,
                           DeviceService deviceService,
                           ClassService classService,
                           CountUtil countUtil,
-                          AlertService alertService) {
+                          AlertService alertService, SemesterService semesterService) {
         this.courseScheduleService = courseScheduleService;
         this.attendanceService = attendanceService;
         this.deviceService = deviceService;
@@ -57,6 +60,7 @@ public class AttendanceTask implements CommandLineRunner {
         this.taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
         this.taskScheduler.setAwaitTerminationSeconds(30);
         this.taskScheduler.initialize();
+        this.semesterService = semesterService;
     }
 
     @Override
@@ -90,7 +94,7 @@ public class AttendanceTask implements CommandLineRunner {
     private void setupAttendanceTasksForToday() {
         log.info("设置今天的考勤任务");
 
-       /** try {
+       try {
             // 获取今天的日期
             LocalDate today = LocalDate.now();
             // 遍历所有课程节数，为每节课的第5分钟、第25分钟、第40分钟设置定时任务
@@ -136,7 +140,7 @@ public class AttendanceTask implements CommandLineRunner {
         } catch (Exception e) {
             log.error("设置考勤任务时发生错误", e);
         }
-        */
+
     }
 
 
@@ -168,11 +172,27 @@ public class AttendanceTask implements CommandLineRunner {
 
             //星期符合
             queryWrapper.eq(CourseSchedule::getWeekday, weekdayStr);
+
+
             //当前节次在开始节次和结束节次之间
             queryWrapper.le(CourseSchedule::getStartPeriod, classPeriod);
             queryWrapper.ge(CourseSchedule::getEndPeriod, classPeriod);
             List<CourseSchedule> ongoingCourses = courseScheduleService.list(queryWrapper);
 
+            //剔除日期不符合的课程
+            ongoingCourses = ongoingCourses.stream()
+                    .filter(course -> {
+                        //日期在范围内
+                        String semesterName = course.getSemesterName();
+                        Semester semester = semesterService.lambdaQuery().eq(Semester::getSemesterName, semesterName).one();
+                        List<LocalDate> dateList = ClassTimeUtil.getCourseDateRange(semester,course.getWeekRange());
+                        if(!(dateList.get(0).isBefore(LocalDate.now())&&LocalDate.now().isBefore(dateList.get(dateList.size()-1)))){
+                            log.error("不在该课程的日期范围内："+dateList);
+                            return false;
+                        }else {
+                            return true;
+                        }
+                    }).toList();
             log.info("找到 {} 个第 {} 节课的课程", ongoingCourses.size(), classPeriod);
 
             // 为每个正在进行的课程执行自动考勤

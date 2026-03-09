@@ -34,3 +34,4 @@ build/
 
 ### ai ###
 .handoff_backend/
+/handoff_backend/

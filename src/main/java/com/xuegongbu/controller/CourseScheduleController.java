@@ -317,5 +317,23 @@ public class CourseScheduleController {
         log.info("获取所有课序号完成");
         return Result.success(OrderNos);
     }
+
+    /**
+     * 获取所有课程类型
+     */
+    @GetMapping("/getAllCourseTypes")
+    @Operation(summary = "获取所有课程类型", description = "获取所有课程类型")
+    public Result<List<String>> getAllCourseTypes() {
+        log.info("获取所有课程类型");
+        List<CourseSchedule> courseSchedules = courseScheduleService.list();
+        List<String> courseTypes = courseSchedules.stream()
+                .map(CourseSchedule::getCourseType)
+                .filter(courseType -> courseType != null && !courseType.trim().isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+                log.info("获取所有课程类型完成");
+                return Result.success(courseTypes);
+    }
 }
 

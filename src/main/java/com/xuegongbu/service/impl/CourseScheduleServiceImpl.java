@@ -437,10 +437,11 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         String building = "";
         String roomNumber = "";
         
-        // 查找数字开始的位置，将字符串分为楼名和房间号
+        // 查找英文字母或数字开始的位置，将字符串分为楼名和房间号
         int numberStartIndex = -1;
         for (int i = 0; i < classroom.length(); i++) {
-            if (Character.isDigit(classroom.charAt(i))) {
+            char c = classroom.charAt(i);
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
                 numberStartIndex = i;
                 break;
             }
@@ -891,10 +892,10 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
             return Result.error("课程名称不能为空");
         }
 
-        // 根据课程名称查询课表（班级信息现在通过关联表获取）
+        // 根据课序号查询课表（班级信息现在通过关联表获取）
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CourseSchedule> queryWrapper =
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseSchedule::getCourseName, courseSchedule.getCourseName().trim());
+        queryWrapper.eq(CourseSchedule::getCourseNo, courseSchedule.getCourseNo().trim());
 
         CourseSchedule existing =this.getOne(queryWrapper);
         if (existing == null) {

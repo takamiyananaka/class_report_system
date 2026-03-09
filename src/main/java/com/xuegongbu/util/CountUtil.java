@@ -37,7 +37,7 @@ public class CountUtil {
          *   "device_id": "1247505953717374976"
          * }
          */
-        String url = "http://localhost:8081/count";
+        String url = "http://localhost:8000/count";
         
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("source", deviceUrls.get("highChn2"));
@@ -58,8 +58,8 @@ public class CountUtil {
         System.out.println(body);
         CountResponse countResponse = JSONUtil.toBean(response.body(), CountResponse.class);
         // 上传图片并获取URL
-        String imageUrl = imageService.getImageUrl(countResponse.getSampleUrl());
-        countResponse.setSampleUrl(imageUrl);
+        String imageUrl = imageService.getImageUrl(countResponse.getSample_url());
+        countResponse.setSample_url(imageUrl);
         return countResponse;
     }
 }

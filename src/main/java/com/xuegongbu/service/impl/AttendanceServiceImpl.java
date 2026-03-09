@@ -150,8 +150,8 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         }
 
         String classroomName = course.getClassroom();
-        //Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
-        Map<String, String> deviceUrls = deviceService.getDeviceUrl("成都校区/博学楼/博学楼A101");
+        Map<String, String> deviceUrls = deviceService.getDeviceUrl(classroomName);
+        //Map<String, String> deviceUrls = deviceService.getDeviceUrl("成都校区/博学楼/博学楼A101");
         if (deviceUrls == null){
             throw new BusinessException("当前教室无可用的设备");
         }
@@ -164,10 +164,10 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         Attendance attendance = new Attendance();
         attendance.setCourseId(courseId);
         attendance.setCheckTime(checkTime);
-        attendance.setActualCount((int) Math.round(countResponse.getSummary().getAverageCount()));
+        attendance.setActualCount((int) Math.round(countResponse.getCount()));
         attendance.setExpectedCount(expectedCount);
-        attendance.setAttendanceRate(BigDecimal.valueOf(countResponse.getSummary().getAverageCount() / expectedCount));
-        attendance.setImageUrl(countResponse.getSampleUrl());
+        attendance.setAttendanceRate(BigDecimal.valueOf(attendance.getActualCount()*100.0 / expectedCount));
+        attendance.setImageUrl(countResponse.getSample_url());
         attendance.setCheckType(2);
         attendance.setStatus(1);
         attendance.setRemark("手动考勤");
@@ -284,21 +284,11 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         LambdaQueryWrapper<CourseSchedule> courseScheduleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
         Object objRole = StpUtil.getSession().get("role");
-        if (queryDTO.getCollegeNames()!=null&&!queryDTO.getCollegeNames().isEmpty()&&objRole.equals("admin")) {
+        if (queryDTO.getCollegeNos()!=null&&!queryDTO.getCollegeNos().isEmpty()&&objRole.equals("admin")) {
             LambdaQueryWrapper<College> collegeLambdaQueryWrapper = new LambdaQueryWrapper<>();
 
-            List<String> collegeNames = queryDTO.getCollegeNames();
-            int flag = 0 ;
-            for (String collegeName : collegeNames) {
-                if (!StringUtil.isBlank(collegeName)) {
-                    if (flag == 0) {
-                        flag = 1;
-                        collegeLambdaQueryWrapper.like(College::getName, collegeName.trim());
-                    } else {
-                        collegeLambdaQueryWrapper.or().like(College::getName, collegeName.trim());
-                    }
-                }
-            }
+            List<String> collegeNos = queryDTO.getCollegeNos();
+            collegeLambdaQueryWrapper.in(College::getCollegeNo, collegeNos);
             List<College> colleges = collegeService.list(collegeLambdaQueryWrapper);
             if (!colleges.isEmpty()) {
                 LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();

@@ -35,6 +35,10 @@ public class DeviceServiceImpl implements DeviceService {
     public Map<String, String> getDeviceUrl(String classroomName)  {
         //redis读取
         Device device = (Device) redisTemplate.opsForValue().get(classroomName);
+        if (device == null) {
+            log.info("redis未读取到: {}",classroomName);
+            return null;
+        }
         log.info("redis读取: {},{}",device,classroomName);
         String deviceId = device.getDeviceId();
         String baseUrl1 = "https://ddxk.swpu.edu.cn:8063/live/";

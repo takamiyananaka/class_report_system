@@ -58,7 +58,7 @@ public class CourseScheduleExcelDTO implements Serializable {
     private String expectedCount;
     
     /**
-     * 学期名（例如：2024-2025学年春季学期）
+     * 例如：2024-2025学年春季学期）
      */
     @ExcelProperty(value = "学期名")
     private String semesterName;

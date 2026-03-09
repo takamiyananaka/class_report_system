@@ -61,25 +61,44 @@ import lombok.Data;
  */
 @Data
 public class CountResponse {
-    private CountSummary summary;
-    private CountSample[] samples;
-    private String sampleUrl;
-    @Data
-    public static class CountSummary {
-        private String timestampUtc;
-        private int frames;
-        private int framesProcessed;
-        private double fps;
-        private int totalCountSum;
-        private double averageCount;
-        private int maxCount;
-        private int minCount;
 
-    }
-    @Data
-    public static class CountSample {
-        private String timestamp;
-        private int count;
-    }
-
+//    /**
+//     * 统计结果
+//     */
+//    private CountSummary summary;
+//
+//
+//    /**
+//     * 图片列表
+//     */
+//    private CountSample[] samples;
+//
+//    /**
+//     * 统计结果图片存放路径
+//     */
+//    private String sampleUrl;
+//
+//    @Data
+//    public static class CountSummary {
+//        private String timestampUtc;
+//        private int frames;
+//        private int framesProcessed;
+//        private double fps;
+//        private int totalCountSum;
+//        private double averageCount;
+//        private int maxCount;
+//        private int minCount;
+//
+//    }
+//
+//
+//    @Data
+//    public static class CountSample {
+//        private String timestamp;
+//        private int count;
+//    }
+    private String status;
+    private Integer count;
+    private Integer frames_processed;
+    private String sample_url;
 }
