@@ -1,7 +1,6 @@
 package com.xuegongbu.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import lombok.Data;
 
 /**
@@ -15,7 +14,7 @@ public class TeacherQueryDTO {
     private String teacherNo;
 
     @Schema(description = "学院", example = "计算机学院")
-    private String department;
+    private String collegeName;
 
     @Schema(description = "真实姓名（支持模糊查询）", example = "张")
     private String realName;

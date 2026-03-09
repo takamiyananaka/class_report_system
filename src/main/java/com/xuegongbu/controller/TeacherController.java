@@ -5,11 +5,9 @@ import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuegongbu.common.Result;
 import com.xuegongbu.domain.College;
-import com.xuegongbu.domain.CollegeAdmin;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.TeacherExcelDTO;
 import com.xuegongbu.dto.TeacherQueryDTO;
@@ -113,10 +111,10 @@ public class TeacherController {
     @SaCheckRole("college_admin")
     public Result<String> createTeacher(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "教师信息") @Valid @RequestBody TeacherRequest request) {
-        if(request.getDepartment() ==  null){
+        if(request.getCollegeName() ==  null){
             return Result.error("学院不能为空");
         }
-        String collegeNo = collegeMapper.selectOne(new LambdaQueryWrapper<College>().eq(College::getName, request.getDepartment())).getCollegeNo();
+        String collegeNo = collegeMapper.selectOne(new LambdaQueryWrapper<College>().eq(College::getName, request.getCollegeName())).getCollegeNo();
         log.info("创建教师，用户名：{}，学院编号：{}", request.getUsername(), collegeNo);
 
         // 创建教师对象
@@ -162,8 +160,8 @@ public class TeacherController {
         if (existingTeacherNo != null) {
             return Result.error("教师工号已被其他教师使用");
         }
-        if(!StringUtil.isNullOrEmpty(request.getDepartment())&&StpUtil.hasRole("admin")){
-            College college = collegeMapper.selectOne(new LambdaQueryWrapper<College>().eq(College::getName, request.getDepartment()));
+        if(!StringUtil.isNullOrEmpty(request.getCollegeName())&&StpUtil.hasRole("admin")){
+            College college = collegeMapper.selectOne(new LambdaQueryWrapper<College>().eq(College::getName, request.getCollegeName()));
             if(college == null){
                 return Result.error("学院不存在");
             }
@@ -249,7 +247,7 @@ public class TeacherController {
         log.info("学院{}查询教师请求，参数：{}", queryDTO);
         if(StpUtil.getSession().get("role").equals("college_admin")){
             College college = (College) StpUtil.getSession().get("collegeInfo");
-            queryDTO.setDepartment(college.getName());
+            queryDTO.setCollegeName(college.getName());
         }
         Page<Teacher> result = teacherService.queryPage(queryDTO);
         log.info("查询教师完成，共{}条记录，当前第{}页", result.getTotal(), result.getCurrent());

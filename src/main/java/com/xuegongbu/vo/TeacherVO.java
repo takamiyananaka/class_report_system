@@ -10,7 +10,7 @@ public class TeacherVO {
     private String teacherNo;
     private String phone;
     private String email;
-    private String department;
+    private String collegeName;
     /**
      * 身份字段：1=只是教师，2=教师且是辅导员
      */

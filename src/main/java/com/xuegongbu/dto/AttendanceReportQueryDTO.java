@@ -9,11 +9,11 @@ import java.util.List;
 @Data
 @Schema(description = "考勤报表查询参数")
 public class AttendanceReportQueryDTO {
-    @Schema(description = "学院编号列表，精确查询")
-    List<String> collegeNos;
+    @Schema(description = "学院名称列表，精确查讯")
+    List<String> collegeNames;
 
-    @Schema(description = "教师名字列表,模糊查询")
-    List<String> teacherNames;
+    @Schema(description = "教师工号列表，精确查询")
+    List<String> teacherNos;
 
     @Schema(description = "任课老师列表，模糊查询")
     List<String> courseTeachers;

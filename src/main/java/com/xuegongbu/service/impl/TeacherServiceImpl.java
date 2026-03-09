@@ -8,7 +8,6 @@ import com.xuegongbu.common.Result;
 import com.xuegongbu.common.ResultCode;
 import com.xuegongbu.common.exception.BusinessException;
 import com.xuegongbu.domain.College;
-import com.xuegongbu.domain.CollegeAdmin;
 import com.xuegongbu.domain.Teacher;
 import com.xuegongbu.dto.LoginRequest;
 import com.xuegongbu.dto.LoginResponse;
@@ -80,7 +79,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         userInfo.put("teacherNo", teacher.getTeacherNo());
         userInfo.put("phone", teacher.getPhone());
         userInfo.put("email", teacher.getEmail());
-        userInfo.put("department", teacher.getDepartment());
+        userInfo.put("collegeName", teacher.getDepartment());
         userInfo.put("collegeNo", teacher.getCollegeNo());
         userInfo.put("role", "teacher");
         userInfo.put("attendanceThreshold",teacher.getAttendanceThreshold());
@@ -121,9 +120,9 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         }
 
         //学院条件（精确查询）
-        if (queryDTO.getDepartment() != null && !queryDTO.getDepartment().trim().isEmpty()) {
+        if (queryDTO.getCollegeName() != null && !queryDTO.getCollegeName().trim().isEmpty()) {
             LambdaQueryWrapper<College> collegeQueryWrapper = new LambdaQueryWrapper<>();
-            collegeQueryWrapper.eq(College::getName, queryDTO.getDepartment());
+            collegeQueryWrapper.eq(College::getName, queryDTO.getCollegeName());
             College college = collegeService.getOne(collegeQueryWrapper);
             String collegeNo = college != null ? college.getCollegeNo() : null;
             queryWrapper.eq(Teacher::getCollegeNo, collegeNo);
@@ -227,20 +226,20 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                         failCount++;
                         continue;
                     }
-                    if (dto.getDepartment() == null || dto.getDepartment().trim().isEmpty()) {
+                    if (dto.getCollegeName() == null || dto.getCollegeName().trim().isEmpty()) {
                         errorMessages.add(String.format("第%d行导入失败，学院名为空", rowNum));
                         failCount++;
                         continue;
                     }
                     
                     // 通过学院名从预加载的Map中查询学院信息
-                    College college = collegeMap.get(dto.getDepartment().trim());
+                    College college = collegeMap.get(dto.getCollegeName().trim());
                     
                     // 如果学院名有误，查询不到学院ID
                     if (college == null) {
                         errorMessages.add(String.format("第%d行导入失败，学院名有误", rowNum));
                         failCount++;
-                        log.warn("第{}行: 学院名'{}'查询不到对应学院，跳过该行", rowNum, dto.getDepartment().trim());
+                        log.warn("第{}行: 学院名'{}'查询不到对应学院，跳过该行", rowNum, dto.getCollegeName().trim());
                         continue;
                     }
                     
@@ -273,7 +272,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     if (result != null && ResultCode.SUCCESS.getCode().equals(result.getCode())) {
                         successCount++;
                         log.debug("第{}行: 成功导入教师，工号：{}，姓名：{}，学院：{}", 
-                                rowNum, dto.getTeacherNo().trim(), dto.getRealName().trim(), dto.getDepartment().trim());
+                                rowNum, dto.getTeacherNo().trim(), dto.getRealName().trim(), dto.getCollegeName().trim());
                     } else {
                         String errorMsg = result != null ? result.getMessage() : "未知错误";
                         errorMessages.add(String.format("第%d行导入失败: %s", rowNum, errorMsg));

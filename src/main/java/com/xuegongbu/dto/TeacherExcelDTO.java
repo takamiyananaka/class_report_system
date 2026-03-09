@@ -22,5 +22,5 @@ public class TeacherExcelDTO {
 
     @ExcelProperty(value = "院系")
     @NotBlank(message = "学院名不能为空")
-    private String department;
+    private String collegeName;
 }

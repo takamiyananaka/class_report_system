@@ -286,11 +286,11 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         LambdaQueryWrapper<CourseSchedule> courseScheduleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         LambdaQueryWrapper<Class> classLambdaQueryWrapper = new LambdaQueryWrapper<>();
         Object objRole = StpUtil.getSession().get("role");
-        if (queryDTO.getCollegeNos()!=null&&!queryDTO.getCollegeNos().isEmpty()&&objRole.equals("admin")) {
+        if (queryDTO.getCollegeNames()!=null&&!queryDTO.getCollegeNames().isEmpty()&&objRole.equals("admin")) {
             LambdaQueryWrapper<College> collegeLambdaQueryWrapper = new LambdaQueryWrapper<>();
 
-            List<String> collegeNos = queryDTO.getCollegeNos();
-            collegeLambdaQueryWrapper.in(College::getCollegeNo, collegeNos);
+            List<String> collegeNames = queryDTO.getCollegeNames();
+            collegeLambdaQueryWrapper.in(College::getName, collegeNames);
             List<College> colleges = collegeService.list(collegeLambdaQueryWrapper);
             if (!colleges.isEmpty()) {
                 LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -305,20 +305,10 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
                 return new Page<>();
             }
         }
-        if (queryDTO.getTeacherNames()!=null&&!queryDTO.getTeacherNames().isEmpty()){
-            List<String> teacherNames = queryDTO.getTeacherNames();
+        if (queryDTO.getTeacherNos()!=null&&!queryDTO.getTeacherNos().isEmpty()){
+            List<String> teacherNos = queryDTO.getTeacherNos();
             LambdaQueryWrapper<Teacher> teacherLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            int flag = 0 ;
-            for (String teacherName : teacherNames) {
-                if (!StringUtil.isBlank(teacherName)) {
-                    if (flag == 0) {
-                        flag = 1;
-                        teacherLambdaQueryWrapper.like(Teacher::getRealName, teacherName.trim());
-                    } else {
-                        teacherLambdaQueryWrapper.or().like(Teacher::getRealName, teacherName.trim());
-                    }
-                }
-            }
+            teacherLambdaQueryWrapper.in(Teacher::getTeacherNo, teacherNos);
             List<Teacher> teachers = teacherService.list(teacherLambdaQueryWrapper);
             if (!teachers.isEmpty()) {
                 classLambdaQueryWrapper.in(Class::getTeacherNo, teachers.stream().map(Teacher::getTeacherNo).toArray());
