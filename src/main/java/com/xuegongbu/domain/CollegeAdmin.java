@@ -104,11 +104,4 @@ public class CollegeAdmin implements Serializable {
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-
-    /**
-    * 是否删除：0-否，1-是
-    */
-    @Schema(description = "是否删除：0-否，1-是")
-    @TableLogic
-    private Integer isDeleted;
 }

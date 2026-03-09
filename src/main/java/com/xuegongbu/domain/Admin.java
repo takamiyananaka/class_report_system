@@ -100,11 +100,5 @@ public class Admin implements Serializable {
     @Schema(description = "更新时间")
     @com.baomidou.mybatisplus.annotation.TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-    /**
-    * 是否删除：0-否，1-是
-    */
-    @Schema(description = "是否删除：0-否，1-是")
-    @com.baomidou.mybatisplus.annotation.TableLogic
-    private Integer isDeleted;
 
 }

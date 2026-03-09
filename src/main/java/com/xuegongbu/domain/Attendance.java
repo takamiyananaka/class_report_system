@@ -91,10 +91,4 @@ public class Attendance implements Serializable {
     @Schema(description = "更新时间")
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-    /**
-    * 逻辑删除
-    */
-    @Schema(description = "逻辑删除")
-    @TableLogic(value = "0", delval = "1")
-    private Integer isDeleted;
 }

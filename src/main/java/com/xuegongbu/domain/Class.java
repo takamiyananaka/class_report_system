@@ -76,13 +76,6 @@ public class Class implements Serializable {
     @Schema(description = "更新时间")
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-    /**
-    * 是否删除: 0-否, 1-是
-    */
-    @NotNull(message="[是否删除: 0-否, 1-是]不能为空")
-    @Schema(description = "是否删除: 0-否, 1-是")
-    @TableLogic
-    private Integer isDelete;
 
 
 }

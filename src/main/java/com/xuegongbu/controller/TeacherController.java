@@ -119,6 +119,7 @@ public class TeacherController {
 
         // 创建教师对象
         Teacher teacher = new Teacher();
+        teacher.setDepartment(request.getCollegeName());
         BeanUtils.copyProperties(request, teacher);
 
         // 使用统一的addTeacher方法
