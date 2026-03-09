@@ -118,8 +118,8 @@ public class AttendanceTask implements CommandLineRunner {
                         taskTime = taskTime.plusDays(1);
                     }
                     
-                    // 创建定时任务
-                    Date scheduledTime = Date.from(taskTime.atZone(ZoneId.systemDefault()).toInstant());
+                    //创建定时任务
+                    /**Date scheduledTime = Date.from(taskTime.atZone(ZoneId.systemDefault()).toInstant());
                     
                     // 检查任务时间是否在运营时间内（8:00-21:25）
                     if (isWithinOperationalHours(attendanceTime)) {
@@ -134,7 +134,7 @@ public class AttendanceTask implements CommandLineRunner {
                         log.info("已设置第 {} 节课第 {} 分钟的考勤任务，执行时间: {}", classNumber, minuteOffset, taskTime);
                     } else {
                         log.debug("第 {} 节课第 {} 分钟的考勤时间 {} 超出运营时间范围，跳过", classNumber, minuteOffset, taskTime);
-                    }
+                    }*/
                 }
             }
         } catch (Exception e) {
